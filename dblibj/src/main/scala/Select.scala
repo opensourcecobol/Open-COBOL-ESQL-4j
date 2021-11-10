@@ -7,6 +7,21 @@ import java.text.SimpleDateFormat
 import scala.collection.immutable.Queue
 
 object Select {
+
+  def getPreviousOperationResultSet(id: Int): Operation[Option[ResultSet]] =
+    lookUpConnList(id).flatMap(_ match {
+      case None => operationPure(None)
+      case Some((_, pConn)) => operationPure(pConn.result match {
+        case Right(EResultSet(rs)) => Some(rs)
+        case _ => None
+      })
+    })
+
+  private def errorProc: Operation[Unit] = for {
+    _ <- setLibErrorStatus(OCDB_NOT_FOUND())
+    _ <- logLn("TUPLES NODATA")
+  } yield ()
+
   def ocesqlExecSelectIntoOne(id: Int, query: Option[String], nParams: Int, nResParams: Int): Operation[Unit] = (for {
     state <- operationCPure(getState)
     _ <- whenExecuteAndExit(query.getOrElse("").length == 0, for {
@@ -21,6 +36,8 @@ object Select {
         ocesqlExec(id, query)
       })
 
+    rs <- operationCPure(getPreviousOperationResultSet(id))
+
     status <- operationCPure(setResultStatus(id))
     _ <- whenExecuteAndExit(!status, operationPure(()))
 
@@ -30,32 +47,27 @@ object Select {
       _ <- setLibErrorStatus(OCDB_EMPTY())
     } yield ())
 
-    // TODO remark これ不要?
-    tuples <- operationCPure(OCDBNtuples(id))
-
-    _ <- operationCPure(
-      if(tuples < 1) {
-        for {
-          _ <- setLibErrorStatus(OCDB_NOT_FOUND())
-          _ <- logLn("TUPLES NODATA")
-        } yield ()
-      } else {
-        forM(state.globalState.sqlResVarQueue.zipWithIndex){e => {
-            val (sv, i) = e
-            if(i >= fields){
-              operationPure(())
-            } else {
-              for {
-                retStr <- OCDBGetValue(id, i + 1)
-                _ <- operationPure(retStr match {
-                  case Some(str) => createCobolData(sv, 0, str, state.globalState.occursInfo)
-                  case _ => ()
-                })
-              } yield ()
-            }
+    _ <- operationCPure(rs match {
+      case None => errorProc
+      case Some(rs) => if (rs.next()) {
+        forM(state.globalState.sqlResVarQueue.zipWithIndex) { e => {
+          val (sv, i) = e
+          if (i >= fields) {
+            operationPure(())
+          } else {
+            for {
+              retStr <- OCDBGetValue(id, i + 1)
+              _ <- operationPure(retStr match {
+                case Some(str) => createCobolData(sv, 0, str, state.globalState.occursInfo)
+                case _ => ()
+              })
+            } yield ()
           }
-        }
-      })
+        }}
+      } else {
+        errorProc
+      }
+    })
   } yield ()).eval
 
   def ocesqlExecSelectIntoOccurs(id: Int, query: Option[String], nParams: Int, nResParams: Int): Operation[Unit] = (for {
