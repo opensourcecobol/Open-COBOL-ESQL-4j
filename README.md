@@ -5,12 +5,12 @@ Open COBOL ESQL 4j (OCESQL 4j) consits of open-source Embedded SQL pre-compiler 
 
 # Requirements
 
-* Open-source database
+* Open-source database.
   OCESQL 4j currently supports PostgreSQL database only.
 
-* [opensource COBOL 4j](https://github.com/opensourcecobol/opensourcecobol4j)
+* [opensource COBOL 4j](https://github.com/opensourcecobol/opensourcecobol4j) v1.0.2 or later.
 
-* [sbt](https://www.scala-sbt.org/)(Optional)
+* [sbt](https://www.scala-sbt.org/)(Optional).
 
 
 # Installation
@@ -50,10 +50,10 @@ See test cases or sample programs.
 
 # TODO
 
-- [ ] Implement Prepared Statement
-- [ ] Support other COBOL data types (COMP5, Japanese, ... etc)
-- [ ] Add test cases
-  - [ ] tests for SQL CA(communication area)
-  - [ ] tests for SQL data types
-- [ ] Set up test environments using Github Actions
-- [ ] Create docker images
+- [ ] Implement Prepared Statement.
+- [ ] Support other COBOL data types (COMP5, Japanese, ... etc).
+- [ ] Add test cases.
+  - [ ] tests for SQL CA(communication area).
+  - [ ] tests for SQL data types.
+- [ ] Set up test environments using Github Actions.
+- [ ] Create docker images.

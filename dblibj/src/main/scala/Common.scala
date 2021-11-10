@@ -313,7 +313,7 @@ object Common {
       while(storage.getByte(i) != 0) {
         i += 1
       }
-      Some(new String(storage.getByteArray(0, i)))
+      Some(new String(storage.getByteArray(0, i), "SHIFT-JIS"))
     } catch {
       case e: Throwable => None
     }
@@ -367,33 +367,23 @@ object Common {
   }
 
   private def createCobolDataUnsignedNumber(sv: SQLVar, addr: CobolDataStorage, index: Int, data: scala.Array[Byte]): Unit = {
-    val finalBufLen = sv.length
-    val finalBuf = new scala.Array[Byte](finalBufLen)
-    val indexOfPoint = data.indexOf('.'.toByte)
-    val beforeDp = if (indexOfPoint < 0) sv.length else indexOfPoint
-    val fillZero = sv.length - beforeDp + sv.power
-    for(i <- 0 to fillZero - 1) {
+    val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
+    val isNegative = data(0) == '-'.toByte
+    val valueFirstIndex = if(isNegative) {1} else {0}
+
+    val indexOfDecimalPoint = {
+      val index = data.indexOf('.')
+      if(index < 0) { data.length } else { index }
+    }
+    for(i <- 0 until finalBuf.length) {
       finalBuf(i) = '0'.toByte
     }
-    for(i <- 0 to beforeDp - 1) {
-      finalBuf(i + fillZero) = data(i)
+    for(i <- valueFirstIndex until indexOfDecimalPoint) {
+      finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = data(i)
     }
-
-    if(sv.power < 0) {
-      var afterDp = 0
-      if(indexOfPoint < 0) {
-        afterDp = data.length - beforeDp - DECIMAL_LENGTH
-        for(i <- 0 to (afterDp - 1)) {
-          finalBuf(fillZero + beforeDp + i) = data(beforeDp + DECIMAL_LENGTH + i)
-        }
-      }
-      val fillZero_ = - sv.power - afterDp
-      for(i <- 0 to (fillZero_ - 1)) {
-        finalBuf(i) = '0'.toByte
-      }
+    for(i <- 0 until finalBuf.length) {
+      addr.setByte(i, finalBuf(i))
     }
-
-    addr.memcpy(finalBuf, sv.length)
   }
 
   private def createCobolDataSignedNumberTc(sv: SQLVar, addr: CobolDataStorage, index: Int, str: scala.Array[Byte]): Unit = {
