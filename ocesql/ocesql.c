@@ -187,7 +187,7 @@ cb_host_list_add (struct cb_hostreference_list *list, char *text)
 
 	hostno = cb_search_list(text);
 
-	com_sprintf(temps,sizeof(temps),"$%d",hostno);
+	com_sprintf(temps,sizeof(temps),"?");
 	return com_strdup(temps);
 }
 

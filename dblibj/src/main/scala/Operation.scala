@@ -125,8 +125,7 @@ object Operation {
             }
           }
           case ExecParam(addr, query, params) => {
-            val newQuery = query.replaceAll("\\$[0-9]+", "?")
-            val stmt = addr.prepareStatement(newQuery)
+            val stmt = addr.prepareStatement(query)
             for ((param, i) <- params.zipWithIndex) {
               param.setParam(stmt, i + 1)
             }
