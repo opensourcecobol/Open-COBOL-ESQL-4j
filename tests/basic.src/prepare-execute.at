@@ -29,7 +29,7 @@ AT_DATA([prog.cbl], [
        01 LOG-COUNT PIC 9999 VALUE 1.
 
        01 SQL-COMMAND.
-         03 SQL-COMMAND-LEN PIC 99 VALUE 0.
+         03 SQL-COMMAND-LEN PIC 9999 VALUE 32.
          03 SQL-COMMAND-ARR PIC X(50)
             VALUE "DELETE FROM EMP WHERE EMP_NO > ?".
        01 SQL-COMMAND-ARG PIC 99 VALUE 5.
@@ -195,12 +195,12 @@ AT_CHECK([${EMBED_DB_INFO} prog.cob])
 AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog], [0],
 [0001 <log> success test_return_code
-0003 <log> success test_return_code
-0004 <log> success fetch_record +0001, 北海　太郎          , +0400
-0005 <log> success fetch_record +0002, 青森　次郎          , +0350
-0006 <log> success fetch_record +0003, 秋田　三郎          , +0300
-0007 <log> success fetch_record +0004, 岩手　四郎          , -0250
-0008 <log> success fetch_record +0005, 宮城　五郎          , -0200
+0002 <log> success test_return_code
+0003 <log> success fetch_record +0001, 北海　太郎          , +0400
+0004 <log> success fetch_record +0002, 青森　次郎          , +0350
+0005 <log> success fetch_record +0003, 秋田　三郎          , +0300
+0006 <log> success fetch_record +0004, 岩手　四郎          , -0250
+0007 <log> success fetch_record +0005, 宮城　五郎          , -0200
 ])
 
 AT_CLEANUP
