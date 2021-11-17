@@ -9,6 +9,7 @@ import java.io._
 import java.sql._
 import java.util.Properties
 import scala.collection.immutable.Queue
+import org.postgresql.util.PSQLException
 
 sealed trait ExecSuccessResult
 case class EResultSet(resultSet: ResultSet) extends ExecSuccessResult
@@ -120,6 +121,7 @@ object Operation {
                 Right(EUpdateCount(stmt.getUpdateCount()))
               }
             } catch {
+              case e: PSQLException => Left(e)
               case e: SQLException => Left(e)
               case e: Throwable => Left(new SQLException())
             }
@@ -136,7 +138,8 @@ object Operation {
                 Right(EUpdateCount(stmt.getUpdateCount()))
               }
             } catch {
-              case e: SQLException => {e.printStackTrace(); Left(e)}
+              case e: PSQLException => Left(e)
+              case e: SQLException => Left(e)
               case e: Throwable => Left(new SQLException())
             }
           }

@@ -1,7 +1,6 @@
 import ConstValues._
 import Operation._
 import Common._
-import cats.syntax.flatMap
 
 import java.sql._
 

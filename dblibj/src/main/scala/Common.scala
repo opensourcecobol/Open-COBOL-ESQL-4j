@@ -204,43 +204,27 @@ object Common {
   def setLibErrorStatus(errorCode: SqlCode): Operation[Int] =
     OCDB_PGSetLibErrorStatus(errorCode)
 
-  def setResultStatus(id: Int): Operation[Boolean] = (for {
-    keyAndValue <- operationCPure(lookUpConnList(id))
-
-    _ <- whenExecuteAndExit(keyAndValue.isEmpty, operationPure(false))
-
-    kv <- operationCPure(operationPure(keyAndValue.getOrElse(("", ConnectionInfo.defaultValue))))
-    key <- operationCPure(operationPure(kv._1))
-    pConn <- operationCPure(operationPure(kv._2))
-
-    //[remark] temporary implementation
-    //_ <- whenExecuteAndExit(pConn.result == OCDB_RES_DEFAULT_ADDRESS && pConn.result <= RESULT_FLAGBASE,
-    _ <- whenExecuteAndExit(pConn.result.isLeft,
-      operationPure(false))
-
-    //[remark] temporary implementation
-    /*returnValue <- if(pConn.result == RESULT_FLAG1_PGSQL_DUMMYOPEN) {
-        operationCPure[Int, Int](operationPure(RESULT_SUCCESS))
-      } else {
-        operationCPure[Int, Int](OCDB_PGSetResultStatus(pConn.result))
-      }*/
-    returnValue <- operationCPure(OCDB_PGSetResultStatus(pConn.result))
-  } yield returnValue).eval
+  def setResultStatus(id: Int): Operation[Boolean] =
+    lookUpConnList(id).flatMap(_ match {
+      case None => operationPure(false)
+      case Some((_, pConn)) => OCDB_PGSetResultStatus(pConn.result)
+    })
 
   /**
-   * [remark] temporary implementation
-   * Equivalent to OCDB_PGSetResultStatus in dblib/ocpgsql.c
+   * Implementation of OCDB_PGSetResultStatus in dblib/ocpgsql.c (Open-COBOL-ESQL)
+   * Regardless of the pretious SQL execution, sqlErrorCode is zero.
+   * If the pretious SQL execution fails, sqlState equals to PSQLState.
+   * (https://github.com/pgjdbc/pgjdbc/blob/8be516d47ece60b7aeba5a9474b5cac1d538a04a/pgjdbc/src/main/java/org/postgresql/util/PSQLState.java)
    * @param connAddr
-   * @return
+   * @return true if and only if the previous SQL execution is successful.
    */
   def OCDB_PGSetResultStatus(result: ExecResult): Operation[Boolean] = {
     val (sqlCode, sqlState) = result match {
       case Right(_) => (OCPG_NO_ERROR, "00000")
-      case Left(e) => (e.getErrorCode, e.getSQLState)
+      case Left(e) => (e.getErrorCode, Option(e.getSQLState).getOrElse("00000"))
     }
     for {
-      state <- getState
-      _ <- setState({
+      _ <- updateState(state => {
         val sqlCA = state.sqlCA
         val newSqlCA = sqlCA.setCode(sqlCode).setState(sqlState.getBytes)
         state.setSqlCA(newSqlCA)
