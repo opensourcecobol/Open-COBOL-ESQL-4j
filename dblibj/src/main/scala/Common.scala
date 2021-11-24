@@ -6,6 +6,7 @@ import java.sql._
 import ConnectionInfo.ConnectionMap
 import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
 
+import java.nio.ByteBuffer
 import scala.collection.immutable.Queue
 
 object Common {
@@ -374,17 +375,36 @@ object Common {
     val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
     val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if(isNegative) {1} else {0}
-
     val indexOfDecimalPoint = {
       val index = str.indexOf('.')
       if(index < 0) { str.length } else { index }
     }
+
     for(i <- 0 until finalBuf.length) {
       finalBuf(i) = '0'.toByte
     }
-    for(i <- valueFirstIndex until indexOfDecimalPoint) {
-      finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = str(i)
+
+    if(sv.power >= 0) {
+      for(i <- valueFirstIndex until indexOfDecimalPoint) {
+        finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = str(i)
+      }
+    } else {
+      var i = sv.length + sv.power - 1
+      var j = indexOfDecimalPoint - 1
+      while(i >= 0 && j >= valueFirstIndex) {
+        finalBuf(i) = str(j)
+        i -= 1
+        j -= 1
+      }
+      i = sv.length + sv.power
+      j = indexOfDecimalPoint + 1
+      while(i < sv.length && j < str.length) {
+        finalBuf(i) = str(j)
+        i += 1
+        j += 1
+      }
     }
+
     if(isNegative) {
       val finalByte = finalBuf(finalBuf.length - 1)
       finalBuf(finalBuf.length - 1) = (finalByte + 0x40).toByte
@@ -403,7 +423,14 @@ object Common {
   }
 
   private def createCobolDataSignedNumberPd(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
-    //TODO Implement
+    println("createCobolDataSignedNumberPd 1")
+    val n = Integer.parseInt(new String(str))
+    println(s"n: ${n}")
+    val bytes = new scala.Array[Byte](4)
+    ByteBuffer.wrap(bytes).putInt(n)
+    for(i <- 0 until 4) {
+      addr.setByte(i, bytes(i))
+    }
   }
 
   private def createCobolDataAlphanumeric(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {

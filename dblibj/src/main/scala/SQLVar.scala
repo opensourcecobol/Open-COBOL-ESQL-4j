@@ -3,6 +3,7 @@ import Operation._
 import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
 import ConstValues._
 
+import java.nio.ByteBuffer
 import java.sql.{ParameterMetaData, PreparedStatement, Types}
 import scala.collection.immutable.Queue
 
@@ -11,18 +12,20 @@ class SQLVar (val sqlVarType: Int,
               val power: Int,
               val addr: Option[CobolDataStorage],
               val data: Option[CobolDataStorage],
-              val realData: Option[CobolDataStorage]){
+              val realData: Option[CobolDataStorage],
+              val realDataLength: Int){
 
-  def setSqlVarType(sqlVarType: Int): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData)
-  def setLength(length: Int): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData)
-  def setPower(power: Int): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData)
-  def setAddr(addr: Option[CobolDataStorage]): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData)
-  def setData(data: Option[CobolDataStorage]): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData)
-  def setRealData(realData: Option[CobolDataStorage]): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData)
+  def setSqlVarType(sqlVarType: Int): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData, realDataLength)
+  def setLength(length: Int): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData, realDataLength)
+  def setPower(power: Int): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData, realDataLength)
+  def setAddr(addr: Option[CobolDataStorage]): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData, realDataLength)
+  def setData(data: Option[CobolDataStorage]): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData, realDataLength)
+  def setRealData(realData: Option[CobolDataStorage]): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData, realDataLength)
+  def setRealDataLength(realDataLength: Int): SQLVar = new SQLVar(sqlVarType, length, power, addr, data, realData, realDataLength)
 
   def getString: String = realData match {
     case None => ""
-    case Some(storage) => new String(storage.getByteArray(0, this.length), "SHIFT-JIS")
+    case Some(storage) => new String(storage.getByteArray(0, this.realDataLength), "SHIFT-JIS")
   }
 
   def setParam(stmt: PreparedStatement, index: Int): Unit = {
@@ -51,7 +54,7 @@ class SQLVar (val sqlVarType: Int,
       case Types.NCHAR => stmt.setString(index, str)
       case Types.NCLOB => {}
       case Types.NULL => {}
-      case Types.NUMERIC => stmt.setInt(index, java.lang.Integer.parseInt(str))
+      case Types.NUMERIC => stmt.setDouble(index, java.lang.Double.parseDouble(str))
       case Types.NVARCHAR => stmt.setString(index, str)
       case Types.OTHER => {}
       case Types.REAL => stmt.setDouble(index, java.lang.Double.parseDouble(str))
@@ -71,7 +74,7 @@ class SQLVar (val sqlVarType: Int,
 }
 
 object SQLVar {
-  def defaultValue = new SQLVar(0, 0, 0, None, None, None)
+  def defaultValue = new SQLVar(0, 0, 0, None, None, None, 0)
 
   def initSqlVarQueue(): Operation[Unit] =
     resetSqlVarQueue()
@@ -94,7 +97,7 @@ object SQLVar {
   }
 
   def addSqlVarQueue(sqlVarType: Int, length: Int, scale: Int, addr: Option[CobolDataStorage]): Operation[Unit] = {
-    val sqlVar = new SQLVar(sqlVarType, length, scale, addr, None, None)
+    val sqlVar = new SQLVar(sqlVarType, length, scale, addr, None, None, length)
     for {
       state <- getState
       newSqlVar <- createRealData(sqlVar, 0)
@@ -108,7 +111,7 @@ object SQLVar {
   }
 
   def addSqlResVarQueue(sqlVarType: Int, length: Int, scale: Int, addr: Option[CobolDataStorage]): Operation[Unit] = {
-    val newSqlVar = new SQLVar(sqlVarType, length, scale, addr, None, None)
+    val newSqlVar = new SQLVar(sqlVarType, length, scale, addr, None, None, length)
     for {
       state <- getState
       _ <- createRealData(newSqlVar, 0)
@@ -137,11 +140,11 @@ object SQLVar {
         //case OCDB_TYPE_UNSIGNED_NUMBER => createRealDataUnsignedNumber(x)
         case OCDB_TYPE_SIGNED_NUMBER_TC => createRealDataSignedNumberTc(x)
         //case OCDB_TYPE_SIGNED_NUMBER_LS => createRealDataSignedNumberLs(x)
-        /*case OCDB_TYPE_UNSIGNED_NUMBER_PD => createRealDataUnsignedNumberPd(x)
-        case OCDB_TYPE_SIGNED_NUMBER_PD => createRealDataSignedNumberPd(x)
-        case OCDB_TYPE_JAPANESE => createRealDataJapanese(x)
-        case OCDB_TYPE_ALPHANUMERIC_VARYING => createRealDataAlphanumericVarying(x)
-        case OCDB_TYPE_JAPANESE_VARYING => createRealDataJapaneseVarying(x)*/
+        //case OCDB_TYPE_UNSIGNED_NUMBER_PD => createRealDataUnsignedNumberPd(x)
+        //case OCDB_TYPE_SIGNED_NUMBER_PD => createRealDataSignedNumberPd(x)
+        //case OCDB_TYPE_JAPANESE => createRealDataJapanese(x)
+        //case OCDB_TYPE_ALPHANUMERIC_VARYING => createRealDataAlphanumericVarying(x)
+        //case OCDB_TYPE_JAPANESE_VARYING => createRealDataJapaneseVarying(x)
         case _ => createRealDataDefault(x)
       }
     }
@@ -163,13 +166,56 @@ object SQLVar {
       insertDecimalPoint(realData, realDataLength, v.power)
     }
 
-    val w = new SQLVar(v.sqlVarType, v.length, v.power, v.addr, Some(data), Some(realData))
+    val w = new SQLVar(v.sqlVarType, v.length, v.power, v.addr, Some(data), Some(realData), v.realDataLength)
 
     for {
       _ <- logLn(s"${w.sqlVarType} ${v.length}->${w.length}#data:${storageToString(w.data)}#realdata:${storageToString(w.realData)}")
     } yield w
   }
 
+  //TODO improve the algorithm
+  private def removeInitZeroes(data: CobolDataStorage, len: Int): Array[Byte] = {
+    var i = 0
+    if(data.getByte(i) == '-'.toByte) {
+      i += 1
+    }
+
+    while(i < len && data.getByte(i) == '0') {
+      i += 1
+    }
+
+    val digits = if(i == len) {
+      val arr = new Array[Byte](1)
+      arr(0) = '0'.toByte
+      arr
+    } else if(data.getByte(i) == '.'.toByte) {
+      val arr = new Array[Byte](len - i + 1)
+      arr(0) = '0'
+      for(j <- i until len) {
+        arr(j - i + 1) = data.getByte(j)
+      }
+      arr
+     } else {
+      val arr = new Array[Byte](len - i)
+      for(j <- i until len) {
+        arr(j - i) = data.getByte(j)
+      }
+      arr
+     }
+
+    if(data.getByte(0) == '-'.toByte) {
+      val arr = new Array[Byte](digits.length + 1)
+      arr(0) = '-'
+      for(i <- 1 until arr.length) {
+        arr(i) = digits(i - 1)
+      }
+      arr
+    } else {
+      digits
+    }
+  }
+
+  // TODO improve the algorighm
   private def createRealDataSignedNumberTc(v: SQLVar):  Operation[SQLVar] =  {
     val data = new CobolDataStorage(v.length + TERMINAL_LENGTH)
     data.memcpy(v.addr.getOrElse(nullDataStorage), v.length)
@@ -179,6 +225,7 @@ object SQLVar {
     } else {
       SIGN_LENGTH + v.length
     }
+    val digitFirstIndex = realDataLength - SIGN_LENGTH - v.length
 
     val realData = new CobolDataStorage(realDataLength)
     realData.getSubDataStorage(SIGN_LENGTH).memcpy(data, v.length)
@@ -188,14 +235,22 @@ object SQLVar {
       realData.setByte(0, '-'.toByte)
       realData.setByte(v.length + SIGN_LENGTH - 1, (signByte - 0x40.toByte).toByte)
     } else {
-      realData.setByte(0, '+'.toByte)
+      realData.setByte(0, '0'.toByte)
     }
 
     if(v.power < 0) {
-      ()//TODO implement!
-      // insert decimal point
+      val pointIndex = realDataLength + v.power - 1
+      if(digitFirstIndex < pointIndex) {
+        for(i <- (realDataLength - 1) to (pointIndex + 1) by -1) {
+          realData.setByte(i, realData.getByte(i - 1))
+        }
+        realData.setByte(pointIndex, '.'.toByte)
+      }
     }
-    operationPure(v.setRealData(Some(realData)).setData(Some(data)).setLength(realDataLength))
+
+    val bytes = removeInitZeroes(realData, realDataLength)
+    val storage = new CobolDataStorage(bytes)
+    operationPure(v.setRealData(Some(storage)).setRealDataLength(bytes.length))
   }
 
   private def createRealDataSignedNumberLs(v: SQLVar): Operation[SQLVar] = {
@@ -213,7 +268,7 @@ object SQLVar {
       insertDecimalPoint(realData, realDataLength, v.power)
     }
 
-    val w = new SQLVar(v.sqlVarType, v.length, v.power, v.addr, Some(data), Some(realData))
+    val w = new SQLVar(v.sqlVarType, v.length, v.power, v.addr, Some(data), Some(realData), v.length)
 
     for {
       _ <- logLn(s"${w.sqlVarType} ${v.length}->${w.length}#data:${storageToString(w.data)}#realdata:${storageToString(w.realData)}")
@@ -222,6 +277,7 @@ object SQLVar {
 
   private def createRealDataUnsignedNumberPd(v: SQLVar): Operation[SQLVar] = operationPure(v)
   private def createRealDataSignedNumberPd(v: SQLVar): Operation[SQLVar] = operationPure(v)
+
   private def createRealDataJapanese(v: SQLVar): Operation[SQLVar] = operationPure(v)
   private def createRealDataAlphanumericVarying(v: SQLVar): Operation[SQLVar] = operationPure(v)
   private def createRealDataJapaneseVarying(v: SQLVar): Operation[SQLVar] = operationPure(v)

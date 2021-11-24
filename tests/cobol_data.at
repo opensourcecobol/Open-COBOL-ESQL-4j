@@ -1,0 +1,4 @@
+AT_INIT(cobol data test)
+
+AT_TESTED([ocesql])
+m4_include([packed_signed_v.at])

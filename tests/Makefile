@@ -1,4 +1,4 @@
-MODULES=basic
+MODULES=basic cobol_data
 
 .PHONY: clean all help
 
@@ -12,6 +12,7 @@ help:
 
 .SUFFIXES: .at
 
-.at: package.m4 atlocal.in
+#.at: package.m4 atlocal.in
+.at: package.m4
 	autom4te --language=autotest -I $@.src -o $@ $@.at
 	chmod +x $@

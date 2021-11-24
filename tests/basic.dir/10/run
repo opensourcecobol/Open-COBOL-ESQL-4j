@@ -1,5 +1,0 @@
-#! /bin/sh
-test "${ZSH_VERSION+set}" = set && alias -g '${1+"$@"}'='"$@"'
-cd '/root/test'
-exec ${CONFIG_SHELL-/bin/sh} "/root/test/./basic" -v -d  10 ${1+"$@"}
-exit 1
