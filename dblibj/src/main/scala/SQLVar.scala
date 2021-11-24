@@ -137,7 +137,7 @@ object SQLVar {
         })))
       val x = v.setAddr(newAddr)
       x.sqlVarType match {
-        //case OCDB_TYPE_UNSIGNED_NUMBER => createRealDataUnsignedNumber(x)
+        case OCDB_TYPE_UNSIGNED_NUMBER => createRealDataUnsignedNumber(x)
         case OCDB_TYPE_SIGNED_NUMBER_TC => createRealDataSignedNumberTc(x)
         //case OCDB_TYPE_SIGNED_NUMBER_LS => createRealDataSignedNumberLs(x)
         //case OCDB_TYPE_UNSIGNED_NUMBER_PD => createRealDataUnsignedNumberPd(x)
@@ -150,27 +150,35 @@ object SQLVar {
     }
   } yield retSQLVar
 
-  //[remark] TODO implemet methds below
+  // TODO improve the algorighm
   private def createRealDataUnsignedNumber(v: SQLVar): Operation[SQLVar] = {
     val data = new CobolDataStorage(v.length + TERMINAL_LENGTH)
-    if(!v.addr.isEmpty) {
-      data.memcpy(v.addr.getOrElse(nullDataStorage), v.length)
+    data.memcpy(v.addr.getOrElse(nullDataStorage), v.length)
+
+    val realDataLength = if(v.power < 0) {
+      v.length + 1
+    } else {
+      v.length + v.power
     }
-    val realDataLength = if(v.power < 0) { v.length + 1 } else { v.length }
-    val realData = new CobolDataStorage(realDataLength + 1)
-    if(!v.data.isEmpty) {
-      realData.memcpy(v.data.getOrElse(nullDataStorage), realDataLength)
-    }
+    val digitFirstIndex = realDataLength - v.length
+
+    val realData = new CobolDataStorage(realDataLength)
+    realData.memset('0'.toByte, realDataLength)
+    realData.memcpy(data, v.length)
 
     if(v.power < 0) {
-      insertDecimalPoint(realData, realDataLength, v.power)
+      val pointIndex = realDataLength + v.power - 1
+      if(digitFirstIndex < pointIndex) {
+        for(i <- (realDataLength - 1) to (pointIndex + 1) by -1) {
+          realData.setByte(i, realData.getByte(i - 1))
+        }
+        realData.setByte(pointIndex, '.'.toByte)
+      }
     }
 
-    val w = new SQLVar(v.sqlVarType, v.length, v.power, v.addr, Some(data), Some(realData), v.realDataLength)
-
-    for {
-      _ <- logLn(s"${w.sqlVarType} ${v.length}->${w.length}#data:${storageToString(w.data)}#realdata:${storageToString(w.realData)}")
-    } yield w
+    val bytes = removeInitZeroes(realData, realDataLength)
+    val storage = new CobolDataStorage(bytes)
+    operationPure(v.setRealData(Some(storage)).setRealDataLength(bytes.length))
   }
 
   //TODO improve the algorithm
@@ -223,19 +231,18 @@ object SQLVar {
     val realDataLength = if(v.power < 0) {
       SIGN_LENGTH + v.length + 1
     } else {
-      SIGN_LENGTH + v.length
+      SIGN_LENGTH + v.length + v.power
     }
     val digitFirstIndex = realDataLength - SIGN_LENGTH - v.length
 
     val realData = new CobolDataStorage(realDataLength)
+    realData.memset('0'.toByte, realDataLength)
     realData.getSubDataStorage(SIGN_LENGTH).memcpy(data, v.length)
 
     val signByte = realData.getByte(v.length + SIGN_LENGTH - 1)
     if(0x70.toByte <= signByte && signByte <= 0x79) {
       realData.setByte(0, '-'.toByte)
       realData.setByte(v.length + SIGN_LENGTH - 1, (signByte - 0x40.toByte).toByte)
-    } else {
-      realData.setByte(0, '0'.toByte)
     }
 
     if(v.power < 0) {

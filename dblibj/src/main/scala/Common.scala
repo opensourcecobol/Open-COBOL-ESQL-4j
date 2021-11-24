@@ -351,21 +351,41 @@ object Common {
     }
   }
 
-  private def createCobolDataUnsignedNumber(sv: SQLVar, addr: CobolDataStorage, index: Int, data: scala.Array[Byte]): Unit = {
+  //[TODO] improve the algorithm
+  private def createCobolDataUnsignedNumber(sv: SQLVar, addr: CobolDataStorage, index: Int, str: scala.Array[Byte]): Unit = {
     val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
-    val isNegative = data(0) == '-'.toByte
+    val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if(isNegative) {1} else {0}
-
     val indexOfDecimalPoint = {
-      val index = data.indexOf('.')
-      if(index < 0) { data.length } else { index }
+      val index = str.indexOf('.')
+      if(index < 0) { str.length } else { index }
     }
+
     for(i <- 0 until finalBuf.length) {
       finalBuf(i) = '0'.toByte
     }
-    for(i <- valueFirstIndex until indexOfDecimalPoint) {
-      finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = data(i)
+
+    if(sv.power >= 0) {
+      for(i <- valueFirstIndex until indexOfDecimalPoint) {
+        finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = str(i)
+      }
+    } else {
+      var i = sv.length + sv.power - 1
+      var j = indexOfDecimalPoint - 1
+      while(i >= 0 && j >= valueFirstIndex) {
+        finalBuf(i) = str(j)
+        i -= 1
+        j -= 1
+      }
+      i = sv.length + sv.power
+      j = indexOfDecimalPoint + 1
+      while(i < sv.length && j < str.length) {
+        finalBuf(i) = str(j)
+        i += 1
+        j += 1
+      }
     }
+
     for(i <- 0 until finalBuf.length) {
       addr.setByte(i, finalBuf(i))
     }
