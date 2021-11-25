@@ -499,7 +499,12 @@ object Common {
   }
 
   private def createCobolDataJapanese(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
-    //TODO Implement
+    if(str.length >= sv.length * 2) {
+      addr.memcpy(str, sv.length * 2)
+    } else {
+      addr.memset(' '.toByte, sv.length * 2)
+      addr.memcpy(str, str.length)
+    }
   }
 
   private def createCobolDataAlphanumericVarying(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {

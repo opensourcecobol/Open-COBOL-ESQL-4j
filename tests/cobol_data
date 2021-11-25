@@ -593,6 +593,7 @@ at_format='?'
 at_help_all="1;numeric_signed_v.at:1;numeric_signed_v;;
 2;numeric_v.at:1;numeric_v;;
 3;alphanumeric.at:1;alphanumeric;;
+4;japanese.at:1;japanese;;
 "
 # List of the all the test groups.
 at_groups_all=`$as_echo "$at_help_all" | sed 's/;.*//'`
@@ -606,7 +607,7 @@ at_fn_validate_ranges ()
   for at_grp
   do
     eval at_value=\$$at_grp
-    if test $at_value -lt 1 || test $at_value -gt 3; then
+    if test $at_value -lt 1 || test $at_value -gt 4; then
       $as_echo "invalid test group: $at_value" >&2
       exit 1
     fi
@@ -2828,3 +2829,199 @@ $at_traceon; }
 ) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
 #AT_STOP_3
+#AT_START_4
+at_fn_group_banner 4 'japanese.at:1' \
+  "japanese" "                                       "
+at_xfail=no
+(
+  $as_echo "4. $at_setup_line: testing $at_desc ..."
+  $at_traceon
+
+
+cat >prog.cbl <<'_ATEOF'
+
+       IDENTIFICATION              DIVISION.
+      ******************************************************************
+       PROGRAM-ID.                 prog.
+      ******************************************************************
+       DATA                        DIVISION.
+      ******************************************************************
+       WORKING-STORAGE             SECTION.
+       01 V PIC N(5).
+
+       01  TEST-DATA.
+         03 FILLER  PIC N(5) VALUE "‚ ‚¢‚¤‚¦‚¨".
+         03 FILLER  PIC N(5) VALUE "‚‚‚‚ƒ‚„‚…".
+         03 FILLER  PIC N(5) VALUE "‚P‚Q‚R‚S‚T".
+         03 FILLER  PIC N(5) VALUE "ƒvƒƒOƒ‰ƒ€".
+         03 FILLER  PIC N(5) VALUE "‚`‚a‚b‚c‚d".
+         03 FILLER  PIC N(5) VALUE "I”“•".
+         03 FILLER  PIC N(5) VALUE "“ú–{ŒêŠ¿š".
+         03 FILLER  PIC N(5) VALUE "—op–{".
+         03 FILLER  PIC N(5) VALUE "QH„ƒC".
+         03 FILLER  PIC N(5) VALUE "“ú–{„ƒC".
+
+       01  TEST-DATA-R   REDEFINES TEST-DATA.
+         03  TEST-TBL    OCCURS  10.
+           05  D             PIC N(5).
+
+       01  IDX                     PIC  S9(02) .
+       01 LOG-COUNT PIC 9999 VALUE 1.
+
+       01 READ-DATA-TBL.
+         03  READ-TBL    OCCURS  10.
+           05  READ-DATA     PIC N(5).
+
+       EXEC SQL BEGIN DECLARE SECTION END-EXEC.
+       01  DBNAME                  PIC  X(30) VALUE SPACE.
+       01  USERNAME                PIC  X(30) VALUE SPACE.
+       01  PASSWD                  PIC  X(10) VALUE SPACE.
+       EXEC SQL END DECLARE SECTION END-EXEC.
+
+       EXEC SQL INCLUDE SQLCA END-EXEC.
+      ******************************************************************
+       PROCEDURE                   DIVISION.
+      ******************************************************************
+       MAIN-RTN.
+
+       PERFORM SETUP-DB.
+
+      *    SHOW RESULT
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL FROM TESTTABLE ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA(IDX)
+           END-PERFORM.
+
+       PERFORM CLEANUP-DB.
+
+      *    END
+           STOP RUN.
+
+      ******************************************************************
+       SETUP-DB.
+      ******************************************************************
+
+      *    SERVER
+           MOVE  "testdb@db_postgres:5432"
+             TO DBNAME.
+           MOVE  "main_user"
+             TO USERNAME.
+           MOVE  "password"
+             TO PASSWD.
+
+           EXEC SQL
+               CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLE
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLE
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     CHAR(10)
+                )
+           END-EXEC.
+
+      *    INSERT ROWS USING HOST VARIABLE
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D(IDX)     TO  V
+              EXEC SQL
+                 INSERT INTO TESTTABLE VALUES (:IDX, :V)
+              END-EXEC
+           END-PERFORM.
+
+      *    COMMIT
+           EXEC SQL
+               COMMIT WORK
+           END-EXEC.
+
+      ******************************************************************
+       CLEANUP-DB.
+      ******************************************************************
+      *    EXEC SQL
+      *        DROP TABLE IF EXISTS TESTTABLE
+      *    END-EXEC.
+
+           EXEC SQL
+               DISCONNECT ALL
+           END-EXEC.
+
+
+_ATEOF
+
+
+{ set +x
+$as_echo "$at_srcdir/japanese.at:119: ocesql prog.cbl prog.cob > /dev/null"
+at_fn_check_prepare_trace "japanese.at:119"
+( $at_check_trace; ocesql prog.cbl prog.cob > /dev/null
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/japanese.at:119"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/japanese.at:120: \${EMBED_DB_INFO} prog.cob"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "japanese.at:120"
+( $at_check_trace; ${EMBED_DB_INFO} prog.cob
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/japanese.at:120"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/japanese.at:121: \${COMPILE_MODULE} prog.cob"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "japanese.at:121"
+( $at_check_trace; ${COMPILE_MODULE} prog.cob
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/japanese.at:121"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/japanese.at:122: \${RUN_MODULE} prog"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "japanese.at:122"
+( $at_check_trace; ${RUN_MODULE} prog
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+echo >>"$at_stdout"; $as_echo "‚ ‚¢‚¤‚¦‚¨
+‚‚‚‚ƒ‚„‚…
+‚P‚Q‚R‚S‚T
+ƒvƒƒOƒ‰ƒ€
+‚\`‚a‚b‚c‚d
+I”“•
+“ú–{ŒêŠ¿š
+—op–{
+QH„ƒC
+“ú–{„ƒC
+" | \
+  $at_diff - "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/japanese.at:122"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+
+  set +x
+  $at_times_p && times >"$at_times_file"
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
+read at_status <"$at_status_file"
+#AT_STOP_4

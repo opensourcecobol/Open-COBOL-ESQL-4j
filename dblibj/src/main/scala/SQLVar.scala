@@ -142,7 +142,7 @@ object SQLVar {
         case OCDB_TYPE_SIGNED_NUMBER_LS => createRealDataSignedNumberLs(x)
         //case OCDB_TYPE_UNSIGNED_NUMBER_PD => createRealDataUnsignedNumberPd(x)
         //case OCDB_TYPE_SIGNED_NUMBER_PD => createRealDataSignedNumberPd(x)
-        //case OCDB_TYPE_JAPANESE => createRealDataJapanese(x)
+        case OCDB_TYPE_JAPANESE => createRealDataJapanese(x)
         //case OCDB_TYPE_ALPHANUMERIC_VARYING => createRealDataAlphanumericVarying(x)
         //case OCDB_TYPE_JAPANESE_VARYING => createRealDataJapaneseVarying(x)
         case _ => createRealDataDefault(x)
@@ -278,7 +278,12 @@ object SQLVar {
   private def createRealDataUnsignedNumberPd(v: SQLVar): Operation[SQLVar] = operationPure(v)
   private def createRealDataSignedNumberPd(v: SQLVar): Operation[SQLVar] = operationPure(v)
 
-  private def createRealDataJapanese(v: SQLVar): Operation[SQLVar] = operationPure(v)
+  private def createRealDataJapanese(v: SQLVar): Operation[SQLVar] = {
+    val realData = new CobolDataStorage(v.length * 2)
+    realData.memcpy(v.addr.getOrElse(nullDataStorage), v.length * 2)
+    operationPure(v.setRealData(Some(realData)).setRealDataLength(v.length * 2))
+  }
+
   private def createRealDataAlphanumericVarying(v: SQLVar): Operation[SQLVar] = operationPure(v)
   private def createRealDataJapaneseVarying(v: SQLVar): Operation[SQLVar] = operationPure(v)
   private def createRealDataDefault(v: SQLVar): Operation[SQLVar] = {
