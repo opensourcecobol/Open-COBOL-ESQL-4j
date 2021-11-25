@@ -139,7 +139,7 @@ object SQLVar {
       x.sqlVarType match {
         case OCDB_TYPE_UNSIGNED_NUMBER => createRealDataUnsignedNumber(x)
         case OCDB_TYPE_SIGNED_NUMBER_TC => createRealDataSignedNumberTc(x)
-        //case OCDB_TYPE_SIGNED_NUMBER_LS => createRealDataSignedNumberLs(x)
+        case OCDB_TYPE_SIGNED_NUMBER_LS => createRealDataSignedNumberLs(x)
         //case OCDB_TYPE_UNSIGNED_NUMBER_PD => createRealDataUnsignedNumberPd(x)
         //case OCDB_TYPE_SIGNED_NUMBER_PD => createRealDataSignedNumberPd(x)
         //case OCDB_TYPE_JAPANESE => createRealDataJapanese(x)
@@ -184,7 +184,7 @@ object SQLVar {
   //TODO improve the algorithm
   private def removeInitZeroes(data: CobolDataStorage, len: Int): Array[Byte] = {
     var i = 0
-    if(data.getByte(i) == '-'.toByte) {
+    if(data.getByte(i) == '-'.toByte || data.getByte(i) == '+'.toByte) {
       i += 1
     }
 
@@ -260,26 +260,19 @@ object SQLVar {
     operationPure(v.setRealData(Some(storage)).setRealDataLength(bytes.length))
   }
 
+  //TODO fix
   private def createRealDataSignedNumberLs(v: SQLVar): Operation[SQLVar] = {
-    val data = new CobolDataStorage(v.length + SIGN_LENGTH + TERMINAL_LENGTH)
-    if(!v.addr.isEmpty) {
-      data.memcpy(v.addr.getOrElse(nullDataStorage), v.length + SIGN_LENGTH)
-    }
-    val realDataLength = SIGN_LENGTH + (if(v.power < 0) { v.length + 1 } else { v.length })
-    val realData = new CobolDataStorage(realDataLength)
-    if(!v.data.isEmpty) {
-      realData.memcpy(v.data.getOrElse(nullDataStorage), realDataLength)
-    }
-
-    if(v.power < 0) {
-      insertDecimalPoint(realData, realDataLength, v.power)
+    val data = v.addr.getOrElse(nullDataStorage)
+    val rawStr = new String(v.addr.getOrElse(nullDataStorage).getByteArray(0, v.length + 1))
+    val convertedStr = if(v.power < 0) {
+      val (fst, snd) = rawStr.splitAt(v.length + v.power)
+      fst + "." + snd
+    } else {
+      rawStr + "0" * v.power
     }
 
-    val w = new SQLVar(v.sqlVarType, v.length, v.power, v.addr, Some(data), Some(realData), v.length)
-
-    for {
-      _ <- logLn(s"${w.sqlVarType} ${v.length}->${w.length}#data:${storageToString(w.data)}#realdata:${storageToString(w.realData)}")
-    } yield w
+    val realData = new CobolDataStorage(convertedStr.getBytes())
+    operationPure(v.setRealData(Some(realData)).setRealDataLength(convertedStr.length))
   }
 
   private def createRealDataUnsignedNumberPd(v: SQLVar): Operation[SQLVar] = operationPure(v)
