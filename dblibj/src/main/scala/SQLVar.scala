@@ -286,7 +286,7 @@ object SQLVar {
     val realData = new CobolDataStorage(v.length)
     data.memcpy(v.addr.getOrElse(nullDataStorage), v.length)
     realData.memcpy(v.addr.getOrElse(nullDataStorage), v.length)
-    operationPure(v.setData(Some(data)).setRealData(Some(realData)))
+    operationPure(v.setRealData(Some(realData)).setRealDataLength(v.length))
   }
 
   private def storageToString(storage: Option[CobolDataStorage]): String = {
