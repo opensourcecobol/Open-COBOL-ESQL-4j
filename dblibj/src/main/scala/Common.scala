@@ -350,7 +350,7 @@ object Common {
       case OCDB_TYPE_JAPANESE_VARYING => createCobolDataJapaneseVarying(sv, addr, index, resultData)
     }
   }
-
+  
   //[TODO] improve the algorithm
   private def createCobolDataUnsignedNumber(sv: SQLVar, addr: CobolDataStorage, index: Int, str: scala.Array[Byte]): Unit = {
     val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
