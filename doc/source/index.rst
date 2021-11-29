@@ -10,6 +10,16 @@ Open-COBOL-ESQL-4j (v0.1.2) Manual
    :maxdepth: 2
    :caption: Contents:
 
+   /test/test1
+   /test/test2
+
+.. toctree::
+   :maxdepth: 2
+   :caption: test3:
+   :numbered:
+
+   /test/test3
+
 
 
 Indices and tables
