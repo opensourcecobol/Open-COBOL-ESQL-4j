@@ -1,0 +1,5 @@
+AT_INIT(SQLCA test)
+
+AT_TESTED([ocesql])
+
+m4_include([connect-disconnect.at])
