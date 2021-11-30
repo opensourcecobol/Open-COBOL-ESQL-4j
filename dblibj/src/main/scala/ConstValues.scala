@@ -142,4 +142,6 @@ object ConstValues {
   case class OCDB_READ_NEXT() extends ReadDirection
   case class OCDB_READ_PREVIOUS() extends ReadDirection
   case class OCDB_READ_CURRENT() extends ReadDirection
+
+  val DATA_SIZE_OF_SQL_COMMAND_LEN = 9
 }

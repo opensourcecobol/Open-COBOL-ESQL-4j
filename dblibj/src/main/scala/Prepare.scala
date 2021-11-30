@@ -1,4 +1,5 @@
 import Operation._
+import ConstValues.DATA_SIZE_OF_SQL_COMMAND_LEN
 import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
 
 class Prepare {
@@ -23,7 +24,7 @@ object Prepare {
 
   def parsePrepareQuery(stringDataStorage: CobolDataStorage, lengthDataStorage: CobolDataStorage): String = {
     var length: Int = 0
-    for(i <- 0 until 4) {
+    for(i <- 0 until DATA_SIZE_OF_SQL_COMMAND_LEN) {
       length = length * 10 + lengthDataStorage.getByte(i) - '0'.toByte
     }
 
