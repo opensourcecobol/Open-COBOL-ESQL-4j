@@ -13,16 +13,47 @@ class SqlCA (
               val errp: Array[Byte], //LEN = 8
               val errd: Array[Int], //LEN = 6
               val warn: Array[Byte], //LEN = 8
-              val state: Array[Byte]) {
+              val state: Array[Byte] // LEN = SQLSTATE_LEN
+            ) {
   def set(storage: CobolDataStorage): Unit = {
     var i = 0
-    storage.set(caid)
+    for (j <- 0 until 8) {
+      storage.setByte(i + j, caid(j))
+    }
     i += 8
+
     storage.getSubDataStorage(i).set(abc)
     i += 4
+
     storage.getSubDataStorage(i).set(code)
     i += 4
+
     storage.getSubDataStorage(i).set(errml)
+    i += 2
+
+    for (j <- 0 until SQLERRMC_LEN) {
+      storage.setByte(i + j, errmc(j))
+    }
+    i += SQLERRMC_LEN
+
+    for (j <- 0 until 8) {
+      storage.setByte(i + j, errp(j))
+    }
+    i += 8
+
+    for (j <- 0 until 6) {
+      storage.getSubDataStorage(i + 4 * j).set(errd(j))
+    }
+    i += 4 * 6
+
+    for (j <- 0 until 8) {
+      storage.setByte(i + j, warn(j))
+    }
+    i += 8
+
+    for(j <- 0 until 5) {
+      storage.setByte(i + j, state(j))
+    }
   }
 
   def setCaid(caid: Array[Byte]): SqlCA = new SqlCA(caid, abc, code, errml, errmc, errp, errd, warn, state)

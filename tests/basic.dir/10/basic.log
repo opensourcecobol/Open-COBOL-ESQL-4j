@@ -1,8 +1,0 @@
-#                             -*- compilation -*-
-10. prepare-execute.at:1: testing prepare and execute statement test ...
-/prepare-execute.at:193: ocesql prog.cbl prog.cob > /dev/null
-/prepare-execute.at:194: ${EMBED_DB_INFO} prog.cob
-/prepare-execute.at:195: ${COMPILE_MODULE} prog.cob
-/prepare-execute.at:196: ${RUN_MODULE} prog
-Binary files - and /root/test/basic.dir/at-groups/10/stdout differ
-10. prepare-execute.at:1: 10. prepare and execute statement test (prepare-execute.at:1): FAILED (prepare-execute.at:196)

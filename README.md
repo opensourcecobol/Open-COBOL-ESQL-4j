@@ -20,7 +20,8 @@ Open COBOL ESQL 4j (OCESQL 4j) consits of open-source Embedded SQL pre-compiler 
 Run the following commands.
 
 ```sh
-./configure
+autoreconf --force --install
+./configure --prefix=/usr/
 make
 make install
 ```
@@ -50,10 +51,6 @@ See test cases or sample programs.
 
 # TODO
 
-- [ ] Implement Prepared Statement.
-- [ ] Support other COBOL data types (COMP5, Japanese, ... etc).
-- [ ] Add test cases.
-  - [ ] tests for SQL CA(communication area).
-  - [ ] tests for SQL data types.
+- [ ] Support other COBOL data types (COMP3, SIGN LEADING, ... etc).
 - [ ] Set up test environments using Github Actions.
 - [ ] Create docker images.

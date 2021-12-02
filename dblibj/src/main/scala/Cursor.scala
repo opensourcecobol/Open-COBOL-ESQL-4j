@@ -3,6 +3,7 @@ import Common._
 import ConstValues._
 import scala.collection.immutable.Queue
 import java.sql.Connection
+import Prepare._
 
 class Cursor(
             val connId : Int,
@@ -157,7 +158,7 @@ object Cursor {
         setLibErrorStatus(OCDB_EMPTY()).flatMap(_ => operationPure(()))
       } else {
         for {
-          _ <- getPrepareFromMap(sname_).flatMap(_ match {
+          _ <- getPrepareFromMap(Some(sname_)).flatMap(_ match {
             case None => for {
                 _ <- errorLogLn(s"prepare ${sname_} not registered.")
                 _ <- setLibErrorStatus(OCDB_INVALID_STMT())
@@ -176,26 +177,77 @@ object Cursor {
     } yield ()
   }
 
-  def getPrepareFromMap(sname: String): Operation[Option[QueryInfo]] = for {
-    state <- getState
-    queryInfoMap <- operationPure(state.globalState.queryInfoMap)
-    retValue <- queryInfoMap.get(sname) match {
-      case None => for {
-        _ <- errorLogLn(s"prepare name '${sname}' is not found in prepare list.")
-        _ <- showQueryInfoMap()
-      } yield None
-      case Some(queryInfo) => for {
-        _ <- logLn(s"#return:${queryInfo.pName}#")
-      } yield Some(queryInfo)
-    }
-  } yield retValue
+  def getPrepareFromMap(sname: Option[String]): Operation[Option[QueryInfo]] = sname match {
+    case None => operationPure(None)
+    case Some(key) => for {
+      state <- getState
+      retValue <- state.globalState.queryInfoMap.get(key) match {
+        case None => for {
+          _ <- errorLogLn(s"prepare name '${sname}' is not found in prepare list.")
+          _ <- showQueryInfoMap()
+        } yield None
+        case Some(queryInfo) => for {
+          _ <- logLn(s"#return:${queryInfo.pName}#")
+        } yield Some(queryInfo)
+      }
+    } yield retValue
+  }
 
   // TODO implement
   private def showQueryInfoMap(): Operation[Unit] = operationPure(())
 
-  def ocesqlExecPrepare(id: Int, sname: Option[String], nParams: Int): Operation[Unit] ={
-    // TODO implement
-    operationPure(())
+  def ocesqlExecPrepare(id: Int, sname: Option[String], nParams: Int): Operation[Int] = {
+    val errorProc = (prepare: QueryInfo) => for {
+      _ <- errorLogLn(s"A number of parameters(${nParams}) and prepared sql parameters(${prepare.nParams} is unmatch.)")
+      _ <- setLibErrorStatus(OCDB_EMPTY())
+      _ <- updateState(state => {
+        val sqlCA = state.sqlCA
+        val errorMessageBytes = "A number of paramteters and prepared sql parameters is unmatch".getBytes()
+        val newSqlCA = sqlCA
+          .setErrmc(errorMessageBytes)
+          .setErrml(errorMessageBytes.length.toShort)
+        state.setSqlCA(newSqlCA)
+      })
+    } yield 1
+
+    val endProc = (query: String) => for {
+      result <- setResultStatus(id)
+      ret <- if(result) {
+        if(query == "COMMIT" || query == "ROLLBACK") {
+          for {
+            _ <- clearCursorMap(id)
+            _ <- OCDBExec(id, "BEGIN")
+          } yield 0
+        } else {
+          operationPure(0)
+        }
+      } else {
+        operationPure(1)
+      }
+    } yield ret
+
+    for {
+      prepareFromMap <- getPrepareFromMap(sname)
+      retValue <- prepareFromMap match {
+        case Some(prepare) if prepare.query.length != 0 => if(nParams > 0) {
+          if(prepare.nParams != nParams) {
+            errorProc(prepare)
+          } else {
+            for {
+              state <- getState
+              _ <- OCDBExecParams(id, prepare.query, state.globalState.sqlVarQueue)
+              ret <- endProc(prepare.query)
+            } yield ret
+          }
+        } else {
+          for {
+            _ <- OCDBExec(id, prepare.query)
+            ret <- endProc(prepare.query)
+          } yield ret
+        }
+        case _ => operationPure(1)
+      }
+    } yield retValue
   }
 
   def OCDBCursorDeclare(id: Int, cname: String, query: String, withHold: Boolean): Operation[Unit] =

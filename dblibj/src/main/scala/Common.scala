@@ -6,6 +6,7 @@ import java.sql._
 import ConnectionInfo.ConnectionMap
 import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
 
+import java.nio.ByteBuffer
 import scala.collection.immutable.Queue
 
 object Common {
@@ -204,43 +205,27 @@ object Common {
   def setLibErrorStatus(errorCode: SqlCode): Operation[Int] =
     OCDB_PGSetLibErrorStatus(errorCode)
 
-  def setResultStatus(id: Int): Operation[Boolean] = (for {
-    keyAndValue <- operationCPure(lookUpConnList(id))
-
-    _ <- whenExecuteAndExit(keyAndValue.isEmpty, operationPure(false))
-
-    kv <- operationCPure(operationPure(keyAndValue.getOrElse(("", ConnectionInfo.defaultValue))))
-    key <- operationCPure(operationPure(kv._1))
-    pConn <- operationCPure(operationPure(kv._2))
-
-    //[remark] temporary implementation
-    //_ <- whenExecuteAndExit(pConn.result == OCDB_RES_DEFAULT_ADDRESS && pConn.result <= RESULT_FLAGBASE,
-    _ <- whenExecuteAndExit(pConn.result.isLeft,
-      operationPure(false))
-
-    //[remark] temporary implementation
-    /*returnValue <- if(pConn.result == RESULT_FLAG1_PGSQL_DUMMYOPEN) {
-        operationCPure[Int, Int](operationPure(RESULT_SUCCESS))
-      } else {
-        operationCPure[Int, Int](OCDB_PGSetResultStatus(pConn.result))
-      }*/
-    returnValue <- operationCPure(OCDB_PGSetResultStatus(pConn.result))
-  } yield returnValue).eval
+  def setResultStatus(id: Int): Operation[Boolean] =
+    lookUpConnList(id).flatMap(_ match {
+      case None => operationPure(false)
+      case Some((_, pConn)) => OCDB_PGSetResultStatus(pConn.result)
+    })
 
   /**
-   * [remark] temporary implementation
-   * Equivalent to OCDB_PGSetResultStatus in dblib/ocpgsql.c
+   * Implementation of OCDB_PGSetResultStatus in dblib/ocpgsql.c (Open-COBOL-ESQL)
+   * Regardless of the pretious SQL execution, sqlErrorCode is zero.
+   * If the pretious SQL execution fails, sqlState equals to PSQLState.
+   * (https://github.com/pgjdbc/pgjdbc/blob/8be516d47ece60b7aeba5a9474b5cac1d538a04a/pgjdbc/src/main/java/org/postgresql/util/PSQLState.java)
    * @param connAddr
-   * @return
+   * @return true if and only if the previous SQL execution is successful.
    */
   def OCDB_PGSetResultStatus(result: ExecResult): Operation[Boolean] = {
     val (sqlCode, sqlState) = result match {
       case Right(_) => (OCPG_NO_ERROR, "00000")
-      case Left(e) => (e.getErrorCode, e.getSQLState)
+      case Left(e) => (e.getErrorCode, Option(e.getSQLState).getOrElse("00000"))
     }
     for {
-      state <- getState
-      _ <- setState({
+      _ <- updateState(state => {
         val sqlCA = state.sqlCA
         val newSqlCA = sqlCA.setCode(sqlCode).setState(sqlState.getBytes)
         state.setSqlCA(newSqlCA)
@@ -365,22 +350,42 @@ object Common {
       case OCDB_TYPE_JAPANESE_VARYING => createCobolDataJapaneseVarying(sv, addr, index, resultData)
     }
   }
-
-  private def createCobolDataUnsignedNumber(sv: SQLVar, addr: CobolDataStorage, index: Int, data: scala.Array[Byte]): Unit = {
+  
+  //[TODO] improve the algorithm
+  private def createCobolDataUnsignedNumber(sv: SQLVar, addr: CobolDataStorage, index: Int, str: scala.Array[Byte]): Unit = {
     val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
-    val isNegative = data(0) == '-'.toByte
+    val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if(isNegative) {1} else {0}
-
     val indexOfDecimalPoint = {
-      val index = data.indexOf('.')
-      if(index < 0) { data.length } else { index }
+      val index = str.indexOf('.')
+      if(index < 0) { str.length } else { index }
     }
+
     for(i <- 0 until finalBuf.length) {
       finalBuf(i) = '0'.toByte
     }
-    for(i <- valueFirstIndex until indexOfDecimalPoint) {
-      finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = data(i)
+
+    if(sv.power >= 0) {
+      for(i <- valueFirstIndex until indexOfDecimalPoint) {
+        finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = str(i)
+      }
+    } else {
+      var i = sv.length + sv.power - 1
+      var j = indexOfDecimalPoint - 1
+      while(i >= 0 && j >= valueFirstIndex) {
+        finalBuf(i) = str(j)
+        i -= 1
+        j -= 1
+      }
+      i = sv.length + sv.power
+      j = indexOfDecimalPoint + 1
+      while(i < sv.length && j < str.length) {
+        finalBuf(i) = str(j)
+        i += 1
+        j += 1
+      }
     }
+
     for(i <- 0 until finalBuf.length) {
       addr.setByte(i, finalBuf(i))
     }
@@ -390,17 +395,36 @@ object Common {
     val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
     val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if(isNegative) {1} else {0}
-
     val indexOfDecimalPoint = {
       val index = str.indexOf('.')
       if(index < 0) { str.length } else { index }
     }
+
     for(i <- 0 until finalBuf.length) {
       finalBuf(i) = '0'.toByte
     }
-    for(i <- valueFirstIndex until indexOfDecimalPoint) {
-      finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = str(i)
+
+    if(sv.power >= 0) {
+      for(i <- valueFirstIndex until indexOfDecimalPoint) {
+        finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = str(i)
+      }
+    } else {
+      var i = sv.length + sv.power - 1
+      var j = indexOfDecimalPoint - 1
+      while(i >= 0 && j >= valueFirstIndex) {
+        finalBuf(i) = str(j)
+        i -= 1
+        j -= 1
+      }
+      i = sv.length + sv.power
+      j = indexOfDecimalPoint + 1
+      while(i < sv.length && j < str.length) {
+        finalBuf(i) = str(j)
+        i += 1
+        j += 1
+      }
     }
+
     if(isNegative) {
       val finalByte = finalBuf(finalBuf.length - 1)
       finalBuf(finalBuf.length - 1) = (finalByte + 0x40).toByte
@@ -411,7 +435,43 @@ object Common {
   }
 
   private def createCobolDataSignedNumberLs(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
-    //TODO Implement
+    val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
+    val isNegative = str(0) == '-'.toByte
+    val valueFirstIndex = if(isNegative) {1} else {0}
+    val indexOfDecimalPoint = {
+      val index = str.indexOf('.')
+      if(index < 0) { str.length } else { index }
+    }
+
+    for(i <- 0 until finalBuf.length) {
+      finalBuf(i) = '0'.toByte
+    }
+
+    if(sv.power >= 0) {
+      for(i <- valueFirstIndex until indexOfDecimalPoint) {
+        finalBuf(i + finalBuf.length - (indexOfDecimalPoint + sv.power)) = str(i)
+      }
+    } else {
+      var i = sv.length + sv.power
+      var j = indexOfDecimalPoint - 1
+      while(i >= 1 && j >= valueFirstIndex) {
+        finalBuf(i) = str(j)
+        i -= 1
+        j -= 1
+      }
+      i = sv.length + sv.power + 1
+      j = indexOfDecimalPoint + 1
+      while(i < sv.length && j < str.length) {
+        finalBuf(i) = str(j)
+        i += 1
+        j += 1
+      }
+    }
+
+    finalBuf(0) = (if(isNegative) {'-'} else {'+'}).toByte
+    for(i <- 0 until finalBuf.length) {
+      addr.setByte(i, finalBuf(i))
+    }
   }
 
   private def createCobolDataUnsignedNumberPd(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
@@ -419,7 +479,14 @@ object Common {
   }
 
   private def createCobolDataSignedNumberPd(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
-    //TODO Implement
+    println("createCobolDataSignedNumberPd 1")
+    val n = Integer.parseInt(new String(str))
+    println(s"n: ${n}")
+    val bytes = new scala.Array[Byte](4)
+    ByteBuffer.wrap(bytes).putInt(n)
+    for(i <- 0 until 4) {
+      addr.setByte(i, bytes(i))
+    }
   }
 
   private def createCobolDataAlphanumeric(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
@@ -432,7 +499,12 @@ object Common {
   }
 
   private def createCobolDataJapanese(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
-    //TODO Implement
+    if(str.length >= sv.length * 2) {
+      addr.memcpy(str, sv.length * 2)
+    } else {
+      addr.memset(' '.toByte, sv.length * 2)
+      addr.memcpy(str, str.length)
+    }
   }
 
   private def createCobolDataAlphanumericVarying(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {

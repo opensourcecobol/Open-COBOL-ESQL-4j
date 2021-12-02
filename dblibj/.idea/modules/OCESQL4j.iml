@@ -24,6 +24,7 @@
       <library name="sbt: unmanaged-jars">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../lib/libcobj.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/postgresql-42.2.24.jre6.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

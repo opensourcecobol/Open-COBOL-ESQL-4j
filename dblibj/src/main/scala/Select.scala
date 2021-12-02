@@ -208,8 +208,8 @@ object Select {
                   bytes <- Option(rowId.toString().getBytes)
                 } yield bytes
                 case java.sql.Types.TIME => for {
-                  date <- Option(rs.getTime(i))
-                  bytes <- Option(dateFormatter.format(date).getBytes())
+                  time <- Option(rs.getTime(i))
+                  bytes <- Option(time.toString().getBytes())
                 } yield bytes
                 case _ => stringConverter
               }

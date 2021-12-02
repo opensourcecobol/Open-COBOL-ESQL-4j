@@ -1,7 +1,6 @@
 import ConstValues._
 import Operation._
 import Common._
-import cats.syntax.flatMap
 
 import java.sql._
 
@@ -67,12 +66,12 @@ object OCESQLConnectCore {
       _ <- logLnC(s"publish connect Id: ${connectId}")
 
       _ <- whenExecuteAndExit(connectId == OCDB_CONN_FAIL_CONNECT, for {
-        _ <- setLibErrorStatus(OCDB_NO_ERROR())
+        _ <- setLibErrorStatus(OCDB_CONNECT())
         _ <- errorLogLn(s"connection failed. connect param is :${connStr}")
       } yield 1)
 
       _ <- whenExecuteAndExit(connectId == INVALID_CONN_ID, for {
-        _ <- setLibErrorStatus(OCDB_NO_ERROR())
+        _ <- setLibErrorStatus(OCDB_CONNECT())
         _ <- errorLogLn(s"connection failed. connect param is :${connStr}")
       } yield 1)
 

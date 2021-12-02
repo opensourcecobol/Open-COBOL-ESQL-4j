@@ -2,13 +2,12 @@ import cats.data.ContT
 import cats.free.Free
 import cats.free.Free.liftF
 import cats.{Id, ~>}
-import ConnectionInfo._
 import cats.data.StateT
 
-import java.io._
 import java.sql._
 import java.util.Properties
 import scala.collection.immutable.Queue
+import org.postgresql.util.PSQLException
 
 sealed trait ExecSuccessResult
 case class EResultSet(resultSet: ResultSet) extends ExecSuccessResult
@@ -112,32 +111,33 @@ object Operation {
             }
           }
           case Exec(addr, query) => {
-            val stmt = addr.createStatement()
             try {
+              val stmt = addr.createStatement()
               if(stmt.execute(query)) {
                 Right(EResultSet(stmt.getResultSet()))
               } else {
                 Right(EUpdateCount(stmt.getUpdateCount()))
               }
             } catch {
+              case e: PSQLException => Left(e)
               case e: SQLException => Left(e)
               case e: Throwable => Left(new SQLException())
             }
           }
           case ExecParam(addr, query, params) => {
-            val newQuery = query.replaceAll("\\$[0-9]+", "?")
-            val stmt = addr.prepareStatement(newQuery)
-            for ((param, i) <- params.zipWithIndex) {
-              param.setParam(stmt, i + 1)
-            }
             try {
+              val stmt = addr.prepareStatement(query)
+              for ((param, i) <- params.zipWithIndex) {
+                param.setParam(stmt, i + 1)
+              }
               if(stmt.execute()) {
                 Right(EResultSet(stmt.getResultSet()))
               } else {
                 Right(EUpdateCount(stmt.getUpdateCount()))
               }
             } catch {
-              case e: SQLException => {e.printStackTrace(); Left(e)}
+              case e: PSQLException => Left(e)
+              case e: SQLException => Left(e)
               case e: Throwable => Left(new SQLException())
             }
           }

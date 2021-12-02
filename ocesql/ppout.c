@@ -1081,7 +1081,8 @@ void ppoutputprepare(struct cb_exec_list *list){
 	memset(buff, 0, sizeof(buff));
 	com_sprintf(buff,sizeof(buff), "OCESQL%10sBY REFERENCE %s\n"," ",child->sister->sname);
 	fputs(buff, outfile);
-	com_sprintf(buff,sizeof(buff), "OCESQL%10sBY VALUE %s\n"," ",child->sname);
+	//com_sprintf(buff,sizeof(buff), "OCESQL%10sBY VALUE %s\n"," ",child->sname);
+	com_sprintf(buff,sizeof(buff), "OCESQL%10sBY REFERENCE %s\n"," ",child->sname);
 	fputs(buff, outfile);
 
 	ppoutputendcall(list);

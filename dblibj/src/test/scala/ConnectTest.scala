@@ -1,25 +1,10 @@
 import org.scalatest.FunSuite
-import CompilerForTest._
-import Operation._
+import Prepare._
 
 class ConnectTest extends FunSuite {
   test("Connect Default") {
-    val program: Operation[Int] = OCESQLConnectCore.connect(None, None, None, None)
-    val envValues: Map[String, String] = Map.empty
-    val testEnv = new TestEnv(Seq(), envValues)
-    val (newState, result) = program.run(emptyOCBDState).foldMap(CompilerForTest.getCompiler).run(testEnv).value
-    println(newState.log)
-    val expectedLog: Seq[String] = Seq(
-      ln("log: param OCDB_DB_NAME is not set. set default value. "),
-      ln("log: param OCDB_DB_USER is not set. set default value. "),
-      ln("log: param OCDB_DB_PASS is not set. set default value. "),
-      ln("log: param OCDB_DB_CHAR is not set. set default value. "),
-      ln("log: dbname   = "),
-      ln("log: user     = "),
-      ln("log: password = "),
-      ln("log: connname = OCDB_DEFAULT_DBNAME"),
-    )
-    //assert(newState.log == expectedLog)
+    assert(getStrReplaceHostValue("SQL :hello, :world_") == (2, "SQL ?, ?"))
+    assert(getStrReplaceHostValue("SQL :hello, :world_ :WORLD-WORLD") == (3, "SQL ?, ? ?"))
   }
 
   def ln(s: String): String = s + System.lineSeparator()

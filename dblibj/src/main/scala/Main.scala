@@ -8,6 +8,7 @@ import ConstValues._
 import SQLVar._
 import Select._
 import Cursor._
+import Prepare._
 
 trait CobolRunnableWrapper extends CobolRunnable {
   override def cancel(): Unit = {}
@@ -133,22 +134,16 @@ class OCESQLIDConnectInformal extends CobolRunnableWrapper {
   }
 }
 
-// TODO
-// unimplemented
 class OCESQLPrepare extends CobolRunnableWrapper {
   override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
-    val sname = getCString(args(1))
-    val query = getCString(args(2))
-    val queryLen = storageToInt(args(3))
+    val sname = getCString(args(1)).getOrElse("")
+    val query = parsePrepareQuery(args(2), args(3))
 
-    //val (nParams, pQuery) = getStrReplaceHostValue(query)
-    val nParams = 0
-    val pQuery = query
+    val nParams = "\\?".r.findAllIn(query).length
 
     for {
-      _ <- logLn(s"Add prepare sname:${sname}, nParams:${nParams}, query:'${pQuery}'")
-      /*result <- addPrepareList(sname, pQuery, nParams)
-      _ <- when(result, setLibErrorStatus(OCDB_OUT_OF_MEMORY()))*/
+      _ <- logLn(s"Add prepare sname:${sname}, nParams:${nParams}, query:'${query}'")
+      _ <- addQueryInfoMap(sname, query, nParams)
     } yield 0
   }
 }
