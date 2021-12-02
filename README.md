@@ -20,6 +20,7 @@ Open COBOL ESQL 4j (OCESQL 4j) consits of open-source Embedded SQL pre-compiler 
 Run the following commands.
 
 ```sh
+autoreconf --force --install
 ./configure --prefix=/usr/
 make
 make install
