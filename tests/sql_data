@@ -894,7 +894,7 @@ Execution tuning:
 _ATEOF
 cat <<_ATEOF || at_write_fail=1
 
-Report bugs to <ws-opensource-cobol-contact@osscons.jp>.
+Report bugs to <opencobol@tsh-world.co.jp>.
 _ATEOF
   exit $at_write_fail
 fi
@@ -902,7 +902,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF || at_write_fail=1
-Open-COBOL-ESQL-1.2 test suite: sql data test test groups:
+Open COBOL ESQL 1.2 test suite: sql data test test groups:
 
  NUM: FILE-NAME:LINE     TEST-GROUP-NAME
       KEYWORDS
@@ -943,7 +943,7 @@ _ATEOF
   exit $at_write_fail
 fi
 if $at_version_p; then
-  $as_echo "$as_me (Open-COBOL-ESQL-1.2)" &&
+  $as_echo "$as_me (Open COBOL ESQL 1.2)" &&
   cat <<\_ATEOF || at_write_fail=1
 
 Copyright (C) 2012 Free Software Foundation, Inc.
@@ -1120,11 +1120,11 @@ exec 5>>"$at_suite_log"
 
 # Banners and logs.
 $as_echo "## ---------------------------------------------- ##
-## Open-COBOL-ESQL-1.2 test suite: sql data test. ##
+## Open COBOL ESQL 1.2 test suite: sql data test. ##
 ## ---------------------------------------------- ##"
 {
   $as_echo "## ---------------------------------------------- ##
-## Open-COBOL-ESQL-1.2 test suite: sql data test. ##
+## Open COBOL ESQL 1.2 test suite: sql data test. ##
 ## ---------------------------------------------- ##"
   echo
 
@@ -1549,7 +1549,7 @@ at_fn_group_postprocess ()
     sed "s/^ */$as_me: WARNING: /" <<_ATEOF
       A failure happened in a test group before any test could be
       run. This means that test suite is improperly designed.  Please
-      report this failure to <ws-opensource-cobol-contact@osscons.jp>.
+      report this failure to <opencobol@tsh-world.co.jp>.
 _ATEOF
     $as_echo "$at_setup_line" >"$at_check_line_file"
     at_status=99
@@ -1967,8 +1967,8 @@ _ASBOX
   fi
   $as_echo "Please send $at_msg and all information you think might help:
 
-   To: <ws-opensource-cobol-contact@osscons.jp>
-   Subject: [Open-COBOL-ESQL-1.2] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
+   To: <opencobol@tsh-world.co.jp>
+   Subject: [Open COBOL ESQL 1.2] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
 
 You may investigate any problem if you feel able to do so, in which
 case the test suite provides a good starting point.  Its output may

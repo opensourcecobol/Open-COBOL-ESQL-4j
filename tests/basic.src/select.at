@@ -78,12 +78,12 @@ AT_DATA([prog.cbl], [
       ******************************************************************
 
       *    SERVER
-           MOVE  "testdb@db_postgres:5432"
+           MOVE  "<|DB_NAME|>@<|DB_HOST|>:<|DB_PORT|>"
              TO DBNAME.
-           MOVE  "main_user"
+           MOVE  "<|DB_USER|>"
              TO USERNAME.
-           MOVE  "password"
-             TO PASSWD.      
+           MOVE  "<|DB_PASSWORD|>"
+             TO PASSWD.
 
            EXEC SQL
                CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME 

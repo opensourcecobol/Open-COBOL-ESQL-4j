@@ -4,4 +4,5 @@ else
   OCESQL = ocesql
 endif
 
-SUBDIRS = dblib $(OCESQL)
+#SUBDIRS = dblib $(OCESQL)
+SUBDIRS = $(OCESQL) tests

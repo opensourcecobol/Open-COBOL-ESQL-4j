@@ -96,6 +96,11 @@ enum oc_usage{
 #define INC_START_MARK  ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 #define INC__END__MARK  "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 
+
+#define PERIOD_DEFAULT 0
+#define PERIOD_FORCE_ON 1
+#define PERIOD_FORCE_OFF 2
+
 struct filename {
 	char  *source;
 	char  *translate;

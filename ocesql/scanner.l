@@ -742,7 +742,7 @@ yyinput(char *buff,int max_size)
 				includelinenum++;
 				/* ignore line */
 				com_strcpy(buff,max_size,"\n");
-	    		return strlen(buff);
+				return strlen(buff);
 			}
 			if(includeflag){
 				includelinenum++;
@@ -751,10 +751,8 @@ yyinput(char *buff,int max_size)
 				includeflag = 0;
 				/* ignore line */
 				com_strcpy(buff,max_size,"\n");
-	    		return strlen(buff);
+				return strlen(buff);
 			}
-			
-			
 		
 			bp = buff + 7;
 

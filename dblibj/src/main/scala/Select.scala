@@ -166,10 +166,18 @@ object Select {
         case Some((_, conn)) => conn.result match {
           case Right(EResultSet(rs)) => {
 
-            lazy val stringConverter = for {
-              s <- Option(rs.getString(i))
-              bytes <- Option(s.getBytes("SHIFT-JIS"))
-            } yield bytes
+            val charset = Option(System.getenv("OCESQL_4J_DB_TO_COBOL_CHARSET")) match {
+              case Some(envVal) if envVal.toLowerCase == "utf8" => "UTF8"
+              case Some(envVal) if envVal.toLowerCase == "utf-8" => "UTF8"
+              case _ => "SHIFT-JIS"
+            }
+
+            lazy val stringConverter = {
+              for {
+                s <- Option(rs.getString(i))
+                bytes <- Option(s.getBytes(charset))
+              } yield bytes
+            }
 
             lazy val decimalConverter = for {
               decimal <- Option(rs.getBigDecimal(i))

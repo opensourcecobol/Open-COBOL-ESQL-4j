@@ -1,4 +1,4 @@
-COBC=cobc
+COBC=cobj
 OCESQL=ocesql
 EMBED_DB_INFO="sh ../../embed_db_info.sh"
 COMPILE="${COBC} -I ../../"
