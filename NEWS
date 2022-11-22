@@ -1,1 +1,13 @@
-Under Construction
+NEWS - user visible changes				-*- outline -*-
+
+* Open COBOL ESQL 4J 1.0.1
+
+** New Features
+    (1) Implement host variables with COMP-3
+
+** Bug fixes
+    (1) Fix the bug of where clause
+    (2) Fix the bug of EXEC SQL INCLUDE
+    (3) Improve the SQLCA
+
+-----------------------------------------------------------------------
