@@ -1,0 +1,208 @@
+AT_SETUP([fetch-sqlca])
+AT_DATA([prog.cbl], [
+       IDENTIFICATION              DIVISION.
+      ******************************************************************
+       PROGRAM-ID.                 prog.
+      ******************************************************************
+       DATA                        DIVISION.
+      ******************************************************************
+       WORKING-STORAGE             SECTION.
+
+       EXEC SQL BEGIN DECLARE SECTION END-EXEC.
+       01 TBL.
+         02 TBL-REC OCCURS 30.
+          03 N PIC 9(3).
+          03 NAME PIC X(20).
+       01 indicator-name pic s9(4).
+       01 DBNAME                  PIC  X(30) VALUE SPACE.
+       01 USERNAME                PIC  X(30) VALUE SPACE.
+       01 PASSWD                  PIC  X(10) VALUE SPACE.
+       EXEC SQL END DECLARE SECTION END-EXEC.
+
+       01 COUNTER PIC 9(7) VALUE ZERO.
+       01 LOOP-MAX PIC 9(7) VALUE 30.
+
+       EXEC SQL INCLUDE SQLCA END-EXEC.
+      ******************************************************************
+       PROCEDURE                   DIVISION.
+      ******************************************************************
+       MAIN-RTN.
+
+       PERFORM SETUP-DB.
+
+      * Invalid Fetch ************************************************
+       EXEC SQL
+         DECLARE C1 CURSOR FOR SELECT
+           N, NAME FROM sqlca_test_table
+       END-EXEC.
+
+       EXEC SQL
+         OPEN C1
+       END-EXEC.
+
+       EXEC SQL
+         FETCH C1 INTO :TBL-REC
+       END-EXEC.
+
+       display "SQLERRD(3)=" SQLERRD(3).
+       display "SQLECODE  =" SQLCODE.
+
+       PERFORM VARYING COUNTER FROM 1 BY 1 UNTIL COUNTER > LOOP-MAX
+         display COUNTER ": N=" N(COUNTER) ", NAME=" NAME(COUNTER) "|"
+       END-PERFORM.
+
+       EXEC SQL
+         CLOSE C1
+       END-EXEC.
+
+      * Error Fetch **************************************************
+       EXEC SQL
+         DECLARE C2 CURSOR FOR SELECT
+           N, NAME FROM error_table________________
+       END-EXEC.
+
+       EXEC SQL
+         OPEN C2
+       END-EXEC.
+
+       EXEC SQL
+         FETCH C2 INTO :TBL-REC
+       END-EXEC.
+
+       display "SQLERRD(3)=" SQLERRD(3).
+       display "SQLECODE  =" SQLCODE.
+
+       EXEC SQL
+         CLOSE C2
+       END-EXEC.
+
+      * fetch empty table ********************************************
+
+      * DELETE all data in sql_test_table
+       EXEC SQL
+         DELETE FROM sqlca_test_table
+       END-EXEC.
+
+       EXEC SQL
+         COMMIT WORK
+       END-EXEC.
+
+      * fetch data
+       EXEC SQL
+         DECLARE C3 CURSOR FOR SELECT
+           N, NAME FROM sqlca_test_table
+       END-EXEC.
+
+       EXEC SQL
+         OPEN C3
+       END-EXEC.
+
+       EXEC SQL
+         FETCH C3 INTO :TBL-REC
+       END-EXEC.
+
+       display "SQLERRD(3)=" SQLERRD(3).
+       display "SQLECODE  =" SQLCODE.
+
+       EXEC SQL
+         CLOSE C3
+       END-EXEC.
+
+       PERFORM CLEANUP-DB.
+
+      *    END
+           STOP RUN.
+
+      ******************************************************************
+       SETUP-DB.
+      ******************************************************************
+
+      *    SERVER
+           MOVE  "<|DB_NAME|>@<|DB_HOST|>:<|DB_PORT|>"
+             TO DBNAME.
+           MOVE  "<|DB_USER|>"
+             TO USERNAME.
+           MOVE  "<|DB_PASSWORD|>"
+             TO PASSWD.
+
+           EXEC SQL
+               CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME 
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS sqlca_test_table
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE sqlca_test_table
+                (
+                    N integer,
+                    NAME CHAR(20)
+                )
+           END-EXEC.
+
+           PERFORM VARYING COUNTER FROM 1 BY 1 UNTIL COUNTER > LOOP-MAX
+             EXEC SQL
+                 INSERT INTO sqlca_test_table
+                   (N, NAME)
+                   VALUES (:COUNTER, 'hello')
+             END-EXEC
+           END-PERFORM.
+
+           COMMIT
+           EXEC SQL
+               COMMIT WORK
+           END-EXEC.
+
+      ******************************************************************
+       CLEANUP-DB.
+      ******************************************************************
+
+           EXEC SQL
+               DISCONNECT ALL
+           END-EXEC.
+])
+
+AT_CHECK([ocesql prog.cbl prog.cob | tee out.txt > /dev/null])
+AT_CHECK([${EMBED_DB_INFO} prog.cob])
+AT_CHECK([${COMPILE_MODULE} prog.cob])
+AT_CHECK([${RUN_MODULE} prog], [0],
+[SQLERRD(3)=+000000030
+SQLECODE  =+000000000
+0000001: N=001, NAME=hello               |
+0000002: N=002, NAME=hello               |
+0000003: N=003, NAME=hello               |
+0000004: N=004, NAME=hello               |
+0000005: N=005, NAME=hello               |
+0000006: N=006, NAME=hello               |
+0000007: N=007, NAME=hello               |
+0000008: N=008, NAME=hello               |
+0000009: N=009, NAME=hello               |
+0000010: N=010, NAME=hello               |
+0000011: N=011, NAME=hello               |
+0000012: N=012, NAME=hello               |
+0000013: N=013, NAME=hello               |
+0000014: N=014, NAME=hello               |
+0000015: N=015, NAME=hello               |
+0000016: N=016, NAME=hello               |
+0000017: N=017, NAME=hello               |
+0000018: N=018, NAME=hello               |
+0000019: N=019, NAME=hello               |
+0000020: N=020, NAME=hello               |
+0000021: N=021, NAME=hello               |
+0000022: N=022, NAME=hello               |
+0000023: N=023, NAME=hello               |
+0000024: N=024, NAME=hello               |
+0000025: N=025, NAME=hello               |
+0000026: N=026, NAME=hello               |
+0000027: N=027, NAME=hello               |
+0000028: N=028, NAME=hello               |
+0000029: N=029, NAME=hello               |
+0000030: N=030, NAME=hello               |
+SQLERRD(3)=+000000000
+SQLECODE  =-000000212
+SQLERRD(3)=+000000000
+SQLECODE  =+000000000
+])
+
+AT_CLEANUP

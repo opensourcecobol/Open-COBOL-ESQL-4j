@@ -8,6 +8,7 @@ import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
 
 import java.nio.ByteBuffer
 import scala.collection.immutable.Queue
+import scala.runtime.Statics
 
 object Common {
   var internalState: GlobalState = GlobalState.initialGlobalState
@@ -221,13 +222,49 @@ object Common {
    */
   def OCDB_PGSetResultStatus(result: ExecResult): Operation[Boolean] = {
     val (sqlCode, sqlState) = result match {
-      case Right(_) => (OCPG_NO_ERROR, "00000")
-      case Left(e) => (e.getErrorCode, Option(e.getSQLState).getOrElse("00000"))
+      case Right(_) => {
+        (OCPG_NO_ERROR, "00000")
+      }
+      case Left(e) => {
+        val state = Option(e.getSQLState).getOrElse("     ")
+        (sqlStateToSqlCode(state), state)
+      }
     }
+
+    val errMsgInfo = result match {
+      case Left(e) => Option(e.getMessage) match {
+        case Some(msg) => {
+          val bytes = msg.getBytes
+          Some((bytes, bytes.length))
+        }
+        case _ => None
+      }
+      case _ => None
+    }
+
     for {
+      // Output Log
+      _ <- errMsgInfo match {
+        case Some((msg, _)) => for {
+          _ <- logLn(s"MESSAGE:${msg}")
+          _ <- errorLogLn(String.format(
+            "%d:%5s:%-70s",
+            sqlCode, sqlState, msg))
+        } yield ()
+        case _ => operationPure()
+      }
+
+      // Update SQLCA
       _ <- updateState(state => {
         val sqlCA = state.sqlCA
-        val newSqlCA = sqlCA.setCode(sqlCode).setState(sqlState.getBytes)
+        val tmpSqlCA = sqlCA.setCode(sqlCode).setState(sqlState.getBytes)
+        val newSqlCA = errMsgInfo match {
+          case Some((msg, len)) =>
+            tmpSqlCA
+              .setErrmc(msg)
+              .setErrml(len.toShort)
+          case _ => tmpSqlCA
+        }
         state.setSqlCA(newSqlCA)
       })
     } yield result.isRight
@@ -333,11 +370,15 @@ object Common {
 
   //inpure function
   def createCobolData(sv: SQLVar, index: Int, resultData: scala.Array[Byte], occursInfo: OccursInfo): Unit = {
-    val addr = if(occursInfo.isPresent) {
-      sv.addr.getOrElse(nullDataStorage).getSubDataStorage(index * occursInfo.length)
-    } else {
-      sv.addr.getOrElse(nullDataStorage).getSubDataStorage(index * sv.length)
+    val realLength = {
+      val len = if(occursInfo.isPresent) {occursInfo.length} else {sv.length}
+      sv.sqlVarType match {
+        case OCDB_TYPE_UNSIGNED_NUMBER_PD | OCDB_TYPE_SIGNED_NUMBER_PD =>
+          (len / 2).toInt + 1
+        case _ => len
+      }
     }
+    val addr = sv.addr.getOrElse(nullDataStorage).getSubDataStorage(index * realLength)
     sv.sqlVarType match {
       case OCDB_TYPE_UNSIGNED_NUMBER => createCobolDataUnsignedNumber(sv, addr, index, resultData)
       case OCDB_TYPE_SIGNED_NUMBER_TC => createCobolDataSignedNumberTc(sv, addr, index, resultData)
@@ -474,18 +515,80 @@ object Common {
     }
   }
 
+  private def getPackedIndexAndByte(dataLen: Int, index: Int, digit: Byte): (Int, Byte) = {
+    val d = (digit - '0').toByte
+    if(dataLen % 2 == 0) {
+      if(index % 2 == 0) {
+        (((index + 1) / 2).toInt, d)
+      } else {
+        (((index + 1) / 2).toInt, (d << 4).toByte)
+      }
+    } else {
+      if(index % 2 == 0) {
+        (index / 2, (d << 4).toByte)
+      } else {
+        (index / 2, d)
+      }
+    }
+  }
   private def createCobolDataUnsignedNumberPd(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
-    //TODO Implement
+    val strStartIndex = if (str(0) == '+'.toByte || str(0) == '-'.toByte) {1} else {0}
+    val strPointIndex = {
+      val index = str.indexWhere(_ == '.'.toByte)
+      if(index < 0) {str.length} else {index}
+    }
+    val dataPointIndex = sv.length + sv.power
+    val realDataLength = (sv.length / 2).toInt + 1
+
+    addr.memset(0, realDataLength)
+    addr.setByte(realDataLength - 1, 0x0F.toByte)
+
+    for(i <- 0 to sv.length - 1) {
+      var strIndex = {
+        val index = i - dataPointIndex + strPointIndex
+        if(index >= strPointIndex) {index + 1} else {index}
+      }
+      val digit = if(strIndex >= strStartIndex && strIndex < str.length) {
+        str(strIndex)
+      } else {
+        '0'.toByte
+      }
+      val (index, byteValue) = getPackedIndexAndByte(sv.length, i, digit)
+      val b = addr.getByte(index)
+      addr.setByte(index, (b | byteValue).toByte)
+    }
   }
 
   private def createCobolDataSignedNumberPd(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
-    println("createCobolDataSignedNumberPd 1")
-    val n = Integer.parseInt(new String(str))
-    println(s"n: ${n}")
-    val bytes = new scala.Array[Byte](4)
-    ByteBuffer.wrap(bytes).putInt(n)
-    for(i <- 0 until 4) {
-      addr.setByte(i, bytes(i))
+    val strStartIndex = if (str(0) == '+'.toByte || str(0) == '-'.toByte) {1} else {0}
+    val sign = if (str(0) == '-'.toByte) {-1} else {1}
+    val strPointIndex = {
+      val index = str.indexWhere(_ == '.'.toByte)
+      if(index < 0) {str.length} else {index}
+    }
+    val dataPointIndex = sv.length + sv.power
+    val realDataLength = (sv.length / 2).toInt + 1
+
+    addr.memset(0, realDataLength)
+    if(sign > 0) {
+      addr.setByte(realDataLength - 1, 0x0c.toByte)
+    } else {
+      addr.setByte(realDataLength - 1, 0x0d.toByte)
+    }
+
+    for(i <- 0 to sv.length - 1) {
+      var strIndex = {
+        val index = i - dataPointIndex + strPointIndex
+        if(index >= strPointIndex) {index + 1} else {index}
+      }
+      val digit = if(strIndex >= strStartIndex && strIndex < str.length) {
+        str(strIndex)
+      } else {
+        '0'.toByte
+      }
+      val (index, byteValue) = getPackedIndexAndByte(sv.length, i, digit)
+      val b = addr.getByte(index)
+      addr.setByte(index, (b | byteValue).toByte)
     }
   }
 
@@ -519,4 +622,23 @@ object Common {
   private def createCobolDataJapaneseVarying(sv: SQLVar, addr: CobolDataStorage, i: Int, str: scala.Array[Byte]): Unit = {
     //TODO Implement
   }
+
+  private def sqlStateToSqlCode(state: String): Int = state match {
+    case "02000" => OCPG_NOT_FOUND
+    case "YE002" => OCPG_EMPTY
+    case "08001" => OCPG_CONNECT
+    case "08003" => OCPG_CONNECT
+    case "08007" => OCPG_TRANS
+    case "21000" => OCPG_SUBSELECT_NOT_ONE
+    case "23505" => OCPG_DUPLICATE_KEY
+    case "25001" => OCPG_WARNING_IN_TRANSACTION
+    case "25P01" => OCPG_WARNING_NO_TRANSACTION
+    case "34000" => OCPG_WARNING_UNKNOWN_PORTAL
+    case "42804" => OCPG_DATA_FORMAT_ERROR
+    case "42P03" => OCPG_WARNING_PORTAL_EXISTS
+    case "55P03" => OCPG_PGSQL
+
+    case _ => OCDB_UNKNOWN_ERROR
+  }
+
 }

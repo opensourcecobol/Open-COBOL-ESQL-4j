@@ -54,7 +54,7 @@ object Operation {
     liftF(Log(msg))
 
   def commandErrorLog(msg: String): Command[Unit] =
-    liftF(Log(msg))
+    liftF(ErrorLog(msg))
 
   // utilities
   def commandLogLn(msg: String): Command[Unit] =
@@ -228,7 +228,7 @@ object Operation {
   def logLn(msg: String): Operation[Unit] =
     StateT.liftF(commandLogLn(msg))
   def errorLogLn(msg: String): Operation[Unit] =
-    StateT.liftF(commandErrorLog(msg))
+    StateT.liftF(commandErrorLogLn(msg))
   def comGetEnvOrElse(key: Option[String], default: Option[String]): Operation[Option[String]] =
     StateT.liftF(commandGetEnvOrElse(key, default))
   def comGetEnvOrElse(key: String, default: String): Operation[Option[String]] =

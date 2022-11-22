@@ -346,10 +346,12 @@ class OCESQLCursorDeclareParams extends CobolRunnableWrapper {
     val cname = getCString(args(1))
     val query = getCString(args(2))
     val nParams = storageToInt(args(3))
+
     for {
       _ <- logLn("OCESQLCursorDeclareParams start")
       _ <- logLn(s"SQL:#${query}#")
       connInfo <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
+      state <- getState
       returnCode <- connInfo match {
         case None => for {
           _ <- errorLogLn("connection id is not found")
@@ -505,13 +507,15 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
       _ <- operationCPure(updateCursorMap(name, cursor))
 
       _ <- operationCPure(if(cursor.nParams > 0) {
-        //TODO implement
-        /*val args = cursor.sqlVarQueue.zipWithIndex.map(s => {
-          val (sv, i) = s
-          createRealData(sv, i)
-        })
-        OCDBCursorDeclareParams(....)*/
-        operationPure(())
+        for {
+          //TODO the following code should be improved
+          args <- transform(cursor.sqlVarQueue.map(sv => {
+            for {
+              x <- createRealData(sv, 0)
+            } yield x
+          }))
+          _ <- OCDBCursorDeclareParams(cursor.connId, cursor.name, cursor.query, args, OCDB_CURSOR_WITH_HOLD_OFF)
+        } yield ()
       } else {
         cursor.sp match {
           case q :: _ =>
@@ -530,6 +534,15 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
       _ <- operationCPure(updateCursorMap(name, cursor.setIsOpened(true)))
     } yield 0).eval
   }
+
+  private def transform[A](queue: Queue[Operation[A]]): Operation[Queue[A]] =
+    queue match {
+      case x +: xs => for {
+        y <- x
+        ys <- transform(xs)
+      } yield y +: ys
+      case _ => operationPure(Queue())
+    }
 }
 
 class OCESQLCursorOpenParams extends CobolRunnableWrapper {
@@ -659,7 +672,8 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
                 } else {
                   setLibErrorStatus(OCDB_NOT_FOUND()).map(_ => ())
                 }
-                case _ => setLibErrorStatus(OCDB_NOT_FOUND()).map(_ => ())
+                case _ =>
+                  setLibErrorStatus(OCDB_NOT_FOUND()).map(_ => ())
               }
             }))
 
@@ -697,7 +711,7 @@ class OCESQLCursorFetchOccurs extends CobolRunnableWrapper {
           val id = cursor.connId
           (for {
             state <- operationCPure(getState)
-            _ <- operationCPure(OCDBCursorFetchOccurs(id, name, OCDB_READ_NEXT(), state.globalState.occursInfo.length))
+            _ <- operationCPure(OCDBCursorFetchOccurs(id, name, OCDB_READ_NEXT(), state.globalState.occursInfo.iter))
             newState <- operationCPure(getState)
             _ <- whenExecuteAndExit(newState.sqlCA.code < 0, operationPure(1))
             fields <- operationCPure(OCDBNfields(id))
@@ -713,21 +727,29 @@ class OCESQLCursorFetchOccurs extends CobolRunnableWrapper {
               })
             } yield 1)
 
-            _ <- operationCPure(lookUpConnList(id).flatMap(_ match {
-              case None => operationPure()
+            option_tuple <- operationCPure(lookUpConnList(id).flatMap(_ match {
               case Some((_, conn)) => conn.result match {
                 case Right(EResultSet(rs)) => for {
                   tuples <- resultSetToSqlVar(rs, id, 0, 0, newState.globalState.sqlResVarQueue, newState.globalState.occursInfo)
                   _ <- updateCursorMap(name, cursor.setTuples(tuples))
-                } yield ()
-                case _ => operationPure(())
+                } yield Option(tuples)
+                case _ => for {
+                  _ <- setLibErrorStatus(OCDB_NOT_FOUND())
+                } yield Option.empty[Int]
               }
+              case _ => for {
+                _ <- setLibErrorStatus(OCDB_NOT_FOUND())
+              } yield Option.empty[Int]
             }))
 
             _ <- operationCPure(updateState(s => {
               var sqlCA = s.sqlCA
-              sqlCA.errd(2) = cursor.tuples
-              s.setSqlCA(sqlCA)
+              sqlCA.errd(2) = option_tuple.getOrElse(0)
+              val newSqlCA = option_tuple match {
+                case Some(tuples) => sqlCA.setCode(0)
+                case _ => sqlCA
+              }
+              s.setSqlCA(newSqlCA)
             }))
 
           } yield 0).eval

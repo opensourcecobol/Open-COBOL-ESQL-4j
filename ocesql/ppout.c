@@ -141,124 +141,30 @@ void sql_string(struct cb_exec_list *wk_text){
 	}
 	com_strcat(sqlloop, sqlloop_len+1, wk_sql->sqltext);
 
-	for(;;){
-		charcount=0;
-		com_strcpy(sqlstr[0],256,"OCESQL     02  FILLER PIC X(000) VALUE \"");
-		com_strcpy(sqlstr[1],256,"OCESQL  &  \"");
-		com_strcpy(sqlstr[2],256,"OCESQL  &  \"");
-		com_strcpy(sqlstr[3],256,"OCESQL  &  \"");
-		com_strcpy(sqlstr[4],256,"OCESQL  &  \"");
-		len = strlen(sqlloop);
-		if(len<256){
-			intNUM = SQcount(len);
-			sqlstr[0][28] = intNUM[0];
-			sqlstr[0][29] = intNUM[1];
-			sqlstr[0][30] = intNUM[2];
-		}else{
-			sqlstr[0][28] = '2';
-			sqlstr[0][29] = '5';
-			sqlstr[0][30] = '6';
-		}
-		com_strcat(sqlstr[0], sizeof(sqlstr[0]), substring(30, sqlloop, 0));
-		com_strcat(sqlstr[0], sizeof(sqlstr[0]), "\"");
+	int sqllen = strlen(sqlloop);
+	fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", sqllen);
 
-		if((strlen(sqlstr[0]) == 72)){
-			charcount++;
-		}
-		sqlstr[0][72]='\0';
-		if(EOFFLG == 1){
-			com_strcat(sqlstr[0], sizeof(sqlstr[0]), ".");
-		}
-		if(!EOFFLG){
-			com_strcat(sqlstr[1], sizeof(sqlstr[1]), substring(58, sqlloop, 0));
-			com_strcat(sqlstr[1], sizeof(sqlstr[1]), "\"");
-			if ((strlen(sqlstr[1]) == 72)){
-				charcount++;
+	int i = 0;
+	const int maximum_chars_in_single_line = 58;
+	while(i < sqllen) {
+		fprintf(outfile, i == 0
+			? "\nOCESQL     \""
+			: "\nOCESQL  &  \"");
+		int j;
+		for(j=0; j<maximum_chars_in_single_line && i<sqllen; ++i, ++j) {
+			//Do not split 2-bytes character into different lines
+			if(j + 1 == maximum_chars_in_single_line) {
+				unsigned char c = sqlloop[i];
+				if((0x81 <= c && c <= 0x9F) || (0xE0 <= c && 0xFC)) {
+					break;
+				}
 			}
-
-			sqlstr[1][72]='\0';
-
-			if(EOFFLG == 1){
-				com_strcat(sqlstr[1], sizeof(sqlstr[1]), ".");
-			}
+			fputc(sqlloop[i], outfile);
 		}
-		if(!EOFFLG){
-			com_strcat(sqlstr[2], sizeof(sqlstr[2]), substring(58, sqlloop, 0));
-			com_strcat(sqlstr[2], sizeof(sqlstr[2]), "\"");
-			if ((strlen(sqlstr[2]) == 72)){
-				charcount++;
-			}
-
-			sqlstr[2][72]='\0';
-
-			if(EOFFLG == 1){
-				com_strcat(sqlstr[2], sizeof(sqlstr[2]), ".");
-			}
-		}
-		if(!EOFFLG){
-			com_strcat(sqlstr[3], sizeof(sqlstr[3]), substring(58, sqlloop, 0));
-			com_strcat(sqlstr[3], sizeof(sqlstr[3]), "\"");
-			if ((strlen(sqlstr[3]) == 72)){
-				charcount++;
-			}
-
-			sqlstr[3][72]='\0';
-
-			if(EOFFLG == 1){
-				com_strcat(sqlstr[3], sizeof(sqlstr[3]), ".");
-			}
-		}
-		if(!EOFFLG){
-			com_strcat(sqlstr[4], sizeof(sqlstr[4]), substring(52 - charcount, sqlloop, 1));
-			com_strcat(sqlstr[4], sizeof(sqlstr[4]), "\"");
-			sqlstr[4][72] = '\0';
-
-			if(strlen(sqlstr[4]) != ( 65 - charcount ) && !EOFFLG){
-				sqlstr[0][28] = '2';
-				sqlstr[0][29] = '5';
-				sqlstr[0][30] = '5';
-			}
-
-			com_strcat(sqlstr[4], sizeof(sqlstr[4]), ".");
-		}
-
-		com_strcpy(out,sizeof(out),sqlstr[0]);
-		outwrite();
-		if(strncmp(compsql, sqlstr[1], 14) == 0){
-			com_strcpy(out,sizeof(out),terminal);
-			outwrite();
-		} else if(sqlstr[1][12] !='\0'){
-			com_strcpy(out,sizeof(out),sqlstr[1]);
-			outwrite();
-		}
-		if(strncmp(compsql, sqlstr[2], 14) == 0){
-			com_strcpy(out,sizeof(out),terminal);
-			outwrite();
-		} else if(sqlstr[2][12] !='\0'){
-			com_strcpy(out,sizeof(out),sqlstr[2]);
-			outwrite();
-		}
-		if(strncmp(compsql, sqlstr[3], 14) == 0){
-			com_strcpy(out,sizeof(out),terminal);
-			outwrite();
-		} else if(sqlstr[3][12] !='\0'){
-			com_strcpy(out,sizeof(out),sqlstr[3]);
-			outwrite();
-		}
-		if(strncmp(compsql, sqlstr[4], 14) == 0){
-			com_strcpy(out,sizeof(out),terminal);
-			outwrite();
-		} else if(sqlstr[4][12] !='\0'){
-			com_strcpy(out,sizeof(out),sqlstr[4]);
-			outwrite();
-		}
-		if(EOFFLG == 1){
-			EOFFLG = 0;
-			com_strcpy(out,sizeof(out),"OCESQL     02  FILLER PIC X(1) VALUE X\"00\".");
-			outwrite();
-			break;
-		}
+		fprintf(outfile, i == sqllen ? "\"." : "\"");
 	}
+	fprintf(outfile, "\nOCESQL     02  FILLER PIC X(1) VALUE X\"00\".\n");
+
 	free(sqlloop);
 }
 
@@ -296,10 +202,11 @@ void ppoutputendcall(struct cb_exec_list *list){
 		return ;
 
 	memset(buff, 0, sizeof(buff));
-	if( list->period)
+	if(list->period) {
 		com_sprintf(buff,sizeof(buff), "OCESQL%5sEND-CALL.\n", " ");
-	else
+	} else {
 		com_sprintf(buff,sizeof(buff), "OCESQL%5sEND-CALL\n", " ");
+	}
 	fputs(buff, outfile);
 	return ;
 
@@ -1974,15 +1881,10 @@ void ppbuff_incfile(struct cb_exec_list *list){
  
  		incf = fopen_or_die(filename, "r");
 
-		memset(incmsg, 0, 256);
-		sprintf(incmsg, "%s incfile start:%s", INC_START_MARK, filename);
-		com_strcpy(out,sizeof(out),incmsg);
-		outwrite();
-
 		while(1){
 			memset(incf_buff, 0, BUFFSIZE + 1);
-			fgets(incf_buff, BUFFSIZE, incf);
-			if(feof(incf)) break;
+			char* result = fgets(incf_buff, BUFFSIZE, incf);
+			if(result == NULL) break;
 
 			if(strlen(incf_buff) > MAX_LINESIZE){
 				memset(buff, 0, sizeof(buff));
@@ -1990,20 +1892,18 @@ void ppbuff_incfile(struct cb_exec_list *list){
 				printerrormsg("", lineNUM, buff);
 			}
 
+			int len = strlen(incf_buff);
+			if(len > 0 && incf_buff[len - 1] == '\n') {
+				if(len > 1 && incf_buff[len - 2] == '\r') {
+					incf_buff[len - 2] = '\0';
+				} else {
+					incf_buff[len - 1] = '\0';
+				}
+			}
 			com_strcpy(out,sizeof(out),"OCESQL");
 			com_strcat(out,sizeof(out), incf_buff + strlen("OCESQL"));
-			retcode = strlen(incf_buff);
-			len2 = strlen("OCESQL");
-			if(retcode > len2){
-				out[retcode-1] = '\0';
-			}
 			outwrite();
 		}
-
-		memset(incmsg, 0, 256);
-		sprintf(incmsg, "%s incfile end:%s",INC__END__MARK , filename);
-		com_strcpy(out,sizeof(out),incmsg);
-		outwrite();
 
 		return;
 	}
@@ -2033,8 +1933,11 @@ void ppoutput(char *ppin,char *ppout,struct cb_exec_list *head){
 
 	EOFFLG = 0;
 	if (readfile && outfile){
-		for(;EOFflg != 1;){
+		while(1){
 			com_readline(readfile, inbuff, &lineNUM, &EOFflg);
+			if(EOFflg) {
+				break;
+			}
 			if(strstr(inbuff, INC_START_MARK) != NULL ||
 			strstr(inbuff, INC__END__MARK) != NULL){
 				continue;
@@ -2120,8 +2023,13 @@ void ppoutput_incfile(char *ppin,char *ppout,struct cb_exec_list *head){
 
 	EOFFLG = 0;
 	if (readfile && outfile){
-		for(;EOFflg != 1;){
+		int after_first_read = 0;
+		while(EOFflg != 1){
+			if(after_first_read) {
+				fwrite (outbuff ,len, 1 , outfile);
+			}
 			com_readline(readfile, inbuff, &lineNUM, &EOFflg);
+			after_first_read = 1;
 			if(head){
 				if (l->startLine<= lineNUM && l->endLine>=lineNUM){
 					if (strcmp(l->commandName, "INCFILE") == 0){
@@ -2136,7 +2044,6 @@ void ppoutput_incfile(char *ppin,char *ppout,struct cb_exec_list *head){
 
 					outbuff = inbuff;
 					len = strlen(outbuff);
-					fwrite (outbuff ,len, 1 , outfile );
 
 					if (EOFflg == 1){
 						fputc('\n',outfile);
@@ -2162,18 +2069,14 @@ void ppoutput_incfile(char *ppin,char *ppout,struct cb_exec_list *head){
 						}
 						outbuff = inbuff;
 						len = strlen(outbuff);
-						fwrite (outbuff ,len, 1 , outfile );
 					}else{
 						outbuff = inbuff;
 						len = strlen(outbuff);
-						fwrite (outbuff ,len, 1 , outfile );
-
 					}
 				}
 			}else{
 				outbuff = inbuff;
 				len = strlen(outbuff);
-				fwrite (outbuff ,len, 1 , outfile);
 			}
 		}
 	}

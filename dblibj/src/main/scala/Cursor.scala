@@ -256,8 +256,35 @@ object Cursor {
       case Some((_, pConn)) => for {
         _ <- OCDB_PGExec(pConn.connAddr, "BEGIN")
         result <- OCDB_PGCursorDeclear(pConn.connAddr, cname, query, withHold)
-        _ <- updateConnList(id, pConn.setResult(result).setResult(Right(ESuccess())))
-        _ <- when(result.isLeft, errorLogLn("PostgreSQL Result is NULL"))
+        _ <- result match {
+          case Right(_) =>
+            updateConnList(id, pConn.setResult(result))
+          case Left(e) => for {
+            _ <- OCDB_PGExec(pConn.connAddr, "ROLLBACK")
+            _ <- updateConnList(id, pConn.setResult(result))
+            _ <- errorLogLn("PostgreSQL Result is NULL")
+          } yield ()
+        }
+        //_ <- updateConnList(id, pConn.setResult(result).setResult(Right(ESuccess())))
+        //_ <- when(result.isLeft, errorLogLn("PostgreSQL Result is NULL"))
+      } yield ()
+    })
+
+  def OCDBCursorDeclareParams(id: Int, cname: String, query: String, sqlVarQueue: Queue[SQLVar], withHold: Boolean): Operation[Unit] =
+    lookUpConnList(id).flatMap(_ match {
+      case None => operationPure(())
+      case Some((_, pConn)) => for {
+        _ <- OCDB_PGExec(pConn.connAddr, "BEGIN")
+        result <- OCDB_PGCursorDeclareParams(pConn.connAddr, cname, query, sqlVarQueue, withHold)
+        _ <- result match {
+          case Right(_) =>
+            updateConnList(id, pConn.setResult(result))
+          case Left(_) => for {
+            _ <- OCDB_PGExec(pConn.connAddr, "ROLLBACK")
+            _ <- updateConnList(id, pConn.setResult(result))
+            _ <- errorLogLn("PostgreSQL Result is NULL")
+          } yield ()
+        }
       } yield ()
     })
 
@@ -271,10 +298,27 @@ object Cursor {
       result <- OCDB_PGExec(conn, command)
       _ <- result match {
         case Left(e) =>
-          operationPure(e.printStackTrace())
+          logLn(e.getMessage())
         case _ =>
           logLn("declare cursor success")
         }
+    } yield result
+  }
+
+  def OCDB_PGCursorDeclareParams(conn: Option[Connection], cname: String, query: String, sqlVarQueue: Queue[SQLVar], withHold: Boolean): Operation[ExecResult] = {
+    val command = if(withHold == OCDB_CURSOR_WITH_HOLD_ON) {
+      s"DECLARE ${cname} CURSOR WITH HOLD FOR ${query}"
+    } else {
+      s"DECLARE ${cname} CURSOR FOR ${query}"
+    }
+    for{
+      result <- OCDB_PGExecParam(conn, command, sqlVarQueue)
+      _ <- result match {
+        case Left(e) =>
+          logLn(e.getMessage())
+        case _ =>
+          logLn("declare cursor success")
+      }
     } yield result
   }
 

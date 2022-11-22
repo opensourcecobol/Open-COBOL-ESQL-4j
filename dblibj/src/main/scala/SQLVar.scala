@@ -142,8 +142,8 @@ object SQLVar {
         case OCDB_TYPE_UNSIGNED_NUMBER => createRealDataUnsignedNumber(x)
         case OCDB_TYPE_SIGNED_NUMBER_TC => createRealDataSignedNumberTc(x)
         case OCDB_TYPE_SIGNED_NUMBER_LS => createRealDataSignedNumberLs(x)
-        //case OCDB_TYPE_UNSIGNED_NUMBER_PD => createRealDataUnsignedNumberPd(x)
-        //case OCDB_TYPE_SIGNED_NUMBER_PD => createRealDataSignedNumberPd(x)
+        case OCDB_TYPE_UNSIGNED_NUMBER_PD => createRealDataUnsignedNumberPd(x)
+        case OCDB_TYPE_SIGNED_NUMBER_PD => createRealDataSignedNumberPd(x)
         case OCDB_TYPE_JAPANESE => createRealDataJapanese(x)
         //case OCDB_TYPE_ALPHANUMERIC_VARYING => createRealDataAlphanumericVarying(x)
         //case OCDB_TYPE_JAPANESE_VARYING => createRealDataJapaneseVarying(x)
@@ -277,8 +277,133 @@ object SQLVar {
     operationPure(v.setRealData(Some(realData)).setRealDataLength(convertedStr.length))
   }
 
-  private def createRealDataUnsignedNumberPd(v: SQLVar): Operation[SQLVar] = operationPure(v)
-  private def createRealDataSignedNumberPd(v: SQLVar): Operation[SQLVar] = operationPure(v)
+  private def createRealDataUnsignedNumberPd(v: SQLVar): Operation[SQLVar] = {
+    val data = v.addr.getOrElse(nullDataStorage)
+    val len = (v.length / 2).toInt + 1
+
+    val bytes = new Array[Byte](v.length)
+    for(i <- 0 to (len - 1)) {
+      val b = data.getByte(i).toInt
+      val a0 = (((b & 0xF0) >> 4) + '0').toByte
+      val a1 = ((b & 0x0F) + '0').toByte
+      if(v.length % 2 == 0) {
+        if(i == 0) {
+          bytes(0) = a1
+        } else if(i == len - 1) {
+          bytes(v.length - 1) = a0
+        } else {
+          bytes(2 * i - 1) = a0
+          bytes(2 * i) = a1
+        }
+      } else {
+        if(i == len - 1) {
+          bytes(v.length - 1) = a0
+        } else {
+          bytes(2 * i) = a0
+          bytes(2 * i + 1) = a1
+        }
+      }
+    }
+
+    //0.00XYZW の場合
+    var (realData, realDataLen) = if(-v.power > v.length) {
+      val realDataLen = v.power + 2
+      var realData = new CobolDataStorage(realDataLen)
+      realData.memset('0'.toByte, realDataLen)
+      realData.setByte(1, '.'.toByte)
+      realData.getSubDataStorage(realDataLen - bytes.length).memcpy(bytes, bytes.length)
+      (realData, realDataLen)
+    //XY.ZWの場合
+    } else if(-v.power > 0) {
+      val tmpDataLen = v.length + 1
+      var tmpData = new CobolDataStorage(tmpDataLen)
+      tmpData.memcpy(bytes, tmpDataLen + v.power - 1)
+      tmpData.setByte(tmpDataLen + v.power - 1, '.'.toByte)
+      for(i <- 0 to -v.power - 1) {
+        tmpData.setByte(tmpDataLen + v.power + i, bytes(bytes.length + v.power + i))
+      }
+      val realBytes = removeInitZeroes(tmpData, tmpDataLen)
+      (new CobolDataStorage(realBytes), realBytes.length)
+    //XYZWやXYZW000の場合
+    } else {
+      val tmpDataLen = v.length + v.power
+      var tmpData = new CobolDataStorage(tmpDataLen)
+      tmpData.memset('0'.toByte, tmpDataLen)
+      tmpData.memcpy(bytes, v.length)
+      val realBytes = removeInitZeroes(tmpData, tmpDataLen)
+      (new CobolDataStorage(realBytes), realBytes.length)
+    }
+
+    operationPure(v.setRealData(Some(realData)).setRealDataLength(realDataLen))
+  }
+  private def createRealDataSignedNumberPd(v: SQLVar): Operation[SQLVar] = {
+    val data = v.addr.getOrElse(nullDataStorage)
+    val len = (v.length / 2).toInt + 1
+    val sign = if((data.getByte(len - 1) & 0x0F) == 0x0d) {-1} else {1}
+
+    val bytes = new Array[Byte](v.length)
+    for(i <- 0 to (len - 1)) {
+      val b = data.getByte(i).toInt
+      val a0 = (((b & 0xF0) >> 4) + '0').toByte
+      val a1 = ((b & 0x0F) + '0').toByte
+      if(v.length % 2 == 0) {
+        if(i == 0) {
+          bytes(0) = a1
+        } else if(i == len - 1) {
+          bytes(v.length - 1) = a0
+        } else {
+          bytes(2 * i - 1) = a0
+          bytes(2 * i) = a1
+        }
+      } else {
+        if(i == len - 1) {
+          bytes(v.length - 1) = a0
+        } else {
+          bytes(2 * i) = a0
+          bytes(2 * i + 1) = a1
+        }
+      }
+    }
+
+    //0.00XYZW の場合
+    var (realData, realDataLen) = if(-v.power > v.length) {
+      val realDataLen = v.power + 2
+      var realData = new CobolDataStorage(realDataLen)
+      realData.memset('0'.toByte, realDataLen)
+      realData.setByte(1, '.'.toByte)
+      realData.getSubDataStorage(realDataLen - bytes.length).memcpy(bytes, bytes.length)
+      (realData, realDataLen)
+    //XY.ZWの場合
+    } else if(-v.power > 0) {
+      val tmpDataLen = v.length + 1
+      var tmpData = new CobolDataStorage(tmpDataLen)
+      tmpData.memcpy(bytes, tmpDataLen + v.power - 1)
+      tmpData.setByte(tmpDataLen + v.power - 1, '.'.toByte)
+      for(i <- 0 to -v.power - 1) {
+        tmpData.setByte(tmpDataLen + v.power + i, bytes(bytes.length + v.power + i))
+      }
+      val realBytes = removeInitZeroes(tmpData, tmpDataLen)
+      (new CobolDataStorage(realBytes), realBytes.length)
+    //XYZWやXYZW000の場合
+    } else {
+      val tmpDataLen = v.length + v.power
+      var tmpData = new CobolDataStorage(tmpDataLen)
+      tmpData.memset('0'.toByte, tmpDataLen)
+      tmpData.memcpy(bytes, v.length)
+      val realBytes = removeInitZeroes(tmpData, tmpDataLen)
+      (new CobolDataStorage(realBytes), realBytes.length)
+    }
+
+    if(sign < 0) {
+      var tmpData = new CobolDataStorage(realDataLen + 1)
+      tmpData.getSubDataStorage(1).memcpy(realData, realDataLen)
+      tmpData.setByte(0, '-'.toByte)
+      realData = tmpData
+      realDataLen += 1
+    }
+
+    operationPure(v.setRealData(Some(realData)).setRealDataLength(realDataLen))
+  }
 
   private def createRealDataJapanese(v: SQLVar): Operation[SQLVar] = {
     val realData = new CobolDataStorage(v.length * 2)

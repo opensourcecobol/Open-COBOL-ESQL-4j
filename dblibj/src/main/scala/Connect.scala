@@ -193,7 +193,7 @@ object OCESQLConnectCore {
       dbType,
       connAddr,
       None,
-      Left(new SQLException()),
+      Right(ESuccess()),
       Some(""),
       Some("")
     )

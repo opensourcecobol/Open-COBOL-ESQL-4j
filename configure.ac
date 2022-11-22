@@ -46,7 +46,7 @@ AC_ARG_ENABLE(precompiler,
 AM_CONDITIONAL(DISABLE_OCESQL, test $DISABLE_COMPILER = yes)
 
 # Checks for libraries.
-AC_CHECK_LIB([pq], [PQconnectdb])
+#AC_CHECK_LIB([pq], [PQconnectdb])
 
 # Checks for header files.
 AC_FUNC_ALLOCA
@@ -69,6 +69,6 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memmove memset setenv strcasecmp strchr strdup strrchr strstr])
 
 AC_CONFIG_FILES([Makefile
-                 dblib/Makefile
-                 ocesql/Makefile])
+                 ocesql/Makefile
+                 tests/Makefile])
 AC_OUTPUT

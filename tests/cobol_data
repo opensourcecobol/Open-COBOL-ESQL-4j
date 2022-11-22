@@ -592,8 +592,10 @@ at_format='?'
 # Description of all the test groups.
 at_help_all="1;numeric_signed_v.at:1;numeric_signed_v;;
 2;numeric_v.at:1;numeric_v;;
-3;alphanumeric.at:1;alphanumeric;;
-4;japanese.at:1;japanese;;
+3;comp3.at:1;comp3;;
+4;comp3_signed.at:1;comp3_signed;;
+5;alphanumeric.at:1;alphanumeric;;
+6;japanese.at:1;japanese;;
 "
 # List of the all the test groups.
 at_groups_all=`$as_echo "$at_help_all" | sed 's/;.*//'`
@@ -607,7 +609,7 @@ at_fn_validate_ranges ()
   for at_grp
   do
     eval at_value=\$$at_grp
-    if test $at_value -lt 1 || test $at_value -gt 4; then
+    if test $at_value -lt 1 || test $at_value -gt 6; then
       $as_echo "invalid test group: $at_value" >&2
       exit 1
     fi
@@ -897,7 +899,7 @@ Execution tuning:
 _ATEOF
 cat <<_ATEOF || at_write_fail=1
 
-Report bugs to <ws-opensource-cobol-contact@osscons.jp>.
+Report bugs to <opencobol@tsh-world.co.jp>.
 _ATEOF
   exit $at_write_fail
 fi
@@ -905,7 +907,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF || at_write_fail=1
-Open-COBOL-ESQL-1.2 test suite: cobol data test test groups:
+Open COBOL ESQL 1.2 test suite: cobol data test test groups:
 
  NUM: FILE-NAME:LINE     TEST-GROUP-NAME
       KEYWORDS
@@ -946,7 +948,7 @@ _ATEOF
   exit $at_write_fail
 fi
 if $at_version_p; then
-  $as_echo "$as_me (Open-COBOL-ESQL-1.2)" &&
+  $as_echo "$as_me (Open COBOL ESQL 1.2)" &&
   cat <<\_ATEOF || at_write_fail=1
 
 Copyright (C) 2012 Free Software Foundation, Inc.
@@ -1123,11 +1125,11 @@ exec 5>>"$at_suite_log"
 
 # Banners and logs.
 $as_echo "## ------------------------------------------------ ##
-## Open-COBOL-ESQL-1.2 test suite: cobol data test. ##
+## Open COBOL ESQL 1.2 test suite: cobol data test. ##
 ## ------------------------------------------------ ##"
 {
   $as_echo "## ------------------------------------------------ ##
-## Open-COBOL-ESQL-1.2 test suite: cobol data test. ##
+## Open COBOL ESQL 1.2 test suite: cobol data test. ##
 ## ------------------------------------------------ ##"
   echo
 
@@ -1552,7 +1554,7 @@ at_fn_group_postprocess ()
     sed "s/^ */$as_me: WARNING: /" <<_ATEOF
       A failure happened in a test group before any test could be
       run. This means that test suite is improperly designed.  Please
-      report this failure to <ws-opensource-cobol-contact@osscons.jp>.
+      report this failure to <opencobol@tsh-world.co.jp>.
 _ATEOF
     $as_echo "$at_setup_line" >"$at_check_line_file"
     at_status=99
@@ -1970,8 +1972,8 @@ _ASBOX
   fi
   $as_echo "Please send $at_msg and all information you think might help:
 
-   To: <ws-opensource-cobol-contact@osscons.jp>
-   Subject: [Open-COBOL-ESQL-1.2] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
+   To: <opencobol@tsh-world.co.jp>
+   Subject: [Open COBOL ESQL 1.2] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
 
 You may investigate any problem if you feel able to do so, in which
 case the test suite provides a good starting point.  Its output may
@@ -2634,11 +2636,1001 @@ $at_traceon; }
 read at_status <"$at_status_file"
 #AT_STOP_2
 #AT_START_3
-at_fn_group_banner 3 'alphanumeric.at:1' \
-  "alphanumeric" "                                   "
+at_fn_group_banner 3 'comp3.at:1' \
+  "comp3" "                                          "
 at_xfail=no
 (
   $as_echo "3. $at_setup_line: testing $at_desc ..."
+  $at_traceon
+
+
+cat >prog.cbl <<'_ATEOF'
+
+       IDENTIFICATION              DIVISION.
+      ******************************************************************
+       PROGRAM-ID.                 prog.
+      ******************************************************************
+       DATA                        DIVISION.
+      ******************************************************************
+       WORKING-STORAGE             SECTION.
+       01 VV-1 PIC 9(4)V9(2) USAGE COMP-3.
+       01 VV-2 PIC 9(5)V9(2) USAGE COMP-3.
+       01 VP-1 PIC 9(4)PP USAGE COMP-3.
+       01 VP-2 PIC 9(5)PP USAGE COMP-3.
+       01 V-1 PIC 9(4) USAGE COMP-3.
+       01 V-2 PIC 9(5) USAGE COMP-3.
+
+       01  TEST-DATA-V-1.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 0.01.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 0.1.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 1.01.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 1.1.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 2000.00.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 2000.01.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 1234.56.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 1234.
+         03 FILLER       PIC 9(4)V9(2) USAGE COMP-3 VALUE 9999.99.
+
+       01  TEST-DATA-R-V-1   REDEFINES TEST-DATA-V-1.
+         03  TEST-TBL-V-1    OCCURS  10.
+           05  D-V-1             PIC 9(4)V9(2) USAGE COMP-3.
+
+       01  TEST-DATA-V-2.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 0.01.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 0.1.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 1.01.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 1.1.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 20000.00.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 20000.01.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 12345.67.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 12345.
+         03 FILLER       PIC 9(5)V9(2) USAGE COMP-3 VALUE 99999.99.
+
+       01  TEST-DATA-R-V-2   REDEFINES TEST-DATA-V-2.
+         03  TEST-TBL-V-2    OCCURS  10.
+           05  D-V-2             PIC 9(5)V9(2) USAGE COMP-3.
+
+       01  TEST-DATA-P-1.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 100.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 200.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 300000.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 110000.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 123400.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 666600.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 777700.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 888800.
+         03 FILLER       PIC 9(4)PPV USAGE COMP-3 VALUE 999900.
+
+       01  TEST-DATA-R-P-1   REDEFINES TEST-DATA-P-1.
+         03  TEST-TBL-P-1    OCCURS  10.
+           05  D-P-1             PIC 9(4)PPV USAGE COMP-3.
+
+       01  TEST-DATA-P-2.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 100.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 200.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 3000000.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 1100000.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 1234500.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 6666600.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 7777700.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 8888800.
+         03 FILLER       PIC 9(5)PPV USAGE COMP-3 VALUE 9999900.
+
+       01  TEST-DATA-R-P-2   REDEFINES TEST-DATA-P-2.
+         03  TEST-TBL-P-2    OCCURS  10.
+           05  D-P-2             PIC 9(5)PPV USAGE COMP-3.
+
+       01  TEST-DATA-1.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 1.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 2.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 10.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 20.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 100.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 200.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 1000.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 2000.
+         03 FILLER       PIC 9(4) USAGE COMP-3 VALUE 9999.
+
+       01  TEST-DATA-R-1   REDEFINES TEST-DATA-1.
+         03  TEST-TBL-1    OCCURS  10.
+           05  D-1             PIC 9(4) USAGE COMP-3.
+
+       01  TEST-DATA-2.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 1.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 2.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 10.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 100.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 1000.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 10000.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 12345.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 20000.
+         03 FILLER       PIC 9(5) USAGE COMP-3 VALUE 99999.
+
+       01  TEST-DATA-R-2   REDEFINES TEST-DATA-2.
+         03  TEST-TBL-2    OCCURS  10.
+           05  D-2             PIC 9(5) USAGE COMP-3.
+
+       01  IDX                     PIC  S9(02).
+       01 LOG-COUNT PIC 9999 VALUE 1.
+
+       01 READ-DATA-TBL-V-1.
+         03  READ-TBL-V-1    OCCURS  10.
+           05  READ-DATA-V-1   PIC 9(4)V9(2) USAGE COMP-3.
+
+       01 READ-DATA-TBL-V-2.
+         03  READ-TBL-V-2    OCCURS  10.
+           05  READ-DATA-V-2   PIC 9(5)V9(2) USAGE COMP-3.
+
+       01 READ-DATA-TBL-P-1.
+         03  READ-TBL-P-1    OCCURS  10.
+           05  READ-DATA-P-1   PIC 9(4)PP USAGE COMP-3.
+
+       01 READ-DATA-TBL-P-2.
+         03  READ-TBL-P-2    OCCURS  10.
+           05  READ-DATA-P-2   PIC 9(5)PP USAGE COMP-3.
+
+       01 READ-DATA-TBL-1.
+         03  READ-TBL-1    OCCURS  10.
+           05  READ-DATA-1     PIC 9(4) USAGE COMP-3.
+
+       01 READ-DATA-TBL-2.
+         03  READ-TBL-2    OCCURS  10.
+           05  READ-DATA-2     PIC 9(5) USAGE COMP-3.
+
+       EXEC SQL BEGIN DECLARE SECTION END-EXEC.
+       01  DBNAME                  PIC  X(30) VALUE SPACE.
+       01  USERNAME                PIC  X(30) VALUE SPACE.
+       01  PASSWD                  PIC  X(10) VALUE SPACE.
+       EXEC SQL END DECLARE SECTION END-EXEC.
+
+       EXEC SQL INCLUDE SQLCA END-EXEC.
+      ******************************************************************
+       PROCEDURE                   DIVISION.
+      ******************************************************************
+       MAIN-RTN.
+
+       PERFORM SETUP-DB.
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-V-1
+               FROM TESTTABLEV1 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-V-1(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-V-2
+               FROM TESTTABLEV2 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-V-2(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-P-1
+               FROM TESTTABLEP1 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-P-1(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-P-2
+               FROM TESTTABLEP2 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-P-2(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-1 FROM TESTTABLE1 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-1(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-2 FROM TESTTABLE2 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-2(IDX)
+           END-PERFORM.
+
+       PERFORM CLEANUP-DB.
+
+      *    END
+           STOP RUN.
+
+      ******************************************************************
+       SETUP-DB.
+      ******************************************************************
+
+      *    SERVER
+           MOVE  "<|DB_NAME|>@<|DB_HOST|>:<|DB_PORT|>"
+             TO DBNAME.
+           MOVE  "<|DB_USER|>"
+             TO USERNAME.
+           MOVE  "<|DB_PASSWORD|>"
+             TO PASSWD.
+
+           EXEC SQL
+               CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLEV1
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLEV2
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLEP1
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLEP2
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLE1
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLE2
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLEV1
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     DECIMAL(6,2) NOT NULL
+                )
+           END-EXEC.
+           EXEC SQL
+                CREATE TABLE TESTTABLEV2
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     DECIMAL(7,2) NOT NULL
+                )
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLEP1
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     NUMERIC(6,0) NOT NULL
+                )
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLEP2
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     NUMERIC(7,0) NOT NULL
+                )
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLE1
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     NUMERIC(4,0) NOT NULL
+                )
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLE2
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     NUMERIC(5,0) NOT NULL
+                )
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-V-1(IDX)     TO  VV-1
+              EXEC SQL
+                 INSERT INTO TESTTABLEV1 VALUES (:IDX, :VV-1)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-V-2(IDX)     TO  VV-2
+              EXEC SQL
+                 INSERT INTO TESTTABLEV2 VALUES (:IDX, :VV-2)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-P-1(IDX)     TO  VP-1
+              EXEC SQL
+                 INSERT INTO TESTTABLEP1 VALUES (:IDX, :VP-1)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-P-2(IDX)     TO  VP-2
+              EXEC SQL
+                 INSERT INTO TESTTABLEP2 VALUES (:IDX, :VP-2)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-1(IDX)     TO  V-1
+              EXEC SQL
+                 INSERT INTO TESTTABLE1 VALUES (:IDX, :V-1)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-2(IDX)     TO  V-2
+              EXEC SQL
+                 INSERT INTO TESTTABLE2 VALUES (:IDX, :V-2)
+              END-EXEC
+           END-PERFORM.
+
+           EXEC SQL
+               COMMIT WORK
+           END-EXEC.
+
+      ******************************************************************
+       CLEANUP-DB.
+      ******************************************************************
+           EXEC SQL
+               DISCONNECT ALL
+           END-EXEC.
+
+_ATEOF
+
+{ set +x
+$as_echo "$at_srcdir/comp3.at:363: ocesql prog.cbl prog.cob > /dev/null"
+at_fn_check_prepare_trace "comp3.at:363"
+( $at_check_trace; ocesql prog.cbl prog.cob > /dev/null
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/comp3.at:363"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/comp3.at:364: \${EMBED_DB_INFO} prog.cob"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "comp3.at:364"
+( $at_check_trace; ${EMBED_DB_INFO} prog.cob
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/comp3.at:364"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/comp3.at:365: \${COMPILE_MODULE} prog.cob"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "comp3.at:365"
+( $at_check_trace; ${COMPILE_MODULE} prog.cob
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/comp3.at:365"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/comp3.at:366: \${RUN_MODULE} prog"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "comp3.at:366"
+( $at_check_trace; ${RUN_MODULE} prog
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+echo >>"$at_stdout"; $as_echo "0000.00
+0000.01
+0000.10
+0001.01
+0001.10
+2000.00
+2000.01
+1234.56
+1234.00
+9999.99
+================
+00000.00
+00000.01
+00000.10
+00001.01
+00001.10
+20000.00
+20000.01
+12345.67
+12345.00
+99999.99
+================
+000000
+000100
+000200
+300000
+110000
+123400
+666600
+777700
+888800
+999900
+================
+0000000
+0000100
+0000200
+3000000
+1100000
+1234500
+6666600
+7777700
+8888800
+9999900
+================
+0000
+0001
+0002
+0010
+0020
+0100
+0200
+1000
+2000
+9999
+================
+00000
+00001
+00002
+00010
+00100
+01000
+10000
+12345
+20000
+99999
+" | \
+  $at_diff - "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/comp3.at:366"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+
+  set +x
+  $at_times_p && times >"$at_times_file"
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
+read at_status <"$at_status_file"
+#AT_STOP_3
+#AT_START_4
+at_fn_group_banner 4 'comp3_signed.at:1' \
+  "comp3_signed" "                                   "
+at_xfail=no
+(
+  $as_echo "4. $at_setup_line: testing $at_desc ..."
+  $at_traceon
+
+
+cat >prog.cbl <<'_ATEOF'
+
+       IDENTIFICATION              DIVISION.
+      ******************************************************************
+       PROGRAM-ID.                 prog.
+      ******************************************************************
+       DATA                        DIVISION.
+      ******************************************************************
+       WORKING-STORAGE             SECTION.
+       01 VV-1 PIC S9(4)V9(2) USAGE COMP-3.
+       01 VV-2 PIC S9(5)V9(2) USAGE COMP-3.
+       01 VP-1 PIC S9(4)PP USAGE COMP-3.
+       01 VP-2 PIC S9(5)PP USAGE COMP-3.
+       01 V-1 PIC S9(4) USAGE COMP-3.
+       01 V-2 PIC S9(5) USAGE COMP-3.
+
+       01  TEST-DATA-V-1.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE -0.01.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE 0.1.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE -1.01.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE 1.1.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE -2000.00.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE 2000.01.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE -1234.56.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE -9999.99.
+         03 FILLER       PIC S9(4)V9(2) USAGE COMP-3 VALUE 9999.99.
+
+       01  TEST-DATA-R-V-1   REDEFINES TEST-DATA-V-1.
+         03  TEST-TBL-V-1    OCCURS  10.
+           05  D-V-1             PIC S9(4)V9(2) USAGE COMP-3.
+
+       01  TEST-DATA-V-2.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE -0.01.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE 0.1.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE -1.01.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE 1.1.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE -20000.00.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE 20000.01.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE -12345.67.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE -99999.99.
+         03 FILLER       PIC S9(5)V9(2) USAGE COMP-3 VALUE 99999.99.
+
+       01  TEST-DATA-R-V-2   REDEFINES TEST-DATA-V-2.
+         03  TEST-TBL-V-2    OCCURS  10.
+           05  D-V-2             PIC S9(5)V9(2) USAGE COMP-3.
+
+       01  TEST-DATA-P-1.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE -100.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE 200.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE -300000.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE 110000.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE -123400.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE 666600.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE -777700.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE -999900.
+         03 FILLER       PIC S9(4)PPV USAGE COMP-3 VALUE 999900.
+
+       01  TEST-DATA-R-P-1   REDEFINES TEST-DATA-P-1.
+         03  TEST-TBL-P-1    OCCURS  10.
+           05  D-P-1             PIC S9(4)PPV USAGE COMP-3.
+
+       01  TEST-DATA-P-2.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE -100.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE 200.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE -3000000.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE 1100000.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE -1234500.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE 6666600.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE -7777700.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE -9999900.
+         03 FILLER       PIC S9(5)PPV USAGE COMP-3 VALUE 9999900.
+
+       01  TEST-DATA-R-P-2   REDEFINES TEST-DATA-P-2.
+         03  TEST-TBL-P-2    OCCURS  10.
+           05  D-P-2             PIC S9(5)PPV USAGE COMP-3.
+
+       01  TEST-DATA-1.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE -1.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE 2.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE -10.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE 20.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE -100.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE 200.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE -1000.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE -9999.
+         03 FILLER       PIC S9(4) USAGE COMP-3 VALUE 9999.
+
+       01  TEST-DATA-R-1   REDEFINES TEST-DATA-1.
+         03  TEST-TBL-1    OCCURS  10.
+           05  D-1             PIC S9(4) USAGE COMP-3.
+
+       01  TEST-DATA-2.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE 0.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE -1.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE 2.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE -10.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE 100.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE -1000.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE 10000.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE -12345.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE -99999.
+         03 FILLER       PIC S9(5) USAGE COMP-3 VALUE 99999.
+
+       01  TEST-DATA-R-2   REDEFINES TEST-DATA-2.
+         03  TEST-TBL-2    OCCURS  10.
+           05  D-2             PIC S9(5) USAGE COMP-3.
+
+       01  IDX                     PIC  S9(02).
+       01 LOG-COUNT PIC 9999 VALUE 1.
+
+       01 READ-DATA-TBL-V-1.
+         03  READ-TBL-V-1    OCCURS  10.
+           05  READ-DATA-V-1   PIC S9(4)V9(2) USAGE COMP-3.
+
+       01 READ-DATA-TBL-V-2.
+         03  READ-TBL-V-2    OCCURS  10.
+           05  READ-DATA-V-2   PIC S9(5)V9(2) USAGE COMP-3.
+
+       01 READ-DATA-TBL-P-1.
+         03  READ-TBL-P-1    OCCURS  10.
+           05  READ-DATA-P-1   PIC S9(4)PP USAGE COMP-3.
+
+       01 READ-DATA-TBL-P-2.
+         03  READ-TBL-P-2    OCCURS  10.
+           05  READ-DATA-P-2   PIC S9(5)PP USAGE COMP-3.
+
+       01 READ-DATA-TBL-1.
+         03  READ-TBL-1    OCCURS  10.
+           05  READ-DATA-1     PIC S9(4) USAGE COMP-3.
+
+       01 READ-DATA-TBL-2.
+         03  READ-TBL-2    OCCURS  10.
+           05  READ-DATA-2     PIC S9(5) USAGE COMP-3.
+
+       EXEC SQL BEGIN DECLARE SECTION END-EXEC.
+       01  DBNAME                  PIC  X(30) VALUE SPACE.
+       01  USERNAME                PIC  X(30) VALUE SPACE.
+       01  PASSWD                  PIC  X(10) VALUE SPACE.
+       EXEC SQL END DECLARE SECTION END-EXEC.
+
+       EXEC SQL INCLUDE SQLCA END-EXEC.
+      ******************************************************************
+       PROCEDURE                   DIVISION.
+      ******************************************************************
+       MAIN-RTN.
+
+       PERFORM SETUP-DB.
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-V-1
+               FROM TESTTABLEV1 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-V-1(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-V-2
+               FROM TESTTABLEV2 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-V-2(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-P-1
+               FROM TESTTABLEP1 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-P-1(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-P-2
+               FROM TESTTABLEP2 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-P-2(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-1 FROM TESTTABLE1 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-1(IDX)
+           END-PERFORM.
+
+           DISPLAY "================".
+
+           EXEC SQL
+               SELECT FIELD INTO :READ-TBL-2 FROM TESTTABLE2 ORDER BY N
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+               DISPLAY READ-DATA-2(IDX)
+           END-PERFORM.
+
+       PERFORM CLEANUP-DB.
+
+      *    END
+           STOP RUN.
+
+      ******************************************************************
+       SETUP-DB.
+      ******************************************************************
+
+      *    SERVER
+           MOVE  "<|DB_NAME|>@<|DB_HOST|>:<|DB_PORT|>"
+             TO DBNAME.
+           MOVE  "<|DB_USER|>"
+             TO USERNAME.
+           MOVE  "<|DB_PASSWORD|>"
+             TO PASSWD.
+
+           EXEC SQL
+               CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLEV1
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLEV2
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLEP1
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLEP2
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLE1
+           END-EXEC.
+
+           EXEC SQL
+               DROP TABLE IF EXISTS TESTTABLE2
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLEV1
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     DECIMAL(6,2) NOT NULL
+                )
+           END-EXEC.
+           EXEC SQL
+                CREATE TABLE TESTTABLEV2
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     DECIMAL(7,2) NOT NULL
+                )
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLEP1
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     NUMERIC(6,0) NOT NULL
+                )
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLEP2
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     NUMERIC(7,0) NOT NULL
+                )
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLE1
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     NUMERIC(4,0) NOT NULL
+                )
+           END-EXEC.
+
+           EXEC SQL
+                CREATE TABLE TESTTABLE2
+                (
+                    N         NUMERIC(2,0) NOT NULL,
+                    FIELD     NUMERIC(5,0) NOT NULL
+                )
+           END-EXEC.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-V-1(IDX)     TO  VV-1
+              EXEC SQL
+                 INSERT INTO TESTTABLEV1 VALUES (:IDX, :VV-1)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-V-2(IDX)     TO  VV-2
+              EXEC SQL
+                 INSERT INTO TESTTABLEV2 VALUES (:IDX, :VV-2)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-P-1(IDX)     TO  VP-1
+              EXEC SQL
+                 INSERT INTO TESTTABLEP1 VALUES (:IDX, :VP-1)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-P-2(IDX)     TO  VP-2
+              EXEC SQL
+                 INSERT INTO TESTTABLEP2 VALUES (:IDX, :VP-2)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-1(IDX)     TO  V-1
+              EXEC SQL
+                 INSERT INTO TESTTABLE1 VALUES (:IDX, :V-1)
+              END-EXEC
+           END-PERFORM.
+
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
+              MOVE D-2(IDX)     TO  V-2
+              EXEC SQL
+                 INSERT INTO TESTTABLE2 VALUES (:IDX, :V-2)
+              END-EXEC
+           END-PERFORM.
+
+           EXEC SQL
+               COMMIT WORK
+           END-EXEC.
+
+      ******************************************************************
+       CLEANUP-DB.
+      ******************************************************************
+           EXEC SQL
+               DISCONNECT ALL
+           END-EXEC.
+
+_ATEOF
+
+{ set +x
+$as_echo "$at_srcdir/comp3_signed.at:363: ocesql prog.cbl prog.cob > /dev/null"
+at_fn_check_prepare_trace "comp3_signed.at:363"
+( $at_check_trace; ocesql prog.cbl prog.cob > /dev/null
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/comp3_signed.at:363"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/comp3_signed.at:364: \${EMBED_DB_INFO} prog.cob"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "comp3_signed.at:364"
+( $at_check_trace; ${EMBED_DB_INFO} prog.cob
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/comp3_signed.at:364"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/comp3_signed.at:365: \${COMPILE_MODULE} prog.cob"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "comp3_signed.at:365"
+( $at_check_trace; ${COMPILE_MODULE} prog.cob
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/comp3_signed.at:365"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+{ set +x
+$as_echo "$at_srcdir/comp3_signed.at:366: \${RUN_MODULE} prog"
+at_fn_check_prepare_notrace 'a ${...} parameter expansion' "comp3_signed.at:366"
+( $at_check_trace; ${RUN_MODULE} prog
+) >>"$at_stdout" 2>>"$at_stderr" 5>&-
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+echo >>"$at_stdout"; $as_echo "+0000.00
+-0000.01
++0000.10
+-0001.01
++0001.10
+-2000.00
++2000.01
+-1234.56
+-9999.99
++9999.99
+================
++00000.00
+-00000.01
++00000.10
+-00001.01
++00001.10
+-20000.00
++20000.01
+-12345.67
+-99999.99
++99999.99
+================
++000000
+-000100
++000200
+-300000
++110000
+-123400
++666600
+-777700
+-999900
++999900
+================
++0000000
+-0000100
++0000200
+-3000000
++1100000
+-1234500
++6666600
+-7777700
+-9999900
++9999900
+================
++0000
+-0001
++0002
+-0010
++0020
+-0100
++0200
+-1000
+-9999
++9999
+================
++00000
+-00001
++00002
+-00010
++00100
+-01000
++10000
+-12345
+-99999
++99999
+" | \
+  $at_diff - "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/comp3_signed.at:366"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+
+  set +x
+  $at_times_p && times >"$at_times_file"
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
+read at_status <"$at_status_file"
+#AT_STOP_4
+#AT_START_5
+at_fn_group_banner 5 'alphanumeric.at:1' \
+  "alphanumeric" "                                   "
+at_xfail=no
+(
+  $as_echo "5. $at_setup_line: testing $at_desc ..."
   $at_traceon
 
 
@@ -2828,13 +3820,13 @@ $at_traceon; }
   $at_times_p && times >"$at_times_file"
 ) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
-#AT_STOP_3
-#AT_START_4
-at_fn_group_banner 4 'japanese.at:1' \
+#AT_STOP_5
+#AT_START_6
+at_fn_group_banner 6 'japanese.at:1' \
   "japanese" "                                       "
 at_xfail=no
 (
-  $as_echo "4. $at_setup_line: testing $at_desc ..."
+  $as_echo "6. $at_setup_line: testing $at_desc ..."
   $at_traceon
 
 
@@ -2905,11 +3897,11 @@ cat >prog.cbl <<'_ATEOF'
       ******************************************************************
 
       *    SERVER
-           MOVE  "testdb@db_postgres:5432"
+           MOVE  "<|DB_NAME|>@<|DB_HOST|>:<|DB_PORT|>"
              TO DBNAME.
-           MOVE  "main_user"
+           MOVE  "<|DB_USER|>"
              TO USERNAME.
-           MOVE  "password"
+           MOVE  "<|DB_PASSWORD|>"
              TO PASSWD.
 
            EXEC SQL
@@ -3024,4 +4016,4 @@ $at_traceon; }
   $at_times_p && times >"$at_times_file"
 ) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
-#AT_STOP_4
+#AT_STOP_6
