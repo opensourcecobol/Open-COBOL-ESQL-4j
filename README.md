@@ -3,8 +3,6 @@
 Open COBOL ESQL 4J (OCESQL 4J) consits of open-source Embedded SQL pre-compiler and run time libraries for [opensource COBOL 4J](https://github.com/opensourcecobol/opensourcecobol4j).
 
 
-test CI
-
 # Requirements
 
 * Open-source database.
