@@ -2231,21 +2231,13 @@ char *yytext;
 
 int startlineno = 0;
 int endlineno = 0;
-int hostlineno = 0;
 int includelinenum = 0;
 int includeflag = 0;
 int period = 0;
 int conn_use_other_db = 0;
 int command_putother = 0;
-struct cb_exec_list *exec_list = NULL;
-struct cb_hostreference_list *host_reference_list;
-struct cb_res_hostreference_list *res_host_reference_list;
-struct cb_sql_list *sql_list;
 
-char dbname[BUFFSIZE];
-char prepname[BUFFSIZE];
 char commandname[BUFFSIZE];
-char cursorname[BUFFSIZE];
 char sqlname[BUFFSIZE];
 int sqlnum = 0;
 char incfilename[BUFFSIZE];
