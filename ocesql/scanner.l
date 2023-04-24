@@ -69,6 +69,7 @@ JPNWORD [\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC])
 DIGIT [0-9]
 WORD ([A-Za-z\+\-0-9_]|[(]|[)]|[\'])
 INCFILE [A-Za-z0-9_\+\-]+
+INCFILE_QUOTED ("\""[^\"]+"\""|"\'"[^\']+"\'")
 FILENAME [A-Za-z0-9_\+\-\.]+
 STRVALUE ("\""[^\"]+"\""|"\'"[^\']+"\'")
 HEXVALUE "X"("\""[^\"]+"\""|"\'"[^\']+"\'")
@@ -510,6 +511,16 @@ INT_CONSTANT {digit}+
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),"INCFILE");
 		yylval.s = com_strdup (yytext);
+		com_strcpy(incfilename,sizeof(incfilename),yylval.s);
+	      	return INCLUDE_FILE;
+	}
+	{INCFILE_QUOTED} {
+		memset(commandname,0,sizeof(commandname));
+		com_strcpy(commandname,sizeof(commandname),"INCFILE");
+		// remove '"'
+		size_t incfile_strlen = strlen(yytext);
+		yylval.s = malloc(strlen(yytext) - 1);
+		memcpy(yylval.s, yytext + 1, incfile_strlen - 2);
 		com_strcpy(incfilename,sizeof(incfilename),yylval.s);
 	      	return INCLUDE_FILE;
 	}
