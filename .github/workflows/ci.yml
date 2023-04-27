@@ -49,14 +49,14 @@ jobs:
           curl -L -o ~/.java_lib/sqlite.jar https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
           curl -L -o ~/.java_lib/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
           
-      # Checkout opensource COBOL 4j v1.0.5
+      # Checkout opensource COBOL 4j v1.0.9
       - name: Checkout opensourcecobol4j (fix/comp3 branch)
         run: |
-          curl -L -o opensourcecobol4j.tar.gz https://github.com/opensourcecobol/opensourcecobol4j/archive/refs/tags/v1.0.5.tar.gz
+          curl -L -o opensourcecobol4j.tar.gz https://github.com/opensourcecobol/opensourcecobol4j/archive/refs/tags/v1.0.9.tar.gz
           tar zxf opensourcecobol4j.tar.gz
-          mv opensourcecobol4j-1.0.5 opensourcecobol4j
+          mv opensourcecobol4j-1.0.9 opensourcecobol4j
       
-      # Install opensource COBOL 4j v1.0.5
+      # Install opensource COBOL 4j v1.0.9
       - name: Install opensource COBOL (fix/comp3 branch)
         run: |
           cd opensourcecobol4j
@@ -64,7 +64,6 @@ jobs:
           export CLASSPATH="$CLASSPATH:$HOME/.java_lib/sqlite.jar"
           make
           sudo make install
-          cp libcobj/build/libcobj.jar ~/.java_lib
           cd ../
 
       # Build and Install Open-COBOL-ESQL-4j
@@ -73,15 +72,16 @@ jobs:
           sh configure --prefix=/usr/
           make
           sudo make install
-          cp ~/.java_lib/{libcobj,postgresql}.jar dblibj/lib
+          cp ~/.java_lib/postgresql.jar dblibj/lib
+          cp /usr/lib/opensourcecobol4j/libcobj.jar dblibj/lib
           cd dblibj
-          export CLASSPATH="$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:$HOME/.java_lib/libcobj.jar"
+          export CLASSPATH="$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar"
           sbt assembly
           cp target/scala-2.13/ocesql4j.jar ~/.java_lib  
       # Run Autotest
       - name: Run tests
         run: |
-          export CLASSPATH=":$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:$HOME/.java_lib/libcobj.jar:$HOME/.java_lib/ocesql4j.jar"
+          export CLASSPATH=":$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar:$HOME/.java_lib/ocesql4j.jar"
           cd tests
           cp ../.github/workflows/ubuntu-test-settings/embed_db_info.sh embed_db_info.sh
           make
