@@ -1,5 +1,15 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Open COBOL ESQL 4J 1.0.2
+
+** New Features
+    (1) Open COBOL ESQL 4J accepts `EXEC SQL INCLUDE "filename" END EXEC`
+
+** Bug fixes
+    (1) Fix the bug related to the installation
+
+-----------------------------------------------------------------------
+
 * Open COBOL ESQL 4J 1.0.1
 
 ** New Features
