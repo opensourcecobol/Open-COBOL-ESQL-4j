@@ -37,21 +37,13 @@
 
 int startlineno = 0;
 int endlineno = 0;
-int hostlineno = 0;
 int includelinenum = 0;
 int includeflag = 0;
 int period = 0;
 int conn_use_other_db = 0;
 int command_putother = 0;
-struct cb_exec_list *exec_list = NULL;
-struct cb_hostreference_list *host_reference_list;
-struct cb_res_hostreference_list *res_host_reference_list;
-struct cb_sql_list *sql_list;
 
-char dbname[BUFFSIZE];
-char prepname[BUFFSIZE];
 char commandname[BUFFSIZE];
-char cursorname[BUFFSIZE];
 char sqlname[BUFFSIZE];
 int sqlnum = 0;
 char incfilename[BUFFSIZE];
@@ -77,6 +69,7 @@ JPNWORD [\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC])
 DIGIT [0-9]
 WORD ([A-Za-z\+\-0-9_]|[(]|[)]|[\'])
 INCFILE [A-Za-z0-9_\+\-]+
+INCFILE_QUOTED ("\""[^\"]+"\""|"\'"[^\']+"\'")
 FILENAME [A-Za-z0-9_\+\-\.]+
 STRVALUE ("\""[^\"]+"\""|"\'"[^\']+"\'")
 HEXVALUE "X"("\""[^\"]+"\""|"\'"[^\']+"\'")
@@ -518,6 +511,16 @@ INT_CONSTANT {digit}+
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),"INCFILE");
 		yylval.s = com_strdup (yytext);
+		com_strcpy(incfilename,sizeof(incfilename),yylval.s);
+	      	return INCLUDE_FILE;
+	}
+	{INCFILE_QUOTED} {
+		memset(commandname,0,sizeof(commandname));
+		com_strcpy(commandname,sizeof(commandname),"INCFILE");
+		// remove '"'
+		size_t incfile_strlen = strlen(yytext);
+		yylval.s = malloc(strlen(yytext) - 1);
+		memcpy(yylval.s, yytext + 1, incfile_strlen - 2);
 		com_strcpy(incfilename,sizeof(incfilename),yylval.s);
 	      	return INCLUDE_FILE;
 	}
