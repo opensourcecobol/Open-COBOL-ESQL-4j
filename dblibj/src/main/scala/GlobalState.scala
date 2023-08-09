@@ -19,7 +19,23 @@ class GlobalState(val connectionMap: ConnectionMap,
   def setOccursInfo(occursInfo: OccursInfo): GlobalState = new GlobalState(connectionMap, rollbackOneMode, cursorMap, sqlVarQueue, sqlResVarQueue, queryInfoMap, occursInfo)
 }
 
+sealed trait PIC_N_Charset
+case class PIC_N_SJIS() extends PIC_N_Charset
+case class PIC_N_UTF16BE() extends PIC_N_Charset
+
 object GlobalState {
   var globalState: GlobalState = initialGlobalState
+
+  var fetch_records: Int = 1
+  val SWITCH_PIC_N_ENV_VAR_NAME = "OCESQL4J_UTF16BE"
+  val FETCH_RECORDS_ENV_VAR_NAME = "OCESQL4J_FETCH_RECORDS"
+
+  def getFetchRecords = fetch_records
+  def setFetchRecords(x: Int) = {
+    if(x > 0) {
+      fetch_records = x
+    }
+  }
+
   def initialGlobalState: GlobalState = new GlobalState(ConnectionInfo.emptyConnectionMap, false, Cursor.emptyCursorMap, Queue.empty, Queue.empty, Map.empty, OccursInfo.defaultValue)
 }

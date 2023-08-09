@@ -1,23 +1,22 @@
 import ConstValues._
 import Operation._
 import Common._
+import java.util.Properties
 
 import java.sql._
 
 object OCESQLConnectCore {
   val OCESQL_DEFAULT_DBNAME = "OCDB_DEFAULT_DBNAME"
 
-  def connect(user: Option[String], passwd: Option[String], name: Option[String], atdb: Option[String]): Operation[Int] = {
+  def connect(user: Option[String], passwd: Option[String], name: Option[String], atdb: Option[String], state: OCDBState): Int = {
     val tmpName   = name.map(getStrWithoutAfterSpace(_))
     val tmpUser   = user.map(getStrWithoutAfterSpace(_))
     val tmpPasswd = passwd.map(getStrWithoutAfterSpace(_))
 
-    for {
-      dbName <- getNameWithEnvValue(tmpName, "OCDB_DB_NAME")
-      dbUser <- getNameWithEnvValue(tmpUser, "OCDB_DB_USER")
-      dbPasswd <- getNameWithEnvValue(tmpPasswd, "OCDB_DB_PASS")
-      result <- connectMain(dbName, dbUser, dbPasswd, atdb.getOrElse(OCESQL_DEFAULT_DBNAME))
-    } yield result
+    val dbName = getNameWithEnvValue(tmpName, "OCDB_DB_NAME")
+    val dbUser = getNameWithEnvValue(tmpUser, "OCDB_DB_USER")
+    val dbPasswd = getNameWithEnvValue(tmpPasswd, "OCDB_DB_PASS")
+    connectMain(dbName, dbUser, dbPasswd, atdb.getOrElse(OCESQL_DEFAULT_DBNAME), state)
   }
 
   def getStrWithoutAfterSpace(str: String): String = {
@@ -29,13 +28,13 @@ object OCESQLConnectCore {
     }
   }
 
-  private def getNameWithEnvValue(defaultName: Option[String], envKey: String): Operation[Option[String]] =
+  private def getNameWithEnvValue(defaultName: Option[String], envKey: String): Option[String] =
     defaultName match {
-      case None => comGetEnv(envKey)
-      case Some(name) => operationPure(defaultName)
+      case None => Option(System.getenv(envKey))
+      case Some(name) => defaultName
     }
 
-  private def connectMain(name: Option[String], user: Option[String], passwd: Option[String], connDBName: String): Operation[Int] = {
+  private def connectMain(name: Option[String], user: Option[String], passwd: Option[String], connDBName: String, state: OCDBState): Int = {
     val dbname = name
     val dbType = DB_Postgres()
     val st = SqlCA.defaultValue
@@ -43,48 +42,48 @@ object OCESQLConnectCore {
     val (real_dbname, host, port) = parseDBName(dbname)
     val autoCommit = true
 
-    (for {
-      cEncoding <- comGetEnvOrElseC("OCDB_DB_CHAR", "SJIS")
+    val cEncoding = Option(System.getenv("OCDB_DB_CHAR")).getOrElse("UTF-8")
 
-      _ <- logLnC("dbname   = " + name.getOrElse(""))
-      _ <- logLnC("user     = " + user.getOrElse(""))
-      _ <- logLnC("password = " + passwd.getOrElse(""))
-      _ <- logLnC("connname = " + connDBName)
+    logLn("dbname   = " + name.getOrElse(""))
+    logLn("user     = " + user.getOrElse(""))
+    logLn("password = " + passwd.getOrElse(""))
+    logLn("connname = " + connDBName)
 
-      state <- getStateC
+    if(!checkType(dbType)) {
+      errorLogLn(s"dbtype invalid")
+      state.updateSQLCA(st.setCode(OCDB_CONN_FAIL_CONNECT))
+      return 1
+    }
 
-      _ <- whenExecuteAndExit(!checkType(dbType),
-        for {
-          _ <- errorLogLn(s"dbtype invalid")
-          _ <- setState(state.setSqlCA(st.setCode(OCDB_CONN_FAIL_CONNECT)))
-        } yield 1)
+    val id = resolveCONNID(connDBName, state.globalState.connectionMap)
+    val connectId = connectDB(dbType, real_dbname, host, port, user, passwd,
+      connDBName, autoCommit, cEncoding, state)
 
-      id <- OperationCPure(resolveCONNID(connDBName, state.globalState.connectionMap))
-      connectId <- operationCPure(connectDB(dbType, real_dbname, host, port, user, passwd,
-        connDBName, autoCommit, cEncoding))
+    logLn(s"publish connect Id: ${connectId}")
 
-      _ <- logLnC(s"publish connect Id: ${connectId}")
+    if(connectId == OCDB_CONN_FAIL_CONNECT) {
+      setLibErrorStatus(OCDB_CONNECT(), state)
+      errorLogLn(s"connection failed. connect param is :${connStr}")
+      return 1
+    }
 
-      _ <- whenExecuteAndExit(connectId == OCDB_CONN_FAIL_CONNECT, for {
-        _ <- setLibErrorStatus(OCDB_CONNECT())
-        _ <- errorLogLn(s"connection failed. connect param is :${connStr}")
-      } yield 1)
+    if(connectId == INVALID_CONN_ID) {
+      setLibErrorStatus(OCDB_CONNECT(), state)
+      errorLogLn(s"connection failed. connect param is :${connStr}")
+      return 1
+    }
 
-      _ <- whenExecuteAndExit(connectId == INVALID_CONN_ID, for {
-        _ <- setLibErrorStatus(OCDB_CONNECT())
-        _ <- errorLogLn(s"connection failed. connect param is :${connStr}")
-      } yield 1)
+    //[remark] トランザクションがどこでとじられるのか不明のため一時的に消去
+    OCDBExec(connectId, "BEGIN", state)
 
-      //[remark] トランザクションがどこでとじられるのか不明のため一時的に消去
-      //_ <- operationCPure(OCDBExec(connectId, "BEGIN"))
+    if(setResultStatus(connectId, state)) {
+      return 1
+    }
 
-      resultStatusFlag <- operationCPure(setResultStatus(connectId))
-      _ <- whenExecuteAndExit(resultStatusFlag,
-        operationPure(1))
-
-      _ <- logLnC(s"Connection success. connectId = ${connectId}, dbname=")
-    } yield 0).eval
+    logLn(s"Connection success. connectId = ${connectId}, dbname=")
+    0
   }
+
 
   private def checkType(dbType: DBtype): Boolean = true
 
@@ -136,55 +135,49 @@ object OCESQLConnectCore {
    * @return
    */
   private def connectDB(dbType: DBtype, dbname: Option[String], host: Option[String], port: Option[String], user: Option[String],
-                        passwd: Option[String], connName: String, autoCommit: Boolean, encoding: Option[String]): Operation[Int] =
-    (for {
-      connAddr <- operationCPure(OCDB_PGConnect(dbname, host, port, user, passwd, autoCommit, encoding))
+                        passwd: Option[String], connName: String, autoCommit: Boolean, encoding: String, state: OCDBState): Int = {
+    val connAddr = OCDB_PGconnect(dbname, host, port, user, passwd, autoCommit, encoding, state)
 
-      //[remark] temporary implementation
-      //_ <- whenExecuteAndExit(connAddr == OCDB_CONN_FAIL_CONNECT,
-      _ <- whenExecuteAndExit(connAddr.isEmpty,
-        operationPure(OCDB_CONN_FAIL_CONNECT))
-
-      returnValue <- operationCPure(addConnList(dbType, connName, connAddr))
-
-      _ <- whenExecuteAndExit(returnValue == INVALID_CONN_ID, for {
-          _ <- OCDB_PGFinish(connAddr)
-        } yield INVALID_CONN_ID)
-
-      _ <- logLnC(s"connid=${returnValue}")
-    } yield returnValue).eval
-
-  private def addConnList(dbType: DBtype, connName: String, connAddr: Option[Connection]): Operation[Int] = {
-    val actionAddConnectionToMap = {
-      val newConnection = createConn(dbType, connName, connAddr)
-      for {
-        _ <- addConnectionInfoToMap(connName, newConnection)
-      } yield newConnection.id
+    //[remark] temporary implementation
+    //_ <- whenExecuteAndExit(connAddr == OCDB_CONN_FAIL_CONNECT,
+    if(connAddr.isEmpty) {
+      return OCDB_CONN_FAIL_CONNECT
     }
 
-    for {
-      state <- getState
-      result <- state.globalState.connectionMap.get(connName) match {
-        case None => actionAddConnectionToMap
-        case Some(sc) => if (connName == sc.cid) {
-          for {
-            _ <- errorLogLn(s"connection id ${connName} is already registered")
-          } yield INVALID_CONN_ID
-        } else {
-          actionAddConnectionToMap
-        }
-      }
-    } yield result
+    val returnValue = addConnList(dbType, connName, connAddr, state)
+
+    if(returnValue == INVALID_CONN_ID) {
+      OCDB_PGFinish(connAddr, state)
+      return INVALID_CONN_ID
+    }
+
+    logLn(s"connid=${returnValue}")
+    returnValue
   }
 
-  private def addConnectionInfoToMap(key: String, info: ConnectionInfo): Operation[Unit] = for {
-    state <- getState
-    _ <- setState({
-      val connectionMap = state.globalState.connectionMap
-      val newConnectionMap = connectionMap + (key -> info)
-      state.setGlobalState(state.globalState.setConnectionMap(newConnectionMap))
-    })
-  } yield ()
+  private def addConnList(dbType: DBtype, connName: String, connAddr: Option[Connection], state: OCDBState): Int = {
+    def actionAddConnectionToMap() = {
+      val newConnection = createConn(dbType, connName, connAddr)
+      addConnectionInfoToMap(connName, newConnection, state)
+      newConnection.id
+    }
+
+    state.globalState.connectionMap.get(connName) match {
+      case None => actionAddConnectionToMap()
+      case Some(sc) => if (connName == sc.cid) {
+        errorLogLn(s"connection id ${connName} is already registered")
+        INVALID_CONN_ID
+      } else {
+        actionAddConnectionToMap()
+      }
+    }
+  }
+
+  private def addConnectionInfoToMap(key: String, info: ConnectionInfo, state: OCDBState): Unit = {
+    val connectionMap = state.globalState.connectionMap
+    val newConnectionMap = connectionMap + (key -> info)
+    state.updateGlobalState(state.globalState.setConnectionMap(newConnectionMap))
+  }
 
   private def createConn(dbType: DBtype, connName: String, connAddr: Option[Connection]): ConnectionInfo =
     new ConnectionInfo(
@@ -198,29 +191,47 @@ object OCESQLConnectCore {
       Some("")
     )
 
-  private def setRollBackOneMode(flag: Boolean): Operation[Unit] = for {
-    state <- getState
-    _ <- setState({
-      val globalState = state.globalState
-      val newGlobalState = globalState.setRollBackOneMode(flag)
-      state.setGlobalState(newGlobalState)
-    })
-  } yield ()
+  private def setRollBackOneMode(flag: Boolean, state: OCDBState): Unit = {
+    val globalState = state.globalState
+    val newGlobalState = globalState.setRollBackOneMode(flag)
+    state.updateGlobalState(newGlobalState)
+  }
 
-  private def OCDB_PGConnect(dbname: Option[String], host: Option[String], port: Option[String],user: Option[String],
-                             passwd: Option[String], autoCommit: Boolean, encoding: Option[String]): Operation[Option[Connection]] =
-    Operation.connect(dbname, host, port, user, passwd, encoding).flatMap(_ match {
-      case None => operationPure(None)
-      case Some(c) => for {
-        _ <- setAutoCommit(c, autoCommit)
-        _ <- comGetEnv("OCDB_PG_IGNORE_ERROR").flatMap(_ match  {
-          case None => setRollBackOneMode(false)
-          case Some(envValue) => setRollBackOneMode(envValue == "Y")
-        })
-      } yield Some(c)
-    })
+  private def OCDB_PGconnect(dbname: Option[String], host: Option[String], port: Option[String],user: Option[String],
+                             passwd: Option[String], autoCommit: Boolean, encoding: String, state: OCDBState): Option[Connection] =
+    execute_connect(dbname, host, port, user, passwd, encoding, state) match {
+      case None => None
+      case Some(c) => {
+        c.setAutoCommit(autoCommit)
+        Option(System.getenv("OCDB_PG_IGNORE_ERROR")) match  {
+          case None => setRollBackOneMode(false, state)
+          case Some(envValue) => setRollBackOneMode(envValue == "Y", state)
+        }
+        Some(c)
+      }
+    }
 
-  def connectInformal(connInfo: Option[String], atdb: Option[String]): Operation[Int] = {
+  private def execute_connect(dbname: Option[String], host: Option[String], port: Option[String],user: Option[String],
+                           passwd: Option[String], encoding: String, state: OCDBState): Option[Connection] = {
+    val _host = host.getOrElse("")
+    val _port = port match {
+      case None => ""
+      case Some(p) => s":${p}"
+    }
+    val _dbname = dbname.getOrElse("")
+    val url = s"jdbc:postgresql://${_host}${_port}/${_dbname}"
+    val prop = new Properties()
+    user.map(prop.put("user", _))
+    passwd.map(prop.put("password", _))
+    prop.put("encoding", encoding)
+    try {
+      Option(DriverManager.getConnection(url, prop))
+    } catch {
+      case e: Throwable => None
+    }
+  }
+
+  def connectInformal(connInfo: Option[String], atdb: Option[String], state: OCDBState): Int = {
     val _connInfoBuf = connInfo.map(getStrWithoutAfterSpace(_))
 
     val _dsn = _connInfoBuf.map(splitString('@', _))
@@ -238,20 +249,21 @@ object OCESQLConnectCore {
     val tmpPasswd = passwd.map(getStrWithoutAfterSpace(_))
 
 
-    val errorProc = for {
-      _ <- errorLogLn("Connection information is NULL")
-    } yield -1
+    def errorProc = {
+      errorLogLn("Connection information is NULL")
+      -1
+    }
 
     connInfoBuf match {
       case None => errorProc
       case Some(ci) if ci.isEmpty => errorProc
-      case Some(ci) => for {
-        _ <- logLn(ci)
-        dbName <- getNameWithEnvValue(tmpName, "OCDB_DB_NAME")
-        dbUser <- getNameWithEnvValue(tmpUser, "OCDB_DB_USER")
-        dbPasswd <- getNameWithEnvValue(tmpPasswd, "OCDB_DB_PASS")
-        returnValue <- connectMain(dbName, dbUser, dbPasswd, atdb.getOrElse(OCESQL_DEFAULT_DBNAME))
-      } yield returnValue
+      case Some(ci) => {
+        logLn(ci)
+        val dbName = getNameWithEnvValue(tmpName, "OCDB_DB_NAME")
+        val dbUser = getNameWithEnvValue(tmpUser, "OCDB_DB_USER")
+        val dbPasswd = getNameWithEnvValue(tmpPasswd, "OCDB_DB_PASS")
+        connectMain(dbName, dbUser, dbPasswd, atdb.getOrElse(OCESQL_DEFAULT_DBNAME), state)
+      }
     }
   }
 }

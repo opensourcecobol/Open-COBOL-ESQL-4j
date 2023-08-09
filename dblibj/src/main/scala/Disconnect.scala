@@ -1,7 +1,8 @@
-import Operation._
 import Common._
 
 object OCESQLDisconnectCore {
-  def disconnect(id: Int): Operation[Unit] =
-    OCDB_Finish(id)
+  def disconnect(id: Int, state: OCDBState): Unit = {
+    OCDBExec(id, "COMMIT", state)
+    OCDB_Finish(id, state)
+  }
 }
