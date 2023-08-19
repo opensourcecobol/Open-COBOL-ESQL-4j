@@ -87,7 +87,7 @@ jobs:
           cp ../.github/workflows/ubuntu-test-settings/embed_db_info.sh embed_db_info.sh
           make
           ./basic
-          ./cobol_data
+          ./cobol_data || cat cobol_data.dir/*/*.log
           ./sql_data
           ./sqlca
           ./misc
