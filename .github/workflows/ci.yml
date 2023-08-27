@@ -14,12 +14,28 @@ jobs:
     container:
       image: ${{ matrix.os }}
     
-    # Start PostgreSQL server
+    # Start PostgreSQL 9.6 server
     services:
-      postgres:
+      postgres9_6:
         image: postgres:9.6
         ports: 
           - 5432:5432
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: main_user
+          POSTGRES_DB: testdb
+          POSTGRES_HOST_AUTH_METHOD: 'trust'
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Start PostgreSQL 15 server
+      postgres15:
+        image: postgres:15
+        ports: 
+          - 5433:5432
         env:
           POSTGRES_PASSWORD: password
           POSTGRES_USER: main_user
@@ -97,10 +113,18 @@ jobs:
           sbt assembly
           cp target/scala-2.13/ocesql4j.jar ~/.java_lib
 
-      # Run Autotest
-      - name: Run tests
+      # Run Autotest for PostgreSQL 9.6
+      - name: Run tests for PostgreSQL 9.6
         run: |
           export CLASSPATH=":$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar:$HOME/.java_lib/ocesql4j.jar"
           cd tests
-          cp ../.github/workflows/ubuntu-test-settings/embed_db_info.sh embed_db_info.sh
+          cp ../.github/workflows/db-settings/embed_db_info_postgresql_9.6.sh embed_db_info.sh
+          make test
+
+      # Run Autotest for PostgreSQL 15
+      - name: Run tests for PostgreSQL 15
+        run: |
+          export CLASSPATH=":$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar:$HOME/.java_lib/ocesql4j.jar"
+          cd tests
+          cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
           make test
