@@ -18,6 +18,7 @@ dblibj/lib_managed/
 dblibj/src_managed/
 dblibj/project/boot/
 dblibj/project/plugins/project/
+dblibj/project/target/
 dblibj/.history
 dblibj/.cache
 dblibj/.lib/
@@ -107,3 +108,15 @@ dblibj/lib/~BROMIUM/
 dblibj/project/target/active.json
 *.class
 *.cache
+Makefile
+config.h
+config.log
+config.status
+libtool
+ocesql/.deps/
+ocesql/Makefile
+ocesql/errorfile.o
+ocesql/ocesql
+ocesql/*.o
+stamp-h1
+tests/*.log
