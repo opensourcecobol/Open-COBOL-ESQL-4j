@@ -1,9 +1,18 @@
 
 import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
 
-class OCDBState(val sqlCA: SqlCA, val globalState: GlobalState) {
+class OCDBState(var sqlCA: SqlCA, var globalState: GlobalState) {
   def setSqlCA(sqlCA: SqlCA): OCDBState = new OCDBState(sqlCA, this.globalState)
   def setGlobalState(globalState: GlobalState): OCDBState = new OCDBState(this.sqlCA, globalState)
+  def updateSQLCA(sqlCA: SqlCA): Unit = {
+    this.sqlCA = sqlCA
+  }
+  def updateGlobalState(globalState: GlobalState): Unit = {
+    this.globalState = globalState
+  }
+  def initSqlca(): Unit = {
+    this.sqlCA = SqlCA.defaultValue
+  }
 }
 
 object OCDBState {

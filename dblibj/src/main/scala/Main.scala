@@ -9,29 +9,51 @@ import SQLVar._
 import Select._
 import Cursor._
 import Prepare._
+import GlobalState._
+
+object CobolRunnableWrapper {
+  var firstRun = true
+}
 
 trait CobolRunnableWrapper extends CobolRunnable {
   override def cancel(): Unit = {}
   override def isActive(): Boolean = true
   override def run(args: CobolDataStorage*): Int = {
-    val initialState: OCDBState = if (parseSqlCA) {
+
+    // Set PIC_N Charset
+    if(CobolRunnableWrapper.firstRun) {
+      GlobalState.setFetchRecords({
+        val envValue = System.getenv(GlobalState.FETCH_RECORDS_ENV_VAR_NAME)
+        val fetchRecords = Option(envValue) match {
+          case Some(x) => x.toIntOption match {
+            case Some(fetchSize) if (fetchSize > 0) => fetchSize
+            case _ => 1
+          }
+          case _ => 1
+        }
+        fetchRecords
+      })
+      CobolRunnableWrapper.firstRun = false
+    }
+
+    val state: OCDBState = if (parseSqlCA) {
       OCDBState.initialState(args(0))
     } else {
       new OCDBState(SqlCA.defaultValue, Common.internalState)
     }
-    val (newOCBDState, result) = execute(args).run(initialState).foldMap(compiler)
+    val result = execute(args, state)
     if(parseSqlCA) {
-      OCDBState.updateByState(args(0), newOCBDState)
+      OCDBState.updateByState(args(0), state)
     } else {
-      OCDBState.updateByState(newOCBDState)
+      OCDBState.updateByState(state)
     }
-    Common.internalState = newOCBDState.globalState
+    Common.internalState = state.globalState
     result
   }
 
-  var parseSqlCA: Boolean = true
+  def execute(args: Seq[CobolDataStorage], state: OCDBState): Int
 
-  def execute(args: Seq[CobolDataStorage]): Operation[Int]
+  var parseSqlCA: Boolean = true
 
   def storageToInt(storage: CobolDataStorage): Option[Int] = {
     try {
@@ -58,912 +80,975 @@ trait CobolRunnableWrapper extends CobolRunnable {
 }
 
 class OCESQLConnect extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val user  : Option[String] = storageToString(args(1), args(2))
     val passwd: Option[String] = storageToString(args(3), args(4))
     val name  : Option[String] = storageToString(args(5), args(6))
-    for {
-      _ <- logLn("OCESQLConnect start")
-      result <- OCESQLConnectCore.connect(user, passwd, name, None)
-    } yield result
+    logLn("OCESQLConnect start")
+    OCESQLConnectCore.connect(user, passwd, name, None, state)
   }
 }
 
 class OCESQLIDConnect extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val _atdb  : Option[String] = storageToString(args(1), args(2))
     val user  : Option[String] = storageToString(args(3), args(4))
     val passwd: Option[String] = storageToString(args(5), args(6))
     val name  : Option[String] = storageToString(args(7), args(8))
     val atdb = _atdb.map(OCESQLConnectCore.getStrWithoutAfterSpace(_))
 
-    val errorProc = for {
-      _ <- setLibErrorStatus(OCDB_VAR_NOT_CHAR())
-    } yield 1
+    def errorProc() = {
+      setLibErrorStatus(OCDB_VAR_NOT_CHAR(), state)
+      1
+    }
 
-    for {
-      _ <- logLn("OCESQLIDConnect start")
-      result <- atdb match {
-        case None => errorProc
-        case Some(a) => if (a.isEmpty) {
-          errorProc
-        } else {
-          OCESQLConnectCore.connect(user, passwd, name, atdb)
-        }
+    logLn("OCESQLIDConnect start")
+    atdb match {
+      case None => errorProc
+      case Some(a) => if (a.isEmpty) {
+        errorProc
+      } else {
+        OCESQLConnectCore.connect(user, passwd, name, atdb, state)
       }
-    } yield result
+    }
   }
 }
 
 class OCESQConnectShort extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = for {
-    _ <- logLn("OCESQLConnectShort start")
-    returnValue <- OCESQLConnectCore.connect(None, None, None, None)
-  } yield returnValue
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
+    logLn("OCESQLConnectShort start")
+    OCESQLConnectCore.connect(None, None, None, None, state)
+  }
 }
 
 class OCESQIDConnectShort extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val _atdb  : Option[String] = storageToString(args(1), args(2))
     val atdb = _atdb.map(OCESQLConnectCore.getStrWithoutAfterSpace(_))
-    for {
-      _ <- logLn("OCESQLIDConnectShort start")
-      returnValue <- OCESQLConnectCore.connect(None, None, None, atdb)
-    } yield returnValue
+    logLn("OCESQLIDConnectShort start")
+    OCESQLConnectCore.connect(None, None, None, atdb, state)
   }
 }
 
 class OCESQLConnectInformal extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val connInfo = storageToString(args(1), args(2))
-    for {
-      _ <- logLn("OCESQLConnectInformal start")
-      returnValue <- OCESQLConnectCore.connectInformal(connInfo, None)
-    } yield returnValue
+    logLn("OCESQLConnectInformal start")
+    OCESQLConnectCore.connectInformal(connInfo, None, state)
   }
 }
 
 class OCESQLIDConnectInformal extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val connInfo = storageToString(args(3), args(4))
-    for {
-      _ <- logLn("OCESQLIDConnectInformal start")
-      returnValue <- OCESQLConnectCore.connectInformal(connInfo, atdb)
-    } yield returnValue
+    logLn("OCESQLIDConnectInformal start")
+    OCESQLConnectCore.connectInformal(connInfo, atdb, state)
   }
 }
 
 class OCESQLPrepare extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val sname = getCString(args(1)).getOrElse("")
     val query = parsePrepareQuery(args(2), args(3))
 
     val nParams = "\\?".r.findAllIn(query).length
 
-    for {
-      _ <- logLn(s"Add prepare sname:${sname}, nParams:${nParams}, query:'${query}'")
-      _ <- addQueryInfoMap(sname, query, nParams)
-    } yield 0
+    logLn(s"Add prepare sname:${sname}, nParams:${nParams}, query:'${query}'")
+    addQueryInfoMap(sname, query, nParams, state)
+    0
   }
 }
 
 class OCESQLDisconnect extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] =
-    resolveCONNID(OCESQL_DEFAULT_DB_NAME).flatMap(_ match {
-      case None => for {
-        _ <- errorLogLn("connection id is not found.")
-        _ <- setLibErrorStatus(OCDB_NO_CONN())
-      } yield 1
-      case Some(c) => for {
-        _ <- OCESQLDisconnectCore.disconnect(c.id)
-      } yield 0
-    })
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int =
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found.")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
+      }
+      case Some(c) => {
+         OCESQLDisconnectCore.disconnect(c.id, state)
+         0
+      }
+    }
 }
 
 class OCESQLIDDisconnect extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
-    resolveCONNID(atdb.getOrElse("")).flatMap(_ match {
-      case None => for {
-        _ <- errorLogLn("connection id is not found.")
-        _ <- setLibErrorStatus(OCDB_NO_CONN())
-      } yield 1
-      case Some(c) => for {
-        _ <- OCESQLDisconnectCore.disconnect(c.id)
-      } yield 0
-    })
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found.")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
+      }
+      case Some(c) => {
+        OCESQLDisconnectCore.disconnect(c.id, state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLExec extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val query = getCString(args(1))
-    for {
-      _ <- logLn("OCESQLExec start")
-      _ <- logLn(s"SQL:#${query}#")
-      returnValue <- resolveCONNID(OCESQL_DEFAULT_DB_NAME).flatMap(_ match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-          } yield 1
-        case Some(connInfo) =>for {
-          _ <- ocesqlExec(connInfo.id, query)
-          } yield 0
-      })
-    } yield returnValue
+    logLn("OCESQLExec start")
+    logLn(s"SQL:#${query}#")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
+      }
+      case Some(connInfo) => {
+        ocesqlExec(connInfo.id, query, state)
+        0
+      }
+    }
+  }
+}
+
+class OCESQLExecWhereCurrentOf extends CobolRunnableWrapper {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
+    val query = getCString(args(1))
+    val cursorName = getCString(args(2))
+    logLn("OCESQLExecWhereCurrentOf start")
+    logLn(s"SQL:#${query}#")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
+      }
+      case Some(connInfo) => {
+        ocesqlExecWhereCurrentOf(connInfo.id, query, cursorName, state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLIDExec extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val query = getCString(args(3))
-    for {
-      _ <- logLn("OCESQLIDExec start")
-      _ <- logLn(s"SQL:#${query}#")
-      returnValue <- resolveCONNID(atdb.getOrElse("")).flatMap(_ match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(connInfo) =>for {
-          _ <- ocesqlExec(connInfo.id, query)
-        } yield 0
-      })
-    } yield returnValue
+    logLn("OCESQLIDExec start")
+    logLn(s"SQL:#${query}#")
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
+      }
+      case Some(connInfo) => {
+        ocesqlExec(connInfo.id, query, state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLExecParams extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val query = getCString(args(1))
     val nParams = storageToInt(args(2))
-    for {
-      _ <- logLn("OCESQLExecParams start")
-      _ <- logLn(s"SQL:#${query.getOrElse("")}#")
-      id <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
-      returnCode <- id match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(connectionInfo) => for {
-          _ <- ocesqlExecParams(connectionInfo.id, query, nParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLExecParams start")
+    logLn(s"SQL:#${query.getOrElse("")}#")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(connectionInfo) => {
+        ocesqlExecParams(connectionInfo.id, query, nParams.getOrElse(0), state)
+        0
+      }
+    }
+  }
+}
+
+class OCESQLExecParamsWhereCurrentOf extends CobolRunnableWrapper {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
+    val query = getCString(args(1))
+    val nParams = storageToInt(args(2))
+    val cursorName = getCString(args(3))
+    logLn("OCESQLExecParamsWhereCurrentOf start")
+    logLn(s"SQL:#${query}#")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
+      }
+      case Some(connInfo) => {
+        ocesqlExecParamsWhereCurrentOf(connInfo.id, query, nParams.getOrElse(0), cursorName, state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLIDExecParams extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val query = getCString(args(3))
     val nParams = storageToInt(args(4))
-    for {
-      _ <- logLn("OCESQLIDExecParams start")
-      id <- resolveCONNID(atdb.getOrElse(""))
-      returnCode <- id match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(connectionInfo) => for {
-          _ <- ocesqlExecParams(connectionInfo.id, query, nParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLIDExecParams start")
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(connectionInfo) => {
+        ocesqlExecParams(connectionInfo.id, query, nParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLExecParamsOccurs extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val query = getCString(args(1))
     val nParams = storageToInt(args(2))
-    for {
-      _ <- logLn("OCESQLExecParamsOccurs start")
-      _ <- logLn(s"SQL:#${query.getOrElse("")}#")
-      connInfo <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlExecParamsOccurs(c.id, query, nParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLExecParamsOccurs start")
+    logLn(s"SQL:#${query.getOrElse("")}#")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlExecParamsOccurs(c.id, query, nParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLIDExecParamsOccurs extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val query = getCString(args(3))
     val nParams = storageToInt(args(4))
-    for {
-      _ <- logLn("OCESQLIDExecParamsOccurs start")
-      connInfo <- resolveCONNID(atdb.getOrElse(""))
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(connectionInfo) => for {
-          _ <- ocesqlExecParamsOccurs(connectionInfo.id, query, nParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLIDExecParamsOccurs start")
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(connectionInfo) => {
+        ocesqlExecParamsOccurs(connectionInfo.id, query, nParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLCursorDeclare extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val cname = getCString(args(1))
     val query = getCString(args(2))
-    for {
-      _ <- logLn("OCESQLCursorDeclare start")
-      _ <- logLn(s"SQL:#${query}#")
-      connInfo <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlCursorDeclare(c.id, cname, query, 0)
-        } yield 0
+    logLn("OCESQLCursorDeclare start")
+    logLn(s"SQL:#${query}#")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        return 1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlCursorDeclare(c.id, cname, query, 0, state)
+        return 0
+      }
+    }
   }
 }
 
 class OCESQLIDCursorDeclare extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val cname = getCString(args(3))
     val query = getCString(args(4))
-    for {
-      _ <- logLn("OCESQLIDCursorDeclare start")
-      connInfo <- resolveCONNID(atdb.getOrElse(""))
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlCursorDeclare(c.id, cname, query, 0)
-        } yield 0
+    logLn("OCESQLIDCursorDeclare start")
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlCursorDeclare(c.id, cname, query, 0, state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLCursorDeclareParams extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val cname = getCString(args(1))
     val query = getCString(args(2))
     val nParams = storageToInt(args(3))
 
-    for {
-      _ <- logLn("OCESQLCursorDeclareParams start")
-      _ <- logLn(s"SQL:#${query}#")
-      connInfo <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
-      state <- getState
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlCursorDeclare(c.id, cname, query, nParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLCursorDeclareParams start")
+    logLn(s"SQL:#${query}#")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        return 1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlCursorDeclare(c.id, cname, query, nParams.getOrElse(0), state)
+        return 0
+      }
+    }
   }
 }
 
 class OCESQLIDCursorDeclareParams extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val cname = getCString(args(3))
     val query = getCString(args(4))
     val nParams = storageToInt(args(5))
-    for {
-      _ <- logLn("OCESQLIDCursorDeclareParams start")
-      connInfo <- resolveCONNID(atdb.getOrElse(""))
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlCursorDeclare(c.id, cname, query, nParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLIDCursorDeclareParams start")
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlCursorDeclare(c.id, cname, query, nParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLPreparedCursorDeclare extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val cname = getCString(args(1))
     val sname = getCString(args(2))
-    for {
-      _ <- logLn("OCESQLPreparedCursorDeclare start")
-      connInfo <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlPreparedCursorDeclare(c.id, cname, sname)
-        } yield 0
+    logLn("OCESQLPreparedCursorDeclare start")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlPreparedCursorDeclare(c.id, cname, sname, state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLIDPreparedCursorDeclare extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val cname = getCString(args(3))
     val sname = getCString(args(4))
-    for {
-      _ <- logLn("OCESQLIDPreparedCursorDeclare start")
-      connInfo <- resolveCONNID(atdb.getOrElse(""))
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlPreparedCursorDeclare(c.id, cname, sname)
-        } yield 0
+    logLn("OCESQLIDPreparedCursorDeclare start")
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlPreparedCursorDeclare(c.id, cname, sname, state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLExecPrepare extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val sname = getCString(args(1))
     val nParams = storageToInt(args(2))
-    for {
-      _ <- logLn("OCESQLExecPrepare start")
-      connInfo <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlExecPrepare(c.id, sname, nParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLExecPrepare start")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlExecPrepare(c.id, sname, nParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLIDExecPrepare extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val sname = getCString(args(3))
     val nParams = storageToInt(args(4))
-    for {
-      _ <- logLn("OCESQLIDExecPrepare start")
-      connInfo <- resolveCONNID(atdb.getOrElse(""))
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(c) => for {
-          _ <- ocesqlExecPrepare(c.id, sname, nParams.getOrElse(0))
-        } yield 0
+
+    logLn("OCESQLIDExecPrepare start")
+
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(c) => {
+        ocesqlExecPrepare(c.id, sname, nParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLCursorOpen extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val cname = getCString(args(1))
     val name = cname.getOrElse("")
-    (for {
-      _ <- operationCPure(logLn("OCESQLIDExecPrepare start"))
-      _ <- operationCPure(updateState(s => s.setSqlCA(SqlCA.defaultValue)))
-      _ <- operationCPure(logLn(s"cname=#${cname.getOrElse("")}#"))
 
-      _ <- whenExecuteAndExit(name == "", for {
-          _ <- setLibErrorStatus(OCDB_EMPTY())
-        } yield 1)
+    logLn("OCESQLIDExecPrepare start")
+    state.updateSQLCA(SqlCA.defaultValue)
+    logLn(s"cname=#${cname.getOrElse("")}#")
 
-      optionCursor <- operationCPure(getCursorFromMap(name))
-
-      _ <- whenExecuteAndExit(optionCursor.isEmpty, for {
-        _ <- errorLogLn(s"cursor ${name} not registered.")
-        _ <- setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL())
-      } yield 1)
-
-      cursor_ <- operationCPure(operationPure(optionCursor.getOrElse(Cursor.defaultValue)))
-
-      _ <- if (cursor_.isOpened) {
-        for {
-          _ <- operationCPure(logLn(s"cursor ${cname} already opened"))
-          result <- operationCPure(setResultStatus(cursor_.connId))
-          _ <- whenExecuteAndExit(!result, for {
-            _ <- errorLogLn(s"cursor ${name} close failed")
-          } yield 1)
-        } yield 0
-      } else {
-        operationCPure[Int, Int](operationPure(0))
-      }
-
-      cursor <- operationCPure(operationPure(cursor_.setIsOpened(false)))
-      _ <- operationCPure(updateCursorMap(name, cursor))
-
-      _ <- operationCPure(if(cursor.nParams > 0) {
-        for {
-          //TODO the following code should be improved
-          args <- transform(cursor.sqlVarQueue.map(sv => {
-            for {
-              x <- createRealData(sv, 0)
-            } yield x
-          }))
-          _ <- OCDBCursorDeclareParams(cursor.connId, cursor.name, cursor.query, args, OCDB_CURSOR_WITH_HOLD_OFF)
-        } yield ()
-      } else {
-        cursor.sp match {
-          case q :: _ =>
-            OCDBCursorDeclare(cursor.connId, cursor.name, q.query, OCDB_CURSOR_WITH_HOLD_OFF)
-          case _ =>
-            OCDBCursorDeclare(cursor.connId, cursor.name, cursor.query, OCDB_CURSOR_WITH_HOLD_OFF)
-        }
-      })
-
-      res <- operationCPure(setResultStatus(cursor.connId))
-      _ <- whenExecuteAndExit(!res, operationPure(1))
-
-      _ <- operationCPure(OCDBCursorOpen(cursor.connId, name))
-      res1 <- operationCPure(setResultStatus(cursor.connId))
-      _ <- whenExecuteAndExit(!res, operationPure(1))
-      _ <- operationCPure(updateCursorMap(name, cursor.setIsOpened(true)))
-    } yield 0).eval
-  }
-
-  private def transform[A](queue: Queue[Operation[A]]): Operation[Queue[A]] =
-    queue match {
-      case x +: xs => for {
-        y <- x
-        ys <- transform(xs)
-      } yield y +: ys
-      case _ => operationPure(Queue())
+    if(name == "") {
+      setLibErrorStatus(OCDB_EMPTY(), state)
+      return 1
     }
+    val optionCursor = getCursorFromMap(name, state)
+
+    if(optionCursor.isEmpty) {
+      errorLogLn(s"cursor ${name} not registered.")
+      setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
+      return 1
+    }
+
+    var cursor_ = optionCursor.getOrElse(Cursor.defaultValue)
+
+    if (cursor_.isOpened) {
+        logLn(s"cursor ${cname} already opened")
+        if (!setResultStatus(cursor_.connId, state)) {
+          errorLogLn(s"cursor ${name} close failed")
+          return 1
+        }
+    }
+
+    var cursor = cursor_.setIsOpened(false)
+    updateCursorMap(name, cursor, state)
+
+    if(cursor.nParams > 0) {
+      //TODO the following code should be improved
+      val args = cursor.sqlVarQueue.map(sv => createRealData(sv, 0, state))
+      OCDBCursorDeclareParams(cursor.connId, cursor.name, cursor.query, args, OCDB_CURSOR_WITH_HOLD_OFF, state)
+    } else {
+      cursor.sp match {
+        case q :: _ =>
+          OCDBCursorDeclare(cursor.connId, cursor.name, q.query, OCDB_CURSOR_WITH_HOLD_OFF, state)
+        case _ =>
+          OCDBCursorDeclare(cursor.connId, cursor.name, cursor.query, OCDB_CURSOR_WITH_HOLD_OFF, state)
+      }
+    }
+
+    if(!setResultStatus(cursor.connId, state)) {
+      return 1
+    }
+
+    OCDBCursorOpen(cursor.connId, name, state)
+    if(!setResultStatus(cursor.connId, state)) {
+      return 1
+    }
+    updateCursorMap(name, cursor.setIsOpened(true), state)
+    return 0
+  }
+}
+
+object OCESQLCursorOpenParams {
+  val ERROR_MESSAGE_NUMBER_OF_PARAMETER = "A number of parameters and prepared sql parameters is unmatch.".getBytes()
 }
 
 class OCESQLCursorOpenParams extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val cname = getCString(args(1))
     val name = cname.getOrElse("")
     val nParams = storageToInt(args(2)).getOrElse(0)
-    (for {
-      _ <- operationCPure(logLn("OCESQLIDExecPrepare start"))
-      _ <- operationCPure(updateState(s => s.setSqlCA(SqlCA.defaultValue)))
-      _ <- operationCPure(logLn(s"cname=#${cname.getOrElse("")}#"))
 
-      _ <- whenExecuteAndExit(name == "", for {
-        _ <- setLibErrorStatus(OCDB_EMPTY())
-      } yield 1)
+    logLn("OCESQLIDExecPrepare start")
+    state.initSqlca()
+    logLn(s"cname=#${cname.getOrElse("")}#")
 
-      optionCursor <- operationCPure(getCursorFromMap(name))
+    if(name == "") {
+      setLibErrorStatus(OCDB_EMPTY(), state)
+      return 1
+    }
 
-      _ <- whenExecuteAndExit(optionCursor.isEmpty, for {
-        _ <- errorLogLn(s"cursor ${name} not registered.")
-        _ <- setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL())
-      } yield 1)
+    val optionCursor = getCursorFromMap(name, state)
 
-      cursor_ <- operationCPure(operationPure(optionCursor.getOrElse(Cursor.defaultValue)))
+    if(optionCursor.isEmpty) {
+      errorLogLn(s"cursor ${name} not registered.")
+      setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
+      return 1
+    }
 
-      _ <- cursor_.sp match {
-        case Nil => whenExecuteAndExit(true, for {
-          _ <- errorLogLn(s"prepare sql in cursor ${name} not registred.")
-          _ <- setLibErrorStatus(OCDB_INVALID_STMT())
-        } yield 1)
-        case sp :: _ if sp.nParams != nParams => whenExecuteAndExit(true, for {
-          _ <- errorLogLn(s"A number of parameters(${nParams}) and prepared sql parameters(${sp.nParams}) is unmatch")
-          _ <- setLibErrorStatus(OCDB_EMPTY())
-          _ <- updateState(s => {
-            val errorMessage = "A number of parameters and prepared sql parameters is unmatch.".getBytes()
-            val newSqlCA = s.sqlCA.setErrmc(errorMessage).setErrml(errorMessage.length.toShort)
-            s.setSqlCA(newSqlCA)
-          })
-        } yield 1)
-        case _ => operationCCPure[Int, Int](0)
+    val cursor_ = optionCursor.getOrElse(Cursor.defaultValue)
+
+    cursor_.sp match {
+      case Nil => {
+        errorLogLn(s"prepare sql in cursor ${name} not registred.")
+        setLibErrorStatus(OCDB_INVALID_STMT(), state)
+        return 1
       }
-
-      _ <- if (cursor_.isOpened) {
-        for {
-          _ <- operationCPure(logLn(s"cursor ${cname} already opened"))
-          result <- operationCPure(setResultStatus(cursor_.connId))
-          _ <- whenExecuteAndExit(!result, for {
-            _ <- errorLogLn(s"cursor ${name} close failed")
-          } yield 1)
-        } yield 0
-      } else {
-        operationCPure[Int, Int](operationPure(0))
+      case sp :: _ if (sp.nParams != nParams) => {
+        errorLogLn(s"A number of parameters(${nParams}) and prepared sql parameters(${sp.nParams}) is unmatch")
+        setLibErrorStatus(OCDB_EMPTY(), state)
+        val errorMessage = OCESQLCursorOpenParams.ERROR_MESSAGE_NUMBER_OF_PARAMETER
+        val newSqlCA = state.sqlCA
+          .setErrmc(errorMessage)
+          .setErrml(errorMessage.length.toShort)
+        state.updateSQLCA(newSqlCA)
+        return 1
       }
+      case _ => ()
+    }
 
-      cursor <- operationCPure(operationPure(cursor_.setIsOpened(false)))
-      _ <- operationCPure(updateCursorMap(name, cursor))
+    if (cursor_.isOpened) {
+      logLn(s"cursor ${cname} already opened")
+      if(!setResultStatus(cursor_.connId, state)) {
+        errorLogLn(s"cursor ${name} close failed")
+        return 1
+      }
+    }
 
-      //TODO implement
+    val cursor = cursor_.setIsOpened(false)
+    updateCursorMap(name, cursor, state)
 
-      res <- operationCPure(setResultStatus(cursor.connId))
-      _ <- whenExecuteAndExit(!res, operationPure(1))
+    //TODO implement
 
-      _ <- operationCPure(OCDBCursorOpen(cursor.connId, name))
-      res1 <- operationCPure(setResultStatus(cursor.connId))
-      _ <- whenExecuteAndExit(!res, operationPure(1))
-      _ <- operationCPure(updateCursorMap(name, cursor.setIsOpened(true)))
-    } yield 0).eval
+    if(!setResultStatus(cursor.connId, state)) {
+      return 1
+    }
+
+    OCDBCursorOpen(cursor.connId, name, state)
+    if(!setResultStatus(cursor.connId, state)) {
+      return 1
+    }
+
+    updateCursorMap(name, cursor.setIsOpened(true), state)
+    0
   }
+}
+
+object OCESQLCursorFetchOne {
+  private val ERROR_MESSAGE_NUMBER_OF_PARAMETER = "A number of Parameters and results is unmatch.".getBytes()
 }
 
 class OCESQLCursorFetchOne extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  def reFetch(state: OCDBState, name: String, cname: Option[String], id: Int) : Int = {
+    OCDBCursorFetchOne(id, name, OCDB_READ_NEXT(), state)
+    val resultStatus = setResultStatus(id, state)
+    if(!resultStatus) {
+      return 1
+    }
+
+    val fields = OCDBNfields(id, state)
+
+    if(fields != state.globalState.sqlResVarQueue.length) {
+      errorLogLn(s"A number of parameters ${state.globalState.sqlResVarQueue.length} " +
+        s"and results(${fields}) is unmatch.")
+      setLibErrorStatus(OCDB_EMPTY(), state)
+      val sqlCA = state.sqlCA
+      val errorMessage = OCESQLCursorFetchOne.ERROR_MESSAGE_NUMBER_OF_PARAMETER
+      state.updateSQLCA(sqlCA.setErrmc(errorMessage).setErrml(errorMessage.length.toShort))
+      return 1
+    }
+
+    lookUpConnList(id, state) match {
+      case None => setLibErrorStatus(OCDB_NOT_FOUND(), state)
+      case Some((_, conn)) => conn.result match {
+        case Right(EResultSet(rs)) => {
+          getCursorFromMap(name, state) match {
+            case None => {
+              errorLogLn(s"cursor ${name} not registered.")
+              setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
+            }
+            case Some(cursor) => {
+              var fetchRecords = List.empty[List[Option[Array[Byte]]]]
+              while(rs.next()) {
+                var fetchRecord = List.empty[Option[Array[Byte]]]
+                for((sv, i) <- state.globalState.sqlResVarQueue.zipWithIndex) {
+                  if(i < fields) {
+                    fetchRecord = fetchRecord ::: List(OCDBGetValue(rs, sv, i + 1))
+                  }
+                }
+                fetchRecords = fetchRecords ::: List(fetchRecord)
+              }
+              updateFetchRecords(name, fetchRecords, true, state)
+            }
+          }
+        }
+        case _ =>
+          setLibErrorStatus(OCDB_NOT_FOUND(), state)
+      }
+    }
+    return 0
+  }
+
+  def popRecord(state: OCDBState, record: List[Option[Array[Byte]]], restRecords: List[List[Option[Array[Byte]]]], id: Int, name: String): Int = {
+    for((sv, i) <- state.globalState.sqlResVarQueue.zipWithIndex) {
+      if(i < record.length){
+        record(i) match {
+          case Some(str) =>
+            createCobolData(sv, 0, str, state.globalState.occursInfo)
+          case None => ()
+        }
+      }
+    }
+    updateFetchRecords(name, restRecords, false, state)
+    0
+  }
+
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val cname = getCString(args(1))
     val name = cname.getOrElse("")
-    (for {
-      _ <- operationCPure(initSqlca())
-      _ <- whenExecuteAndExit(name.length == 0,
-        setLibErrorStatus(OCDB_EMPTY()).flatMap(_ => operationPure(1)))
 
-      _ <- operationCPure(logLn(s"cname:${name}"))
-      returnCode <- operationCPure(getCursorFromMap(name).flatMap(_ match {
-        case None => for {
-          _ <- errorLogLn(s"cursor ${name} not registered.")
-          _ <- setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL())
-        } yield 1
-        case Some(cursor) => {
-          val id = cursor.connId
-          (for {
-            state <- operationCPure(getState)
-            _ <- operationCPure(OCDBCursorFetchOne(id, name, OCDB_READ_NEXT()))
-            resultStatus <- operationCPure(setResultStatus(id))
-            _ <- whenExecuteAndExit(!resultStatus, operationPure(1))
+    state.initSqlca()
+    if(name.length == 0) {
+      setLibErrorStatus(OCDB_EMPTY(), state)
+      return 1
+    }
 
-            fields <- operationCPure(OCDBNfields(id))
+    logLn(s"cname:${name}")
+    getCursorFromMap(name, state) match {
+      case None => {
+        errorLogLn(s"cursor ${name} not registered.")
+        setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
+        return 1
+      }
+      case Some(cursor) => {
+        val id = cursor.connId        
 
-            _ <- whenExecuteAndExit(fields != state.globalState.sqlResVarQueue.length, for {
-              _ <- errorLogLn(s"A number of parameters ${state.globalState.sqlResVarQueue.length} " +
-                s"and results(${fields}) is unmatch.")
-              _ <- setLibErrorStatus(OCDB_EMPTY())
-              _ <- updateState(s => {
-                val sqlCA = s.sqlCA
-                val errorMessage = s"A number of Parameters and results is unmatch.".getBytes()
-                s.setSqlCA(sqlCA.setErrmc(errorMessage).setErrml(errorMessage.length.toShort))
-              })
-            } yield 1)
-
-            _ <- operationCPure(lookUpConnList(id).flatMap(_ match {
-              case None => operationPure(())
-              case Some((_, conn)) => conn.result match {
-                case Right(EResultSet(rs)) => if(rs.next()) {
-                  forM(state.globalState.sqlResVarQueue.zipWithIndex)(e => {
-                    val (sv, i) = e
-                    if(i >= fields){
-                      operationPure(())
-                    } else {
-                      for {
-                        retStr <- OCDBGetValue(id, i + 1)
-                        _ <- retStr match {
-                          case Some(str) =>
-                            operationPure(createCobolData(sv, 0, str, state.globalState.occursInfo))
-                          case _ =>
-                            operationPure(())
-                        }
-                      } yield ()
-                    }
-                  }).flatMap(_ => operationPure(()))
-                } else {
-                  setLibErrorStatus(OCDB_NOT_FOUND()).map(_ => ())
-                }
-                case _ =>
-                  setLibErrorStatus(OCDB_NOT_FOUND()).map(_ => ())
+        val retCode = cursor.fetchRecords match {
+          case Nil => {
+            reFetch(state, name, cname, id)
+            getCursorFromMap(name, state) match {
+              case None => {
+                setLibErrorStatus(OCDB_NOT_FOUND(), state)
+                1
               }
-            }))
-
-            newTuples <- operationCCPure(cursor.tuples + state.sqlCA.errd(2))
-            _ <- operationCPure(updateCursorMap(name, cursor.setTuples(newTuples)))
-            _ <- operationCPure(updateState(s => {
-              var sqlCA = s.sqlCA
-              sqlCA.errd(2) = newTuples
-              s.setSqlCA(sqlCA)
-            }))
-
-          } yield 0).eval
+              case Some(cursor) => cursor.fetchRecords match {
+                case Nil => {
+                  if(state.sqlCA.code != -9999) {
+                    setLibErrorStatus(OCDB_NOT_FOUND(), state)
+                  }
+                  1
+                }
+                case record :: restRecords => {
+                  popRecord(state, record, restRecords, id, name)
+                }
+              }
+            }
+          }
+          case record :: restRecords =>
+            popRecord(state, record, restRecords, id, name)
         }
-      }))
-    } yield returnCode).eval
+
+        val newTuples = cursor.tuples + state.sqlCA.errd(2)
+        for {
+          cursor_name <- cname
+          c <- state.globalState.cursorMap.get(cursor_name)
+        } yield updateCursorMap(name, c.setTuples(newTuples), state)
+        var sqlCA = state.sqlCA
+        sqlCA.errd(2) = newTuples
+        state.updateSQLCA(sqlCA)
+        return retCode
+      }
+    }
   }
 }
 
+object OCESQLCursorFetchOccurs {
+  private val ERROR_MESSAGE_NUMBER_OF_PARAMETER = s"A number of Parameters and results is unmatch.".getBytes()
+}
+
 class OCESQLCursorFetchOccurs extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val cname = getCString(args(1))
     val name = cname.getOrElse("")
-    (for {
-      _ <- operationCPure(initSqlca())
-      _ <- whenExecuteAndExit(name.length == 0,
-        setLibErrorStatus(OCDB_EMPTY()).flatMap(_ => operationPure(1)))
+    state.initSqlca()
+    if(name.length == 0) {
+      setLibErrorStatus(OCDB_EMPTY(), state)
+      return 1
+    }
 
-      _ <- operationCPure(logLn(s"cname:${name}"))
-      returnCode <- operationCPure(getCursorFromMap(name).flatMap(_ match {
-        case None => for {
-          _ <- errorLogLn(s"cursor ${name} not registered.")
-          _ <- setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL())
-        } yield 1
-        case Some(cursor) => {
-          val id = cursor.connId
-          (for {
-            state <- operationCPure(getState)
-            _ <- operationCPure(OCDBCursorFetchOccurs(id, name, OCDB_READ_NEXT(), state.globalState.occursInfo.iter))
-            newState <- operationCPure(getState)
-            _ <- whenExecuteAndExit(newState.sqlCA.code < 0, operationPure(1))
-            fields <- operationCPure(OCDBNfields(id))
-
-            _ <- whenExecuteAndExit(fields != newState.globalState.sqlResVarQueue.length, for {
-              _ <- errorLogLn(s"A number of parameters ${newState.globalState.sqlResVarQueue.length} " +
-               s"and results(${fields} is unmatch.")
-              _ <- setLibErrorStatus(OCDB_EMPTY())
-              _ <- updateState(s => {
-                val sqlCA = s.sqlCA
-                val errorMessage = s"A number of Parameters and results is unmatch.".getBytes()
-                s.setSqlCA(sqlCA.setErrmc(errorMessage).setErrml(errorMessage.length.toShort))
-              })
-            } yield 1)
-
-            option_tuple <- operationCPure(lookUpConnList(id).flatMap(_ match {
-              case Some((_, conn)) => conn.result match {
-                case Right(EResultSet(rs)) => for {
-                  tuples <- resultSetToSqlVar(rs, id, 0, 0, newState.globalState.sqlResVarQueue, newState.globalState.occursInfo)
-                  _ <- updateCursorMap(name, cursor.setTuples(tuples))
-                } yield Option(tuples)
-                case _ => for {
-                  _ <- setLibErrorStatus(OCDB_NOT_FOUND())
-                } yield Option.empty[Int]
-              }
-              case _ => for {
-                _ <- setLibErrorStatus(OCDB_NOT_FOUND())
-              } yield Option.empty[Int]
-            }))
-
-            _ <- operationCPure(updateState(s => {
-              var sqlCA = s.sqlCA
-              sqlCA.errd(2) = option_tuple.getOrElse(0)
-              val newSqlCA = option_tuple match {
-                case Some(tuples) => sqlCA.setCode(0)
-                case _ => sqlCA
-              }
-              s.setSqlCA(newSqlCA)
-            }))
-
-          } yield 0).eval
+    logLn(s"cname:${name}")
+    getCursorFromMap(name, state) match {
+      case None => {
+        errorLogLn(s"cursor ${name} not registered.")
+        setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
+        1
+      }
+      case Some(cursor) => {
+        val id = cursor.connId
+        OCDBCursorFetchOccurs(id, name, OCDB_READ_NEXT(), state.globalState.occursInfo.iter, state)
+        if(state.sqlCA.code < 0) {
+          return 1
         }
-      }))
-    } yield returnCode).eval
+        val fields = OCDBNfields(id, state)
+
+        if(fields != state.globalState.sqlResVarQueue.length) {
+          errorLogLn(s"A number of parameters ${state.globalState.sqlResVarQueue.length} " +
+            s"and results(${fields} is unmatch.")
+          setLibErrorStatus(OCDB_EMPTY(), state)
+          val sqlCA = state.sqlCA
+          state.updateSQLCA(
+            sqlCA
+              .setErrmc(OCESQLCursorFetchOccurs.ERROR_MESSAGE_NUMBER_OF_PARAMETER)
+              .setErrml(OCESQLCursorFetchOccurs.ERROR_MESSAGE_NUMBER_OF_PARAMETER.length.toShort))
+          return 1
+        }
+
+        val option_tuple = lookUpConnList(id, state) match {
+          case Some((_, conn)) => conn.result match {
+            case Right(EResultSet(rs)) => {
+              val tuples = resultSetToSqlVar(rs, 0, 0, state.globalState.sqlResVarQueue, state.globalState.occursInfo)
+              updateCursorMap(name, cursor.setTuples(tuples), state)
+              Option(tuples)
+            }
+            case _ => {
+              setLibErrorStatus(OCDB_NOT_FOUND(), state)
+              None
+            } 
+          }
+          case _ => {
+            setLibErrorStatus(OCDB_NOT_FOUND(), state)
+            None
+          }
+        }
+
+        var sqlCA = state.sqlCA
+        sqlCA.errd(2) = option_tuple.getOrElse(0)
+        val newSqlCA = option_tuple match {
+          case Some(tuples) => sqlCA.setCode(0)
+          case _ => sqlCA
+        }
+        state.updateSQLCA(newSqlCA)
+        0
+      }
+    }
   }
 }
 
 class OCESQLCursorClose extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val cname = getCString(args(1))
     val name = cname.getOrElse("")
-    for {
-      _ <- initSqlca()
-      returnCode <- if(name == "") {
-        setLibErrorStatus(OCDB_EMPTY()).flatMap(_ => operationPure(1))
-      } else {
-        for {
-          _ <- logLn(s"Cursor Name: ${name}")
-          returnCode <- getCursorFromMap(name).flatMap(_ match {
-            case None => for {
-              _ <- errorLog(s"cursor ${name} not registered")
-              _ <- setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL())
-            } yield 1
-            case Some(cursor) if !cursor.isOpened =>
-              logLn(s"cursor ${name} not opened.").flatMap(_ => operationPure(0))
-            case Some(cursor) => for {
-              _ <- logLn(s"Connect ID: ${cursor.connId}")
-              _ <- OCDBCursorClose(cursor.connId, name)
-              res <- setResultStatus(cursor.connId)
-              returnCode <- if(res) {
-                for{
-                  _ <- updateCursorMap(name, cursor.setIsOpened(false))
-                } yield 0
-              } else {
-                operationPure(1)
-              }
-            } yield returnCode
-          })
-        } yield returnCode
+    state.initSqlca()
+    if(name == "") {
+      setLibErrorStatus(OCDB_EMPTY(), state)
+      return 1
+    } else {
+      logLn(s"Cursor Name: ${name}")
+      getCursorFromMap(name, state) match {
+        case None => {
+          errorLogLn(s"cursor ${name} not registered")
+          setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
+          return 1
+        }
+        case Some(cursor) if !cursor.isOpened => {
+          logLn(s"cursor ${name} not opened.")
+          return 0
+        }
+        case Some(cursor) => {
+          logLn(s"Connect ID: ${cursor.connId}")
+          OCDBCursorClose(cursor.connId, name, state)
+          if(setResultStatus(cursor.connId, state)) {
+            updateCursorMap(name, cursor.setIsOpened(false), state)
+            return 0
+          } else {
+            return 1
+          }
+        }
       }
-    } yield returnCode
+    }
   }
 }
 
 
 class OCESQLExecSelectIntoOne extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val query = getCString(args(1))
     val nParams = storageToInt(args(2))
     val nResParams = storageToInt(args(3))
-    for {
-      _ <- logLn("OCESQLExecSelectIntoOne start")
-      _ <- logLn(s"SQL:#${query}#")
-      connInfo <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(connectionInfo) => for {
-          _ <- ocesqlExecSelectIntoOne(connectionInfo.id, query, nParams.getOrElse(0), nResParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLExecSelectIntoOne start")
+    logLn(s"SQL:#${query}#")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(connectionInfo) => {
+        ocesqlExecSelectIntoOne(connectionInfo.id, query, nParams.getOrElse(0), nResParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLIDExecSelectIntoOne extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val query = getCString(args(3))
     val nParams = storageToInt(args(4))
     val nResParams = storageToInt(args(5))
-    for {
-      _ <- logLn("OCESQLIDExecSelectIntoOne start")
-      connInfo <- resolveCONNID(atdb.getOrElse(""))
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(connectionInfo) => for {
-          _ <- ocesqlExecSelectIntoOne(connectionInfo.id, query, nParams.getOrElse(0), nResParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLIDExecSelectIntoOne start")
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(connectionInfo) => {
+        ocesqlExecSelectIntoOne(connectionInfo.id, query, nParams.getOrElse(0), nResParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLExecSelectIntoOccurs extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val query = getCString(args(1))
     val nParams = storageToInt(args(2))
     val nResParams = storageToInt(args(3))
-    for {
-      _ <- logLn("OCESQLExecSelectIntoOccurs start")
-      connInfo <- resolveCONNID(OCESQL_DEFAULT_DB_NAME)
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(connectionInfo) => for {
-          _ <- ocesqlExecSelectIntoOccurs(connectionInfo.id, query, nParams.getOrElse(0), nResParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLExecSelectIntoOccurs start")
+    resolveCONNID(OCESQL_DEFAULT_DB_NAME, state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(connectionInfo) => {
+        ocesqlExecSelectIntoOccurs(connectionInfo.id, query, nParams.getOrElse(0), nResParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLIDExecSelectIntoOccurs extends CobolRunnableWrapper {
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val atdb = storageToString(args(1), args(2))
     val query = getCString(args(3))
     val nParams = storageToInt(args(4))
     val nResParams = storageToInt(args(5))
-    for {
-      _ <- logLn("OCESQLIDExecSelectIntoOccurs start")
-      connInfo <- resolveCONNID(atdb.getOrElse(""))
-      returnCode <- connInfo match {
-        case None => for {
-          _ <- errorLogLn("connection id is not found")
-          _ <- setLibErrorStatus(OCDB_NO_CONN())
-        } yield 1
-        case Some(connectionInfo) => for {
-          _ <- ocesqlExecSelectIntoOccurs(connectionInfo.id, query, nParams.getOrElse(0), nResParams.getOrElse(0))
-        } yield 0
+    logLn("OCESQLIDExecSelectIntoOccurs start")
+    resolveCONNID(atdb.getOrElse(""), state) match {
+      case None => {
+        errorLogLn("connection id is not found")
+        setLibErrorStatus(OCDB_NO_CONN(), state)
+        1
       }
-    } yield returnCode
+      case Some(connectionInfo) => {
+        ocesqlExecSelectIntoOccurs(connectionInfo.id, query, nParams.getOrElse(0), nResParams.getOrElse(0), state)
+        0
+      }
+    }
   }
 }
 
 class OCESQLStartSQL extends CobolRunnableWrapper {
   parseSqlCA = false
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = for {
-    _ <- logLn("#begin")
-    _ <- initSqlVarQueue()
-    _ <- logLn("#end")
-  } yield 0
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
+    logLn("#begin")
+    resetSqlVarQueue(state)
+    logLn("#end")
+    0
+  }
 }
 
 class OCESQLSetSQLParams extends CobolRunnableWrapper {
   parseSqlCA = false
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val paramType = storageToInt(args(0)).getOrElse(0)
     val paramLength = storageToInt(args(1)).getOrElse(0)
     val scale = storageToInt(args(2)).getOrElse(0)
     val storage = args(3)
     val oStorage = Option(storage)
 
-    (for {
-      _ <- whenExecuteAndExit(paramType < OCDB_TYPE_MIN || paramType > OCDB_TYPE_MAX, for {
-        _ <- errorLogLn(s"invalid argument 'type': ${paramType}")
-      } yield 1)
-      _ <- whenExecuteAndExit(paramLength < 0, for {
-        _ <- errorLogLn(s"invalid argument 'length': ${paramLength}")
-      } yield 1)
-      _ <- whenExecuteAndExit(oStorage.isEmpty, for {
-        _ <- errorLogLn(s"finvalid argument addr is NULL").map(_ => 1)
-      } yield 1)
-      _ <- operationCPure(addSqlVarQueue(paramType, paramLength, scale, oStorage))
-    } yield 0).eval
+    if(paramType < OCDB_TYPE_MIN || paramType > OCDB_TYPE_MAX) {
+      errorLogLn(s"invalid argument 'type': ${paramType}")
+      return 1
+    }
+    if(paramLength < 0) {
+      errorLogLn(s"invalid argument 'length': ${paramLength}")
+      return 1
+    }
+    if(oStorage.isEmpty) {
+      errorLogLn(s"finvalid argument addr is NULL")
+      return 1
+    }
+    addSqlVarQueue(paramType, paramLength, scale, oStorage, state)
+    0
   }
 }
 
 class OCESQLSetResultParams extends CobolRunnableWrapper {
   parseSqlCA = false
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val paramType = storageToInt(args(0)).getOrElse(0)
     val paramLength = storageToInt(args(1)).getOrElse(0)
     val scale = storageToInt(args(2)).getOrElse(0)
     val storage = args(3)
     val oStorage = Option(storage)
 
-    (for {
-      _ <- whenExecuteAndExit(paramType < OCDB_TYPE_MIN || paramType > OCDB_TYPE_MAX, for {
-        _ <- errorLogLn(s"invalid argument 'type': ${paramType}")
-        } yield 1)
-      _ <- whenExecuteAndExit(paramLength < 0, for {
-        _ <- errorLogLn(s"invalid argument 'length': ${paramLength}")
-        } yield 1)
-      _ <- whenExecuteAndExit(oStorage.isEmpty, for {
-        _ <- errorLogLn(s"finvalid argument addr is NULL")
-        } yield 1)
-      _ <- operationCPure(addSqlResVarQueue(paramType, paramLength, scale, oStorage))
-    } yield 0).eval
+    if(paramType < OCDB_TYPE_MIN || paramType > OCDB_TYPE_MAX) {
+      errorLogLn(s"invalid argument 'type': ${paramType}")
+      return 1
+    }
+    if(paramLength < 0) {
+      errorLogLn(s"invalid argument 'length': ${paramLength}")
+      return 1
+    }
+    if(oStorage.isEmpty) {
+      errorLogLn(s"finvalid argument addr is NULL")
+      return 1
+    }
+    addSqlResVarQueue(paramType, paramLength, scale, oStorage, state)
+    0
   }
 }
 
 class OCESQLSetHostTable extends CobolRunnableWrapper {
   parseSqlCA = false
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = {
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
     val iter = storageToInt(args(0)).getOrElse(0)
     val length = storageToInt(args(1)).getOrElse(0)
     val isParent = storageToInt(args(2)).getOrElse(0) != 0
 
     if(iter < 0) {
-      for {
-        _ <- errorLogLn(s"invalid argument 'iter': ${iter}")
-      } yield 1
+      errorLogLn(s"invalid argument 'iter': ${iter}")
+      1
     } else if(length < 0) {
-      for {
-        _ <- errorLogLn(s"invalid argument 'length': ${length}")
-      } yield 1
+      errorLogLn(s"invalid argument 'length': ${length}")
+      1
     } else {
-      for {
-        _ <- updateState(state => {
-          val globalState = state.globalState
-          val newGlobalState = globalState.setOccursInfo(new OccursInfo(iter, length, isParent))
-          state.setGlobalState(newGlobalState)
-        })
-      } yield 0
+      val globalState = state.globalState
+      val newGlobalState = globalState.setOccursInfo(new OccursInfo(iter, length, isParent))
+      state.updateGlobalState(newGlobalState)
+      0
     }
   }
 }
@@ -971,13 +1056,13 @@ class OCESQLSetHostTable extends CobolRunnableWrapper {
 class OCESQLEndSQL extends CobolRunnableWrapper {
   parseSqlCA = false
 
-  override def execute(args: Seq[CobolDataStorage]): Operation[Int] = for {
-    state <- getState
-    _ <- logLn("#debug start dump var_list")
-    _ <- showSqlVarQueue(state.globalState.sqlVarQueue)
-    _ <- logLn("#debug start dump res_list")
-    _ <- showSqlVarQueue(state.globalState.sqlResVarQueue)
+  override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
+    logLn("#debug start dump var_list")
+    showSqlVarQueue(state.globalState.sqlVarQueue)
+    logLn("#debug start dump res_list")
+    showSqlVarQueue(state.globalState.sqlResVarQueue)
 
-    _ <- resetSqlVarQueue()
-  } yield 0
+    resetSqlVarQueue(state)
+    0
+  }
 }

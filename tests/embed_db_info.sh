@@ -7,7 +7,7 @@
 
 # example
 DB_NAME=testdb
-DB_HOST=db_postgres
+DB_HOST=oc4j_db
 DB_PORT=5432
 DB_USER=main_user
 DB_PASSWORD=password

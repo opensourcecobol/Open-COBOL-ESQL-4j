@@ -1,6 +1,7 @@
 import Operation._
 import ConstValues.DATA_SIZE_OF_SQL_COMMAND_LEN
 import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
+import java.nio.charset.StandardCharsets
 
 class Prepare {
 
@@ -15,12 +16,11 @@ object Prepare {
     (count, replaced)
   }
 
-  def addQueryInfoMap(name: String, query: String, nParams: Int): Operation[Unit] =
-    updateState(s => {
-      val newQueryInfoMap = s.globalState.queryInfoMap + (name -> new QueryInfo(name, query, nParams))
-      val newGlobalState = s.globalState.setQueryInfoMap(newQueryInfoMap)
-      s.setGlobalState(newGlobalState)
-    })
+  def addQueryInfoMap(name: String, query: String, nParams: Int, state: OCDBState): Unit = {
+    val newQueryInfoMap = state.globalState.queryInfoMap + (name -> new QueryInfo(name, query, nParams))
+    val newGlobalState = state.globalState.setQueryInfoMap(newQueryInfoMap)
+    state.updateGlobalState(newGlobalState)
+  }
 
   def parsePrepareQuery(stringDataStorage: CobolDataStorage, lengthDataStorage: CobolDataStorage): String = {
     var length: Int = 0

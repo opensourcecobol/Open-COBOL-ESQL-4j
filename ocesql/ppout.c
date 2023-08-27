@@ -2101,6 +2101,8 @@ int get_host_group_length(struct cb_field *field, int *length){
 	if((field->pictype == PIC_NATIONAL) ||
 			(field->pictype == PIC_NATIONAL_VARYING)){
 		*length += field->picnsize * 2;
+	} else if(field->usage == USAGE_PACKED) {
+		* length += field->picnsize / 2 + 1;
 	}else{
 		*length += field->picnsize;
 	}
@@ -2121,6 +2123,8 @@ int get_host_group_table_info(struct cb_field *field, int *iteration, int *lengt
 	if((field->pictype == PIC_NATIONAL) ||
 			(field->pictype == PIC_NATIONAL_VARYING)){
 		*length += field->picnsize * 2;
+	} else if(field->usage == USAGE_PACKED) {
+		*length += field->picnsize / 2 + 1;
 	}else{
 		*length += field->picnsize;
 	}
