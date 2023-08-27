@@ -5,6 +5,15 @@ on:
   pull_request:
     types: [opened, reopened, review_requested, synchronize]
 
+env:
+  COBOL4J_LIB_DIR: /usr/lib/opensourcecobol4j
+  COBOL4J_SQLITE_JDBC_PATH: /usr/lib/opensourcecobol4j/sqlite.jar
+  COBOL4J_LIBCOBJ_JAR_PATH: /usr/lib/opensourcecobol4j/libcobj.jar
+  OCESQL4J_LIB_DIR: /usr/lib/Open-COBOL-ESQL-4j
+  OCESQL4J_POSTGRESQL_JDBC_PATH: /usr/lib/Open-COBOL-ESQL-4j/postgresql.jar
+  OCESQL4J_OCESQL4J_JAR_PATH: /usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar
+  CLASSPATH: ":/usr/lib/opensourcecobol4j/sqlite.jar:/usr/lib/opensourcecobol4j/libcobj.jar:/usr/lib/Open-COBOL-ESQL-4j/postgresql.jar:/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar"
+
 jobs:
   Open-COBOL-ESQL-4j-tests:
     strategy:
@@ -83,9 +92,9 @@ jobs:
       - name: Install JDBC
         if: steps.java_lib_cache_id.outputs.cache-hit != 'true'
         run: |
-          mkdir ~/.java_lib
-          curl -L -o ~/.java_lib/sqlite.jar https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
-          curl -L -o ~/.java_lib/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
+          mkdir -p $COBOL4J_LIB_DIR $OCESQL4J_LIB_DIR
+          curl -L -o $COBOL4J_SQLITE_JDBC_PATH https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
+          curl -L -o $OCESQL4J_POSTGRESQL_JDBC_PATH https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
           
       # Checkout opensource COBOL 4J
       - name: Checkout opensourcecobol 4J
@@ -99,7 +108,6 @@ jobs:
         run: |
           cd opensourcecobol4j
           ./configure --prefix=/usr/
-          export CLASSPATH="$CLASSPATH:$HOME/.java_lib/sqlite.jar"
           make
           make install
           cd ../
@@ -110,17 +118,15 @@ jobs:
           sh configure --prefix=/usr/
           make
           make install
-          cp ~/.java_lib/postgresql.jar dblibj/lib
-          cp /usr/lib/opensourcecobol4j/libcobj.jar dblibj/lib
+          cp $OCESQL4J_POSTGRESQL_JDBC_PATH dblibj/lib
+          cp $COBOL4J_LIBCOBJ_JAR_PATH dblibj/lib
           cd dblibj
-          export CLASSPATH="$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar"
           sbt assembly
-          cp target/scala-2.13/ocesql4j.jar ~/.java_lib
+          cp target/scala-2.13/ocesql4j.jar $OCESQL4J_OCESQL4J_JAR_PATH
 
       # Run Autotest for PostgreSQL 9.6
       - name: Run tests for PostgreSQL 9.6
         run: |
-          export CLASSPATH=":$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar:$HOME/.java_lib/ocesql4j.jar"
           cd tests
           cp ../.github/workflows/db-settings/embed_db_info_postgresql_9.6.sh embed_db_info.sh
           make test
@@ -128,7 +134,6 @@ jobs:
       # Run Autotest for PostgreSQL 15
       - name: Run tests for PostgreSQL 15
         run: |
-          export CLASSPATH=":$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar:$HOME/.java_lib/ocesql4j.jar"
           cd tests
           cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
           make test
