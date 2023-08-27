@@ -85,9 +85,4 @@ jobs:
           export CLASSPATH=":$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar:$HOME/.java_lib/ocesql4j.jar"
           cd tests
           cp ../.github/workflows/ubuntu-test-settings/embed_db_info.sh embed_db_info.sh
-          make
-          ./basic
-          ./cobol_data
-          ./sql_data
-          ./sqlca
-          ./misc
+          make test
