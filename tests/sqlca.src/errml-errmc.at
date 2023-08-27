@@ -90,26 +90,30 @@ AT_DATA([prog.cbl], [
            END-EXEC.
            DISPLAY "<invalid declare> SQLERRML:" SQLERRML.
            DISPLAY "<invalid declare> SQLERRMC:" SQLERRMC.
+           EXEC SQL ROLLBACK END-EXEC.
 
            EXEC SQL
                OPEN C2
            END-EXEC.
            DISPLAY "<invalid open> SQLERRML:" SQLERRML.
            DISPLAY "<invalid open> SQLERRMC:" SQLERRMC.
+           EXEC SQL ROLLBACK END-EXEC.
 
            EXEC SQL 
                FETCH C2 INTO :EMP-NO, :EMP-NAME, :EMP-SALARY
            END-EXEC.
            DISPLAY "<invalid fetch> SQLERRML:" SQLERRML.
            DISPLAY "<invalid fetch> SQLERRMC:" SQLERRMC.
-           PERFORM UNTIL SQLCODE NOT = ZERO
-              DISPLAY EMP-NO ", " EMP-SALARY
-              EXEC SQL 
-                  FETCH C2 INTO :EMP-NO, :EMP-NAME, :EMP-SALARY
-              END-EXEC
-             DISPLAY "<invalid fetch> SQLERRML:" SQLERRML
-             DISPLAY "<invalid fetch> SQLERRMC:" SQLERRMC
-           END-PERFORM.
+           EXEC SQL ROLLBACK END-EXEC.
+
+      *    PERFORM UNTIL SQLCODE NOT = ZERO
+      *       DISPLAY EMP-NO ", " EMP-SALARY
+      *       EXEC SQL 
+      *           FETCH C2 INTO :EMP-NO, :EMP-NAME, :EMP-SALARY
+      *       END-EXEC
+      *      DISPLAY "<invalid fetch> SQLERRML:" SQLERRML
+      *      DISPLAY "<invalid fetch> SQLERRMC:" SQLERRMC
+      *    END-PERFORM.
 
            EXEC SQL
                CLOSE C2
@@ -142,6 +146,8 @@ AT_DATA([prog.cbl], [
                DROP TABLE IF EXISTS EMP
            END-EXEC.
 
+           EXEC SQL COMMIT END-EXEC.
+
       *    INVALID CREATE TABLE
            EXEC SQL
                 CREATE TABLE EMP
@@ -154,6 +160,8 @@ AT_DATA([prog.cbl], [
            DISPLAY "<invalid create table> SQLERRML:" SQLERRML.
            DISPLAY "<invalid create table> SQLERRMC:" SQLERRMC.
 
+           EXEC SQL ROLLBACK END-EXEC.
+
       *    VALID CREATE TABLE
            EXEC SQL
                 CREATE TABLE EMP
@@ -165,6 +173,7 @@ AT_DATA([prog.cbl], [
            END-EXEC.
            DISPLAY "<valid create table> SQLERRML:" SQLERRML.
            DISPLAY "<valid create table> SQLERRMC:" SQLERRMC.
+           EXEC SQL COMMIT END-EXEC.
 
            PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > 10
               MOVE TEST-NO(IDX)     TO  EMP-NO
@@ -177,6 +186,7 @@ AT_DATA([prog.cbl], [
            END-PERFORM.
            DISPLAY "<valid insert> SQLERRML:" SQLERRML.
            DISPLAY "<valid insert> SQLERRMC:" SQLERRMC.
+           EXEC SQL COMMIT END-EXEC.
 
            EXEC SQL
                INSERT INTO EMP VALUES
@@ -184,6 +194,7 @@ AT_DATA([prog.cbl], [
            END-EXEC
            DISPLAY "<invalid insert 1> SQLERRML:" SQLERRML.
            DISPLAY "<invalid insert 1> SQLERRMC:" SQLERRMC.
+           EXEC SQL ROLLBACK END-EXEC.
 
            EXEC SQL
                INSERT INTO EMPQRSTVQ13256 VALUES
@@ -191,8 +202,7 @@ AT_DATA([prog.cbl], [
            END-EXEC
            DISPLAY "<invalid insert 2> SQLERRML:" SQLERRML.
            DISPLAY "<invalid insert 2> SQLERRMC:" SQLERRMC.
-
-           EXEC SQL COMMIT WORK END-EXEC.
+           EXEC SQL ROLLBACK END-EXEC.
 
       ******************************************************************
        CLEANUP-DB.
