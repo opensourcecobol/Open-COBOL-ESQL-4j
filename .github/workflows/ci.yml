@@ -1,17 +1,32 @@
-name: Open-COBOL-ESQL-4j tests on Ubuntu
+name: tests
 
 on:
   push:
   pull_request:
     types: [opened, reopened, review_requested, synchronize]
+  workflow_dispatch:
+
+env:
+  COBOL4J_LIB_DIR: /usr/lib/opensourcecobol4j
+  COBOL4J_SQLITE_JDBC_PATH: /usr/lib/opensourcecobol4j/sqlite.jar
+  COBOL4J_LIBCOBJ_JAR_PATH: /usr/lib/opensourcecobol4j/libcobj.jar
+  OCESQL4J_LIB_DIR: /usr/lib/Open-COBOL-ESQL-4j
+  OCESQL4J_POSTGRESQL_JDBC_PATH: /usr/lib/Open-COBOL-ESQL-4j/postgresql.jar
+  OCESQL4J_OCESQL4J_JAR_PATH: /usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar
+  CLASSPATH: ":/usr/lib/opensourcecobol4j/sqlite.jar:/usr/lib/opensourcecobol4j/libcobj.jar:/usr/lib/Open-COBOL-ESQL-4j/postgresql.jar:/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar"
 
 jobs:
   Open-COBOL-ESQL-4j-tests:
+    strategy:
+      matrix:
+        os: ["ubuntu:22.04", "almalinux:9"]
     runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.os }}
     
-    # Start PostgreSQL server
+    # Start PostgreSQL 9.6 server
     services:
-      postgres:
+      postgres9_6:
         image: postgres:9.6
         ports: 
           - 5432:5432
@@ -25,74 +40,101 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
+    # Start PostgreSQL 15 server
+      postgres15:
+        image: postgres:15
+        ports: 
+          - 5433:5432
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: main_user
+          POSTGRES_DB: testdb
+          POSTGRES_HOST_AUTH_METHOD: 'trust'
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - name: Install dependencies
+      # Install dependencies (Ubuntu 22.04)
+      - name: Install dependencies on Ubuntu 22.04
+        if: matrix.os == 'ubuntu:22.04'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git
-          sudo apt-get install -y build-essential bison flex gettext texinfo
+          apt update -y
+          apt install -y build-essential bison flex gettext texinfo automake autoconf curl
+
+      # Install dependencies (Almalinux 9)
+      - name: Install dependencies on AlmaLinux 9
+        if: matrix.os == 'almalinux:9'
+        run: |
+          dnf -y update
+          dnf install -y gcc gcc-c++ make bison flex automake autoconf diffutils gettext
+
+      # Setup JDK
       - name: Setup JDK
         uses: actions/setup-java@v3
         with:
-          distribution: temurin
+          distribution: zulu
           java-version: 11
 
-      # Checkout Open-COBOL-ESQL-4j
+      # Setup sbt
+      - name: Setup sbt
+        uses: olafurpg/setup-scala@v11
+        with:
+          java-version: zulu@1.11
+
+      # Checkout
       - name: Checkout Open-COBOL-ESQL-4j
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Install JDBC
       - name: Install JDBC
         if: steps.java_lib_cache_id.outputs.cache-hit != 'true'
         run: |
-          mkdir ~/.java_lib
-          curl -L -o ~/.java_lib/sqlite.jar https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
-          curl -L -o ~/.java_lib/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
+          mkdir -p $COBOL4J_LIB_DIR $OCESQL4J_LIB_DIR
+          curl -L -o $COBOL4J_SQLITE_JDBC_PATH https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
+          curl -L -o $OCESQL4J_POSTGRESQL_JDBC_PATH https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
           
-      # Checkout opensource COBOL 4j v1.0.13
-      #- name: Checkout opensourcecobol4j
-      #  run: |
-      #    curl -L -o opensourcecobol4j.tar.gz https://github.com/opensourcecobol/opensourcecobol4j/archive/refs/tags/v1.0.13.tar.gz
-      #    tar zxf opensourcecobol4j.tar.gz
-      #    mv opensourcecobol4j-1.0.13 opensourcecobol4j
-      - name: Checkout opensourcecobol4j
+      # Checkout opensource COBOL 4J
+      - name: Checkout opensourcecobol 4J
         uses: actions/checkout@v3
         with:
           repository: opensourcecobol/opensourcecobol4j
           path: opensourcecobol4j
       
-      # Install opensource COBOL 4j v1.0.13
-      - name: Install opensource COBOL
+      # Install opensource COBOL 4J
+      - name: Install opensource COBOL 4J
         run: |
           cd opensourcecobol4j
           ./configure --prefix=/usr/
-          export CLASSPATH="$CLASSPATH:$HOME/.java_lib/sqlite.jar"
           make
-          sudo make install
+          make install
           cd ../
 
-      # Build and Install Open-COBOL-ESQL-4j
-      - name: Install Open-COBOL-ESQL-4j
+      # Build and Install Open COBOL ESQL 4J
+      - name: Install Open COBOL ESQL 4J
         run: |
           sh configure --prefix=/usr/
           make
-          sudo make install
-          cp ~/.java_lib/postgresql.jar dblibj/lib
-          cp /usr/lib/opensourcecobol4j/libcobj.jar dblibj/lib
+          make install
+          cp $OCESQL4J_POSTGRESQL_JDBC_PATH dblibj/lib
+          cp $COBOL4J_LIBCOBJ_JAR_PATH dblibj/lib
           cd dblibj
-          export CLASSPATH="$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar"
           sbt assembly
-          cp target/scala-2.13/ocesql4j.jar ~/.java_lib
+          cp target/scala-2.13/ocesql4j.jar $OCESQL4J_OCESQL4J_JAR_PATH
 
-      # Run Autotest
-      - name: Run tests
+      # Run Autotest for PostgreSQL 9.6
+      - name: Run tests for PostgreSQL 9.6
         run: |
-          export CLASSPATH=":$HOME/.java_lib/sqlite.jar:$HOME/.java_lib/postgresql.jar:/usr/lib/opensourcecobol4j/libcobj.jar:$HOME/.java_lib/ocesql4j.jar"
           cd tests
-          cp ../.github/workflows/ubuntu-test-settings/embed_db_info.sh embed_db_info.sh
-          make
-          ./basic
-          ./cobol_data || cat cobol_data.dir/*/*.log
-          ./sql_data
-          ./sqlca
-          ./misc
+          cp ../.github/workflows/db-settings/embed_db_info_postgresql_9.6.sh embed_db_info.sh
+          make test
+
+      # Run Autotest for PostgreSQL 15
+      - name: Run tests for PostgreSQL 15
+        run: |
+          cd tests
+          cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
+          make test

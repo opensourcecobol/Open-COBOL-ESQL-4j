@@ -56,6 +56,11 @@ all: $(TESTS)
 clean-local:
 	rm -rf $(TESTS)
 
+test: $(TESTS)
+	@for TEST_SCRIPT in $(TESTS); do \
+		./$${TEST_SCRIPT}; \
+	done
+
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	@echo "creating $(srcdir)/package.m4"
 	@{								   \
