@@ -39,7 +39,7 @@ jobs:
 
       # Checkout Open-COBOL-ESQL-4j
       - name: Checkout Open-COBOL-ESQL-4j
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Install JDBC
       - name: Install JDBC
@@ -49,19 +49,14 @@ jobs:
           curl -L -o ~/.java_lib/sqlite.jar https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
           curl -L -o ~/.java_lib/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
           
-      # Checkout opensource COBOL 4j v1.0.13
-      #- name: Checkout opensourcecobol4j
-      #  run: |
-      #    curl -L -o opensourcecobol4j.tar.gz https://github.com/opensourcecobol/opensourcecobol4j/archive/refs/tags/v1.0.13.tar.gz
-      #    tar zxf opensourcecobol4j.tar.gz
-      #    mv opensourcecobol4j-1.0.13 opensourcecobol4j
+      # Checkout opensource COBOL 4j
       - name: Checkout opensourcecobol4j
         uses: actions/checkout@v3
         with:
           repository: opensourcecobol/opensourcecobol4j
           path: opensourcecobol4j
       
-      # Install opensource COBOL 4j v1.0.13
+      # Install opensource COBOL 4j
       - name: Install opensource COBOL
         run: |
           cd opensourcecobol4j
@@ -92,7 +87,7 @@ jobs:
           cp ../.github/workflows/ubuntu-test-settings/embed_db_info.sh embed_db_info.sh
           make
           ./basic
-          ./cobol_data || cat cobol_data.dir/*/*.log
+          ./cobol_data
           ./sql_data
           ./sqlca
           ./misc
