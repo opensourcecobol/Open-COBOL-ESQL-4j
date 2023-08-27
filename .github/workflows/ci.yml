@@ -4,6 +4,7 @@ on:
   push:
   pull_request:
     types: [opened, reopened, review_requested, synchronize]
+  workflow_dispatch:
 
 env:
   COBOL4J_LIB_DIR: /usr/lib/opensourcecobol4j
