@@ -20,6 +20,9 @@
 #ifndef OCESQLUTIL_H
 #define OCESQLUTIL_H
 
+#include <stddef.h>
+#include <stdio.h>
+
 char *com_strdup(const char *);
 int com_sprintf(char *, size_t, const char *, ...);
 char *com_strcat(char *, size_t, const char *);
