@@ -153,7 +153,7 @@ am__define_uniq_tagged_files = \
   unique=`for i in $$list; do \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
-DIST_SUBDIRS = ocesql tests
+DIST_SUBDIRS = ocesql tests dblibj
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in AUTHORS \
 	COPYING ChangeLog INSTALL NEWS README compile config.guess \
 	config.sub depcomp install-sh ltmain.sh missing ylwrap
@@ -335,7 +335,7 @@ top_srcdir = @top_srcdir@
 @DISABLE_OCESQL_TRUE@OCESQL = 
 
 #SUBDIRS = dblib $(OCESQL)
-SUBDIRS = $(OCESQL) tests
+SUBDIRS = $(OCESQL) tests dblibj
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

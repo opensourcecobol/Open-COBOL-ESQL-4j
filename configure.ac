@@ -70,5 +70,6 @@ AC_CHECK_FUNCS([memmove memset setenv strcasecmp strchr strdup strrchr strstr])
 
 AC_CONFIG_FILES([Makefile
                  ocesql/Makefile
-                 tests/Makefile])
+                 tests/Makefile
+                 dblibj/Makefile])
 AC_OUTPUT
