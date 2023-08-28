@@ -5,6 +5,9 @@ on:
   pull_request:
     types: [opened, reopened, review_requested, synchronize]
   workflow_dispatch:
+  # Run tests 10:00 PM (JST) every day
+  schedule:
+    - cron: '0 13 * * *'
 
 env:
   COBOL4J_LIB_DIR: /usr/lib/opensourcecobol4j
@@ -135,3 +138,17 @@ jobs:
           cd tests
           cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
           make test
+
+  create-issue-on-failure:
+    needs: Open-COBOL-ESQL-4j-tests
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create an Issue
+        uses: imjohnbo/issue-bot@v3
+        with:
+          assignees: "yutaro-sakamoto"
+          title: A scheduled build is failed
+          body: |
+            Scheduled build is failed.
+            See ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
