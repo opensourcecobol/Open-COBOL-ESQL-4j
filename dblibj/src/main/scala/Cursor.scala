@@ -8,44 +8,157 @@ import java.sql.ResultSet
 import org.postgresql.util.PSQLException
 
 class Cursor(
-            val connId : Int,
-            val name : String,
-            val sp: List[QueryInfo],
-            val query: String,
-            val nParams: Int,
-            val isOpened: Boolean,
-            val tuples: Int,
-            val sqlVarQueue: Queue[SQLVar], //pList
-            val fetchRecords: List[List[Option[Array[Byte]]]],
-            val overFetch: Boolean,
-            ) {
-  def setConnId(connId: Int): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setName(name: String): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setSp(sp: List[QueryInfo]): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setQuery(query: String): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setNParams(nParams: Int): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setIsOpened(isOpened: Boolean): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setTuples(tuples: Int): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setSqlVarQueue(sqlVarQueue: Queue[SQLVar]): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setFetchRecords(fetchRecords: List[List[Option[Array[Byte]]]]): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
-  def setOverFetch(overFetch: Boolean): Cursor = new Cursor(connId, name, sp, query, nParams, isOpened, tuples, sqlVarQueue, fetchRecords, overFetch)
+    val connId: Int,
+    val name: String,
+    val sp: List[QueryInfo],
+    val query: String,
+    val nParams: Int,
+    val isOpened: Boolean,
+    val tuples: Int,
+    val sqlVarQueue: Queue[SQLVar], // pList
+    val fetchRecords: List[List[Option[Array[Byte]]]],
+    val overFetch: Boolean
+) {
+  def setConnId(connId: Int): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
+  def setName(name: String): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
+  def setSp(sp: List[QueryInfo]): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
+  def setQuery(query: String): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
+  def setNParams(nParams: Int): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
+  def setIsOpened(isOpened: Boolean): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
+  def setTuples(tuples: Int): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
+  def setSqlVarQueue(sqlVarQueue: Queue[SQLVar]): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
+  def setFetchRecords(fetchRecords: List[List[Option[Array[Byte]]]]): Cursor =
+    new Cursor(
+      connId,
+      name,
+      sp,
+      query,
+      nParams,
+      isOpened,
+      tuples,
+      sqlVarQueue,
+      fetchRecords,
+      overFetch
+    )
+  def setOverFetch(overFetch: Boolean): Cursor = new Cursor(
+    connId,
+    name,
+    sp,
+    query,
+    nParams,
+    isOpened,
+    tuples,
+    sqlVarQueue,
+    fetchRecords,
+    overFetch
+  )
 }
 
 object Cursor {
   type CursorMap = scala.collection.immutable.Map[String, Cursor]
   type QueryInfoMap = scala.collection.immutable.Map[String, QueryInfo]
-  def defaultValue(): Cursor = new Cursor(0, "", Nil, "", 0, false, 0, Queue(), Nil, false)
+  def defaultValue(): Cursor =
+    new Cursor(0, "", Nil, "", 0, false, 0, Queue(), Nil, false)
   def emptyCursorMap: CursorMap = Map.empty
 
   def clearCursorMap(id: Int, state: OCDBState): Unit = {
     val globalState = state.globalState
     val cursorMap = globalState.cursorMap
     val newCursorMap = cursorMap.transform((_, cursor) =>
-      if(cursor.connId == id) {
+      if (cursor.connId == id) {
         cursor.setIsOpened(false)
       } else {
         cursor
-      })
+      }
+    )
     val newGlobalState = globalState.setCursorMap(newCursorMap)
     state.updateGlobalState(newGlobalState)
   }
@@ -70,37 +183,55 @@ object Cursor {
     state.updateGlobalState(newGlobalState)
   }
 
-  def updateFetchRecords(cursorName: String, fetchRecords: List[List[Option[Array[Byte]]]], updateOverFetch: Boolean, state: OCDBState): Unit = {
+  def updateFetchRecords(
+      cursorName: String,
+      fetchRecords: List[List[Option[Array[Byte]]]],
+      updateOverFetch: Boolean,
+      state: OCDBState
+  ): Unit = {
     state.globalState.cursorMap.get(cursorName) match {
       case None => ()
       case Some(cursor) => {
-        val newCursor = if(updateOverFetch) {
-          cursor.setFetchRecords(fetchRecords).setOverFetch(0 < fetchRecords.size && fetchRecords.size < GlobalState.fetch_records)
+        val newCursor = if (updateOverFetch) {
+          cursor
+            .setFetchRecords(fetchRecords)
+            .setOverFetch(
+              0 < fetchRecords.size && fetchRecords.size < GlobalState.fetch_records
+            )
         } else {
           cursor.setFetchRecords(fetchRecords)
         }
-        val newCursorMap = state.globalState.cursorMap ++ Map(cursorName -> newCursor)
+        val newCursorMap =
+          state.globalState.cursorMap ++ Map(cursorName -> newCursor)
         val newGlobalState = state.globalState.setCursorMap(newCursorMap)
         state.updateGlobalState(newGlobalState)
       }
     }
   }
 
-  def addCursorMap(id: Int, cname: String, query: String, nParams: Int, state: OCDBState): Boolean = {
+  def addCursorMap(
+      id: Int,
+      cname: String,
+      query: String,
+      nParams: Int,
+      state: OCDBState
+  ): Boolean = {
     state.globalState.cursorMap.get(cname) match {
-      case Some(cursor) if (cursor.isOpened)  => {
-          errorLogLn(s"cursor name '${cname}' alrready registred and opend")
-          false
+      case Some(cursor) if (cursor.isOpened) => {
+        errorLogLn(s"cursor name '${cname}' alrready registred and opend")
+        false
       }
       case _ => {
         val globalState = state.globalState
         val sqlVarQueue = globalState.sqlVarQueue
-        val newCursor = Cursor.defaultValue()
+        val newCursor = Cursor
+          .defaultValue()
           .setName(cname)
           .setConnId(id)
           .setQuery(query)
           .setNParams(nParams)
-          .setSqlVarQueue(if(nParams > 0) {sqlVarQueue} else {Queue()})
+          .setSqlVarQueue(if (nParams > 0) { sqlVarQueue }
+          else { Queue() })
           .setIsOpened(false)
           .setTuples(0)
         val newCursorMap = globalState.cursorMap + (cname -> newCursor)
@@ -111,15 +242,21 @@ object Cursor {
     }
   }
 
-  def addCursorMapWithPrepare(id: Int, cname: String, prepare: QueryInfo, state: OCDBState): Boolean = {
+  def addCursorMapWithPrepare(
+      id: Int,
+      cname: String,
+      prepare: QueryInfo,
+      state: OCDBState
+  ): Boolean = {
     state.globalState.cursorMap.get(cname) match {
-      case Some(cursor) if (cursor.isOpened)  => {
+      case Some(cursor) if (cursor.isOpened) => {
         errorLogLn(s"cursor name '${cname}' alrready registred and opend")
         false
       }
       case _ => {
         val globalState = state.globalState
-        val newCursor = Cursor.defaultValue()
+        val newCursor = Cursor
+          .defaultValue()
           .setName(cname)
           .setConnId(id)
           .setSp(List(prepare))
@@ -133,7 +270,13 @@ object Cursor {
     }
   }
 
-  def ocesqlCursorDeclare(id: Int, cname: Option[String], query: Option[String], nParams: Int, state: OCDBState): Unit = {
+  def ocesqlCursorDeclare(
+      id: Int,
+      cname: Option[String],
+      query: Option[String],
+      nParams: Int,
+      state: OCDBState
+  ): Unit = {
     val cname_ = cname.getOrElse("")
     val query_ = query.getOrElse("")
     state.updateSQLCA(SqlCA.defaultValue)
@@ -141,13 +284,18 @@ object Cursor {
       setLibErrorStatus(OCDB_EMPTY(), state)
     } else {
       val res = addCursorMap(id, cname_, query_, nParams, state)
-      if(!res) {
+      if (!res) {
         setLibErrorStatus(OCDB_WARNING_PORTAL_EXISTS(), state)
       }
     }
   }
 
-  def ocesqlPreparedCursorDeclare(id: Int, cname: Option[String], sname: Option[String], state: OCDBState): Unit = {
+  def ocesqlPreparedCursorDeclare(
+      id: Int,
+      cname: Option[String],
+      sname: Option[String],
+      state: OCDBState
+  ): Unit = {
     val cname_ = cname.getOrElse("")
     val sname_ = sname.getOrElse("")
     state.initSqlca()
@@ -160,7 +308,7 @@ object Cursor {
           setLibErrorStatus(OCDB_INVALID_STMT(), state)
         }
         case Some(prepare) => {
-          if(addCursorMapWithPrepare(id, cname_, prepare, state)) {
+          if (addCursorMapWithPrepare(id, cname_, prepare, state)) {
             setLibErrorStatus(OCDB_WARNING_PORTAL_EXISTS(), state)
           }
         }
@@ -168,30 +316,43 @@ object Cursor {
     }
   }
 
-  def getPrepareFromMap(sname: Option[String], state: OCDBState): Option[QueryInfo] = sname match {
+  def getPrepareFromMap(
+      sname: Option[String],
+      state: OCDBState
+  ): Option[QueryInfo] = sname match {
     case None => None
-    case Some(key) => state.globalState.queryInfoMap.get(key) match {
-      case None => {
-        errorLogLn(s"prepare name '${sname}' is not found in prepare list.")
-        showQueryInfoMap()
-        None
+    case Some(key) =>
+      state.globalState.queryInfoMap.get(key) match {
+        case None => {
+          errorLogLn(s"prepare name '${sname}' is not found in prepare list.")
+          showQueryInfoMap()
+          None
+        }
+        case Some(queryInfo) => {
+          logLn(s"#return:${queryInfo.pName}#")
+          Some(queryInfo)
+        }
       }
-      case Some(queryInfo) => {
-        logLn(s"#return:${queryInfo.pName}#")
-        Some(queryInfo)
-      }
-    }
   }
 
   // TODO implement
   private def showQueryInfoMap(): Unit = ()
 
-  def ocesqlExecPrepare(id: Int, sname: Option[String], nParams: Int, state: OCDBState): Int = {
+  def ocesqlExecPrepare(
+      id: Int,
+      sname: Option[String],
+      nParams: Int,
+      state: OCDBState
+  ): Int = {
     val errorProc = (prepare: QueryInfo) => {
-      errorLogLn(s"A number of parameters(${nParams}) and prepared sql parameters(${prepare.nParams} is unmatch.)")
+      errorLogLn(
+        s"A number of parameters(${nParams}) and prepared sql parameters(${prepare.nParams} is unmatch.)"
+      )
       setLibErrorStatus(OCDB_EMPTY(), state)
       val sqlCA = state.sqlCA
-      val errorMessageBytes = "A number of paramteters and prepared sql parameters is unmatch".getBytes()
+      val errorMessageBytes =
+        "A number of paramteters and prepared sql parameters is unmatch"
+          .getBytes()
       val newSqlCA = sqlCA
         .setErrmc(errorMessageBytes)
         .setErrml(errorMessageBytes.length.toShort)
@@ -200,10 +361,10 @@ object Cursor {
     }
 
     val endProc = (query: String) => {
-      if(setResultStatus(id, state)) {
-        if(query == "COMMIT" || query == "ROLLBACK") {
-            clearCursorMap(id, state)
-            OCDBExec(id, "BEGIN", state)
+      if (setResultStatus(id, state)) {
+        if (query == "COMMIT" || query == "ROLLBACK") {
+          clearCursorMap(id, state)
+          OCDBExec(id, "BEGIN", state)
         }
         0
       } else {
@@ -212,42 +373,39 @@ object Cursor {
     }
 
     getPrepareFromMap(sname, state) match {
-      case Some(prepare) if prepare.query.length != 0 => if(nParams > 0) {
-        if(prepare.nParams != nParams) {
-          errorProc(prepare)
+      case Some(prepare) if prepare.query.length != 0 =>
+        if (nParams > 0) {
+          if (prepare.nParams != nParams) {
+            errorProc(prepare)
+          } else {
+            OCDBExecParams(
+              id,
+              prepare.query,
+              state.globalState.sqlVarQueue,
+              state
+            )
+            endProc(prepare.query)
+          }
         } else {
-          OCDBExecParams(id, prepare.query, state.globalState.sqlVarQueue, state)
-          endProc(prepare.query)
-        }
-      } else {
           OCDBExec(id, prepare.query, state)
           endProc(prepare.query)
-      }
+        }
       case _ => 1
     }
   }
 
-  def OCDBCursorDeclare(id: Int, cname: String, query: String, withHold: Boolean, state: OCDBState): Unit =
+  def OCDBCursorDeclare(
+      id: Int,
+      cname: String,
+      query: String,
+      withHold: Boolean,
+      state: OCDBState
+  ): Unit =
     lookUpConnList(id, state) match {
       case None => ()
       case Some((_, pConn)) => {
-        val result = OCDB_PGCursorDeclear(pConn.connAddr, cname, query, withHold, state)
-        result match {
-          case Right(EResultSet(rs)) =>
-            updateConnList(id, pConn.setResult(result), state)
-          case _ => {
-            updateConnList(id, pConn.setResult(result), state)
-            errorLogLn("PostgreSQL Result is NULL")
-          }
-        }
-      }
-    }
-  
-  def OCDBCursorDeclareParams(id: Int, cname: String, query: String, sqlVarQueue: Queue[SQLVar], withHold: Boolean, state: OCDBState): Unit =
-    lookUpConnList(id, state) match {
-      case None => ()
-      case Some((_, pConn)) => {
-        val result = OCDB_PGCursorDeclareParams(pConn.connAddr, cname, query, sqlVarQueue, withHold, state)
+        val result =
+          OCDB_PGCursorDeclear(pConn.connAddr, cname, query, withHold, state)
         result match {
           case Right(EResultSet(rs)) =>
             updateConnList(id, pConn.setResult(result), state)
@@ -259,8 +417,44 @@ object Cursor {
       }
     }
 
-  def OCDB_PGCursorDeclear(conn: Option[Connection], cname: String, query: String, withHold: Boolean, state: OCDBState): ExecResult = {
-    val command = if(withHold == OCDB_CURSOR_WITH_HOLD_ON) {
+  def OCDBCursorDeclareParams(
+      id: Int,
+      cname: String,
+      query: String,
+      sqlVarQueue: Queue[SQLVar],
+      withHold: Boolean,
+      state: OCDBState
+  ): Unit =
+    lookUpConnList(id, state) match {
+      case None => ()
+      case Some((_, pConn)) => {
+        val result = OCDB_PGCursorDeclareParams(
+          pConn.connAddr,
+          cname,
+          query,
+          sqlVarQueue,
+          withHold,
+          state
+        )
+        result match {
+          case Right(EResultSet(rs)) =>
+            updateConnList(id, pConn.setResult(result), state)
+          case _ => {
+            updateConnList(id, pConn.setResult(result), state)
+            errorLogLn("PostgreSQL Result is NULL")
+          }
+        }
+      }
+    }
+
+  def OCDB_PGCursorDeclear(
+      conn: Option[Connection],
+      cname: String,
+      query: String,
+      withHold: Boolean,
+      state: OCDBState
+  ): ExecResult = {
+    val command = if (withHold == OCDB_CURSOR_WITH_HOLD_ON) {
       s"DECLARE ${cname} CURSOR WITH HOLD FOR ${query}"
     } else {
       s"DECLARE ${cname} CURSOR FOR ${query}"
@@ -271,12 +465,19 @@ object Cursor {
         logLn(e.getMessage())
       case _ =>
         logLn("declare cursor success")
-      }
+    }
     result
   }
 
-  def OCDB_PGCursorDeclareParams(conn: Option[Connection], cname: String, query: String, sqlVarQueue: Queue[SQLVar], withHold: Boolean, state: OCDBState): ExecResult = {
-    val command = if(withHold == OCDB_CURSOR_WITH_HOLD_ON) {
+  def OCDB_PGCursorDeclareParams(
+      conn: Option[Connection],
+      cname: String,
+      query: String,
+      sqlVarQueue: Queue[SQLVar],
+      withHold: Boolean,
+      state: OCDBState
+  ): ExecResult = {
+    val command = if (withHold == OCDB_CURSOR_WITH_HOLD_ON) {
       s"DECLARE ${cname} CURSOR WITH HOLD FOR ${query}"
     } else {
       s"DECLARE ${cname} CURSOR FOR ${query}"
@@ -298,40 +499,73 @@ object Cursor {
         updateConnList(id, pConn.setResult(Right(ESuccess())), state)
     }
 
-  def OCDBCursorFetchOccurs(id: Int, cname: String, fetchMode: ReadDirection, count: Int, state: OCDBState): Unit =
+  def OCDBCursorFetchOccurs(
+      id: Int,
+      cname: String,
+      fetchMode: ReadDirection,
+      count: Int,
+      state: OCDBState
+  ): Unit =
     lookUpConnList(id, state) match {
       case None => ()
       case Some((_, pConn)) => {
-        logLn(s"addr:${pConn.connAddr.getOrElse("")}, cname:${cname}, mode:${fetchMode}, count:${count}")
+        logLn(s"addr:${pConn.connAddr
+            .getOrElse("")}, cname:${cname}, mode:${fetchMode}, count:${count}")
         OCDB_PGCursorFetchOccurs(pConn, cname, fetchMode, count, state)
       }
     }
 
-  def OCDB_PGCursorFetchOccurs(conn: ConnectionInfo, cname: String, fetchMode: ReadDirection, count: Int, state: OCDBState): Unit = {
+  def OCDB_PGCursorFetchOccurs(
+      conn: ConnectionInfo,
+      cname: String,
+      fetchMode: ReadDirection,
+      count: Int,
+      state: OCDBState
+  ): Unit = {
     val strReadMode = fetchMode match {
       case OCDB_READ_PREVIOUS() => "BACKWARD"
-      case _ => "FORWARD"
+      case _                    => "FORWARD"
     }
     OCDBExec(conn.id, s"FETCH ${strReadMode} ${count} FROM ${cname}", state)
   }
 
-  def OCDBCursorFetchOne(id: Int, cname: String, fetchMode: ReadDirection, state: OCDBState): Unit =
+  def OCDBCursorFetchOne(
+      id: Int,
+      cname: String,
+      fetchMode: ReadDirection,
+      state: OCDBState
+  ): Unit =
     lookUpConnList(id, state) match {
       case None => ()
       case Some((_, pConn)) => {
-        logLn(s"addr:${pConn.connAddr.getOrElse("")}, cname:${cname}, mode:${fetchMode}")
+        logLn(
+          s"addr:${pConn.connAddr.getOrElse("")}, cname:${cname}, mode:${fetchMode}"
+        )
         OCDB_PGCursorFetchOne(pConn, cname, fetchMode, state)
       }
     }
 
-  def OCDB_PGCursorFetchOne(conn: ConnectionInfo, cname: String, fetchMode: ReadDirection, state: OCDBState): Unit = {
+  def OCDB_PGCursorFetchOne(
+      conn: ConnectionInfo,
+      cname: String,
+      fetchMode: ReadDirection,
+      state: OCDBState
+  ): Unit = {
     fetchMode match {
       case OCDB_READ_PREVIOUS() =>
-        OCDBExec(conn.id,s"FETCH BACKWARD ${GlobalState.getFetchRecords} FROM ${cname}", state)
+        OCDBExec(
+          conn.id,
+          s"FETCH BACKWARD ${GlobalState.getFetchRecords} FROM ${cname}",
+          state
+        )
       case OCDB_READ_CURRENT() =>
-        OCDBExec(conn.id,s"FETCH FORWARD 0 FROM ${cname}", state)
+        OCDBExec(conn.id, s"FETCH FORWARD 0 FROM ${cname}", state)
       case OCDB_READ_NEXT() =>
-        OCDBExec(conn.id,s"FETCH FORWARD ${GlobalState.getFetchRecords} FROM ${cname}", state)
+        OCDBExec(
+          conn.id,
+          s"FETCH FORWARD ${GlobalState.getFetchRecords} FROM ${cname}",
+          state
+        )
     }
   }
 
@@ -344,6 +578,10 @@ object Cursor {
       }
     }
 
-  def OCDB_PGCursorClose(conn: Option[Connection], cname: String, state: OCDBState): ExecResult =
+  def OCDB_PGCursorClose(
+      conn: Option[Connection],
+      cname: String,
+      state: OCDBState
+  ): ExecResult =
     OCDB_PGExec(conn, s"CLOSE ${cname}")
 }

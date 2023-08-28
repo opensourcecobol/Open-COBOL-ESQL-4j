@@ -20,9 +20,9 @@
 #ifndef DEFINE_H_1234567890
 #define DEFINE_H_1234567890
 
-#include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 #define BUFFSIZE 256
 #define MAX_LINESIZE 128
@@ -30,16 +30,16 @@
 
 #define TERMINAL_LENGTH 1
 
-#define PICTYPEX  1
-#define PICTYPES  2
+#define PICTYPEX 1
+#define PICTYPES 2
 
-#define PIC_ALPHABETIC 			0x01
-#define PIC_NUMERIC 			0x02
-#define PIC_NATIONAL			0x04
-#define PIC_VARYING			0x08
-#define PIC_ALPHANUMERIC		(PIC_ALPHABETIC | PIC_NUMERIC)
-#define PIC_ALPHANUMERIC_VARYING	(PIC_ALPHANUMERIC | PIC_VARYING)
-#define PIC_NATIONAL_VARYING	        (PIC_NATIONAL | PIC_VARYING)
+#define PIC_ALPHABETIC 0x01
+#define PIC_NUMERIC 0x02
+#define PIC_NATIONAL 0x04
+#define PIC_VARYING 0x08
+#define PIC_ALPHANUMERIC (PIC_ALPHABETIC | PIC_NUMERIC)
+#define PIC_ALPHANUMERIC_VARYING (PIC_ALPHANUMERIC | PIC_VARYING)
+#define PIC_NATIONAL_VARYING (PIC_NATIONAL | PIC_VARYING)
 
 #define HVARTYPE_UNSIGNED_NUMERIC 1
 #define HVARTYPE_SIGNED_TRAILING_SEPARATE 2
@@ -60,13 +60,13 @@
 #define CODE_CR '\r'
 #define CODE_LF '\n'
 
-enum oc_usage{
-	USAGE_NONE,
-	USAGE_FLOAT,
-	USAGE_DOUBLE,
-	USAGE_PACKED,
-	USAGE_BINARY_NATIVE,
-	USAGE_OTHER
+enum oc_usage {
+  USAGE_NONE,
+  USAGE_FLOAT,
+  USAGE_DOUBLE,
+  USAGE_PACKED,
+  USAGE_BINARY_NATIVE,
+  USAGE_OTHER
 };
 
 #define ERR_NOTDEF_WORKING 1
@@ -77,92 +77,92 @@ enum oc_usage{
 #define ERR_NOT_SUPPORTED_USAGE 30
 #define ERR_EXCEED_LIMIT_LINE_LENGTH 901
 
-#define  SIGNLEADING 1
-#define  FLAGVARYING 1
+#define SIGNLEADING 1
+#define FLAGVARYING 1
 
 #define SIGN_SEPARATE 1
 
-#define strcall       " CALL "
-#define strusing      " USING"
-#define strend        " END-CALL"
-#define strsqlca      "  BY REFERENCE SQLCA"
-#define strreference  "  BY REFERENCE "
-#define strconnid     "  BY VALUE CONNID"
-#define strbyvalue    "  BY VALUE "
+#define strcall " CALL "
+#define strusing " USING"
+#define strend " END-CALL"
+#define strsqlca "  BY REFERENCE SQLCA"
+#define strreference "  BY REFERENCE "
+#define strconnid "  BY VALUE CONNID"
+#define strbyvalue "  BY VALUE "
 
-#define incfolder     "INC"
-#define copypath      "sqlca.cbl"
+#define incfolder "INC"
+#define copypath "sqlca.cbl"
 
-#define INC_START_MARK  ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-#define INC__END__MARK  "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-
+#define INC_START_MARK                                                         \
+  ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+#define INC__END__MARK                                                         \
+  "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 
 #define PERIOD_DEFAULT 0
 #define PERIOD_FORCE_ON 1
 #define PERIOD_FORCE_OFF 2
 
 struct filename {
-	char  *source;
-	char  *translate;
+  char *source;
+  char *translate;
 };
 
 struct cb_sql_list {
-	char *sqltext;
-	struct cb_sql_list *next;
+  char *sqltext;
+  struct cb_sql_list *next;
 };
 
 struct cb_hostreference_list {
-	char *hostreference;
-	int hostno;
-	int lineno;
-	struct cb_hostreference_list *next;
+  char *hostreference;
+  int hostno;
+  int lineno;
+  struct cb_hostreference_list *next;
 };
 
 struct cb_res_hostreference_list {
-	char *hostreference;
-	int lineno;
-	struct cb_res_hostreference_list *next;
+  char *hostreference;
+  int lineno;
+  struct cb_res_hostreference_list *next;
 };
 
 struct cb_exec_list {
-	int startLine;
-	int endLine;
-	int period;
-	struct cb_hostreference_list *host_list;
-	int hostreferenceCount;
-	struct cb_res_hostreference_list *res_host_list;
-	int conn_use_other_db;
-	struct cb_sql_list *sql_list;
-	char *dbName;
-	char *prepareName;
-	char *cursorName;
-	char *commandName;
-	int command_putother;
-	char *sqlName;
-	char *incfileName;
-	struct cb_field *varname;
-	struct cb_exec_list *next;
+  int startLine;
+  int endLine;
+  int period;
+  struct cb_hostreference_list *host_list;
+  int hostreferenceCount;
+  struct cb_res_hostreference_list *res_host_list;
+  int conn_use_other_db;
+  struct cb_sql_list *sql_list;
+  char *dbName;
+  char *prepareName;
+  char *cursorName;
+  char *commandName;
+  int command_putother;
+  char *sqlName;
+  char *incfileName;
+  struct cb_field *varname;
+  struct cb_exec_list *next;
 };
 
 struct cb_field {
-	char	*sname;
-	int		level;
-	int		usage;
-//	int		sign_leading;
-	int		occurs;
-	struct cb_field *parent;
-	struct cb_field *children;
-	struct cb_field *sister;
-//	char  *picname;
+  char *sname;
+  int level;
+  int usage;
+  //	int		sign_leading;
+  int occurs;
+  struct cb_field *parent;
+  struct cb_field *children;
+  struct cb_field *sister;
+  //	char  *picname;
 
-	int pictype;
-	int picnsize;
-	int scale;
-	unsigned char have_sign;
-	int sign_leading;
-	int separate;
+  int pictype;
+  int picnsize;
+  int scale;
+  unsigned char have_sign;
+  int sign_leading;
+  int separate;
 };
-
 
 extern struct cb_exec_list *exec_list;
 extern struct cb_hostreference_list *host_reference_list;
@@ -171,14 +171,14 @@ extern int conn_use_other_db;
 extern int command_putother;
 extern struct cb_sql_list *sql_list;
 extern int currenthostno;
-extern char * cb_source_file;
-extern int  cb_source_line;
+extern char *cb_source_file;
+extern int cb_source_line;
 extern char *include_path;
 
 extern FILE *yyin;
 extern FILE *yyout;
 extern int yylex(void);
-extern int yyparse (void);
+extern int yyparse(void);
 
 extern char inbuff[256];
 extern char out[256];
@@ -210,69 +210,43 @@ extern char *errorfilename;
 extern int flag_external;
 extern char *filenameID;
 
-extern struct cb_sql_list *
-cb_add_text_list (struct cb_sql_list *list, struct cb_sql_list *targetlist);
-extern struct cb_sql_list *
-cb_text_list_add (struct cb_sql_list *list, char *text);
-char *
-cb_host_list_add (struct cb_hostreference_list *list, char *text);
-void
-cb_res_host_list_add (struct cb_res_hostreference_list *list, char *text);
-int
-cb_search_list(char *text);
-void
-cb_set_dbname(char *text);
-void
-cb_set_cursorname(char *text);
-void
-cb_set_prepname(char *text);
-extern struct cb_field *
-getfieldbyname(char *name);
-extern int
-gethostvarianttype(char *name , int *type , int *len , int *scale);
+extern struct cb_sql_list *cb_add_text_list(struct cb_sql_list *list,
+                                            struct cb_sql_list *targetlist);
+extern struct cb_sql_list *cb_text_list_add(struct cb_sql_list *list,
+                                            char *text);
+char *cb_host_list_add(struct cb_hostreference_list *list, char *text);
+void cb_res_host_list_add(struct cb_res_hostreference_list *list, char *text);
+int cb_search_list(char *text);
+void cb_set_dbname(char *text);
+void cb_set_cursorname(char *text);
+void cb_set_prepname(char *text);
+extern struct cb_field *getfieldbyname(char *name);
+extern int gethostvarianttype(char *name, int *type, int *len, int *scale);
 
-void
-outwrite();
-FILE *
-fopen_or_die(char *filename, const char *mode);
-void
-_printlog(char *msg);
-void
-readline(FILE *readfile);
-char *
-SQcount(int i);
-char *
-substring(int dexlen,char *wk_str, int flag_end);
-void
-sql_string(struct cb_exec_list *wk_text);
-void
-outsqlfiller(struct cb_exec_list *wk_head_p);
-void
-ppbuff(struct cb_exec_list *list);
-extern int
-ppoutputparam(struct cb_hostreference_list *host_list, int iteration);
-extern void
-_ppoutputparam(char *varface, int type, int digits, int scale, int iteration);
-extern void
-ppoutput(char *ppin,char *ppout,struct cb_exec_list *head);
-extern void
-ppoutput_incfile(char *ppin,char *ppout,struct cb_exec_list *head);
-int
-check_Dchar(char c);
-int
-get_host_group_length(struct cb_field *field, int *length);
-int
-get_host_group_table_info(struct cb_field *field, int *iteration, int *length);
-void
-parameter_split(struct cb_field *vp_parent);
+void outwrite();
+FILE *fopen_or_die(char *filename, const char *mode);
+void _printlog(char *msg);
+void readline(FILE *readfile);
+char *SQcount(int i);
+char *substring(int dexlen, char *wk_str, int flag_end);
+void sql_string(struct cb_exec_list *wk_text);
+void outsqlfiller(struct cb_exec_list *wk_head_p);
+void ppbuff(struct cb_exec_list *list);
+extern int ppoutputparam(struct cb_hostreference_list *host_list,
+                         int iteration);
+extern void _ppoutputparam(char *varface, int type, int digits, int scale,
+                           int iteration);
+extern void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head);
+extern void ppoutput_incfile(char *ppin, char *ppout,
+                             struct cb_exec_list *head);
+int check_Dchar(char c);
+int get_host_group_length(struct cb_field *field, int *length);
+int get_host_group_table_info(struct cb_field *field, int *iteration,
+                              int *length);
+void parameter_split(struct cb_field *vp_parent);
 
-extern int
-openerrorfile(char *filename);
-extern int
-closeerrorfile();
-extern int
-printerrormsg(char *name, int line, char * code);
-extern int
-printmsg(char *format, ...);
+extern int openerrorfile(char *filename);
+extern int closeerrorfile();
+extern int printerrormsg(char *name, int line, char *code);
+extern int printmsg(char *format, ...);
 #endif
-

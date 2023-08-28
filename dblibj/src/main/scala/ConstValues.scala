@@ -11,7 +11,7 @@ object ConstValues {
 
   val DEFAULT_NEXT_CONN_ID: Int = 1
   val INVALID_CONN_ID: Int = -1
-  val OCDB_INVALID_NUMBER:Int = -1
+  val OCDB_INVALID_NUMBER: Int = -1
   val OCDB_INVALID_STRING: Int = 0
   val OCDB_CONN_CONNECT_OK: Int = 1
   val OCDB_CONN_NOT_CONNECT: Int = 0
@@ -105,24 +105,24 @@ object ConstValues {
   case class OCDB_LOCK_ERROR() extends SqlCode
   case class OCDB_JDD_ERROR() extends SqlCode
 
-  val SQL_SAVEPOINT: String  = "SAVEPOINT oc_save"
+  val SQL_SAVEPOINT: String = "SAVEPOINT oc_save"
   val SQL_RELEASE_SAVEPOINT: String = "RELEASE SAVEPOINT oc_save"
   val SQL_ROLLBACK_SAVEPOINT: String = "ROLLBACK TO oc_save"
 
   val OCESQL_DEFAULT_DB_NAME: String = "OCDB_DEFAULT_DBNAME"
 
-  val OCDB_TYPE_UNSIGNED_NUMBER: Int = 1         // 符号無数字
-  val OCDB_TYPE_SIGNED_NUMBER_TC: Int = 3        // 符号付数字(trailing combined)
-  val OCDB_TYPE_SIGNED_NUMBER_LS: Int = 4        // 符号付数字(leading separete)
-  val OCDB_TYPE_UNSIGNED_NUMBER_PD: Int = 8        // 正のパック10進数
-  val OCDB_TYPE_SIGNED_NUMBER_PD: Int = 9      // 符号付パック10進数
-  val OCDB_TYPE_SINGED_BINARY_NATIVE: Int = 13   // 符号付2進数(native-order)
+  val OCDB_TYPE_UNSIGNED_NUMBER: Int = 1 // 符号無数字
+  val OCDB_TYPE_SIGNED_NUMBER_TC: Int = 3 // 符号付数字(trailing combined)
+  val OCDB_TYPE_SIGNED_NUMBER_LS: Int = 4 // 符号付数字(leading separete)
+  val OCDB_TYPE_UNSIGNED_NUMBER_PD: Int = 8 // 正のパック10進数
+  val OCDB_TYPE_SIGNED_NUMBER_PD: Int = 9 // 符号付パック10進数
+  val OCDB_TYPE_SINGED_BINARY_NATIVE: Int = 13 // 符号付2進数(native-order)
   val OCDB_TYPE_UNSINGED_BINARY_NATIVE: Int = 14 // 符号無2進数(native-order)
-  val OCDB_TYPE_ALPHANUMERIC: Int = 16           // 英数字
-  val OCDB_TYPE_GROUP: Int = 22                  // 集団
-  val OCDB_TYPE_JAPANESE: Int = 24               // 日本語
-  val OCDB_TYPE_ALPHANUMERIC_VARYING: Int = 30     // VARYING(PIC X)
-  val OCDB_TYPE_JAPANESE_VARYING: Int = 31         // VARYING(PIC N)
+  val OCDB_TYPE_ALPHANUMERIC: Int = 16 // 英数字
+  val OCDB_TYPE_GROUP: Int = 22 // 集団
+  val OCDB_TYPE_JAPANESE: Int = 24 // 日本語
+  val OCDB_TYPE_ALPHANUMERIC_VARYING: Int = 30 // VARYING(PIC X)
+  val OCDB_TYPE_JAPANESE_VARYING: Int = 31 // VARYING(PIC N)
   val OCDB_TYPE_MIN: Int = 0
   val OCDB_TYPE_MAX: Int = 32
 

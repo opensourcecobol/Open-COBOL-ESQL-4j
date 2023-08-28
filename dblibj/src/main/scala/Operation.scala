@@ -9,7 +9,7 @@ object Operation {
   type ExecResult = Either[SQLException, ExecSuccessResult]
 
   sealed trait LogLevel
-  case class LogOutputNoTest() extends  LogLevel
+  case class LogOutputNoTest() extends LogLevel
   case class LogOutputNothing() extends LogLevel
   case class LogOutputError() extends LogLevel
   case class LogOutputDebug() extends LogLevel
@@ -38,16 +38,18 @@ object Operation {
 
   def getLogLevel(): LogLevel =
     Option(System.getenv("OCDB_LOGLEVEL")) match {
-      case Some(envValue) if(envValue.toLowerCase == "nolog") => LogOutputNothing()
-      case Some(envValue) if(envValue.toLowerCase == "err") => LogOutputError()
-      case Some(envValue) if(envValue.toLowerCase == "debug") => LogOutputDebug()
+      case Some(envValue) if (envValue.toLowerCase == "nolog") =>
+        LogOutputNothing()
+      case Some(envValue) if (envValue.toLowerCase == "err") => LogOutputError()
+      case Some(envValue) if (envValue.toLowerCase == "debug") =>
+        LogOutputDebug()
       case _ => LogOutputNothing()
     }
 
   def getLogFilePath(): String =
     Option(System.getenv("OCDB_LOGFILE")) match {
       case Some(path) => path
-      case _ => "/tmp/ocesql.log"
+      case _          => "/tmp/ocesql.log"
     }
 
   def writeLog(msg: String, filePath: String): Unit = {
