@@ -81,7 +81,6 @@ jobs:
           ./configure --prefix=/usr/
           make
           sudo make install
-          cd ../
 
       # Build and Install Open COBOL ESQL 4J
       - name: Install Open COBOL ESQL 4J
