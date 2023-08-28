@@ -126,3 +126,5 @@ tests/cobol_data
 tests/misc
 tests/sql_data
 tests/sqlca
+configure~
+tests/*~
