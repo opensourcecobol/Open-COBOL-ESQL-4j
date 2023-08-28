@@ -17,118 +17,117 @@
  * Boston, MA 02110-1301 USA
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include "ocesqlutil.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#define MAXBUFFSIZE  1024
+#define MAXBUFFSIZE 1024
 #define ERRORMSGNUM 10
 static char errormsg[ERRORMSGNUM][128] = {
-	{"E001: is not defined in the working-storage !"},
-	{"E002: is not defined in c and cobol conversion rules!"},
-	{"E011: child element can't have OCCURS items !"},
-	{"E012: OCCURS item can't have multi item-layer !"},
-	{"E013: variable for PREPARE should be GROUP."},
-	{"E014: invalid parameter for PREPARE."},
-	{"E030:'s usage option not supported."},
-	{"E901: exceed limit line length(128 characters)"},
-	{"E990: usage error"},
-	{"E999: unexpected error"}
-};
+    {"E001: is not defined in the working-storage !"},
+    {"E002: is not defined in c and cobol conversion rules!"},
+    {"E011: child element can't have OCCURS items !"},
+    {"E012: OCCURS item can't have multi item-layer !"},
+    {"E013: variable for PREPARE should be GROUP."},
+    {"E014: invalid parameter for PREPARE."},
+    {"E030:'s usage option not supported."},
+    {"E901: exceed limit line length(128 characters)"},
+    {"E990: usage error"},
+    {"E999: unexpected error"}};
 static FILE *pfile;
 
-int openerrorfile(char *filename){
-	if( filename != NULL){
-		com_fopen(&pfile, filename, "a+");
-		if(pfile == NULL){
-			printf("errormsgshow: could not open %s.\n", filename);
-		}
-	}
+int openerrorfile(char *filename) {
+  if (filename != NULL) {
+    com_fopen(&pfile, filename, "a+");
+    if (pfile == NULL) {
+      printf("errormsgshow: could not open %s.\n", filename);
+    }
+  }
 
-	if(pfile == NULL){
-		pfile = stdout;
-	}
-	return 1;
+  if (pfile == NULL) {
+    pfile = stdout;
+  }
+  return 1;
 }
 
-int closeerrorfile(){
-	if(pfile != NULL && pfile != stdout){
-		fclose(pfile);
-	}
-	return 1;
+int closeerrorfile() {
+  if (pfile != NULL && pfile != stdout) {
+    fclose(pfile);
+  }
+  return 1;
 }
 
-int spreadchar(char * code , char* msg, char *ret){
-	char *p ;
-	if(code  == NULL || msg == NULL || ret == NULL)
-	    return 0;
+int spreadchar(char *code, char *msg, char *ret) {
+  char *p;
+  if (code == NULL || msg == NULL || ret == NULL)
+    return 0;
 
-	if(strlen(msg) <= strlen(code))
-		return 0;
+  if (strlen(msg) <= strlen(code))
+    return 0;
 
-	if(memcmp(code, msg, strlen(code)) != 0)
-		return 0;
+  if (memcmp(code, msg, strlen(code)) != 0)
+    return 0;
 
-	p = msg + strlen(code) + 1;
+  p = msg + strlen(code) + 1;
 
-	if(p == NULL)
-		return 0;
+  if (p == NULL)
+    return 0;
 
-	com_strcpy(ret, sizeof(ret), p);
-	return 1;
+  com_strcpy(ret, sizeof(ret), p);
+  return 1;
 }
 
-int geterrormsg(char *code , char *msg, int len){
-	char buf[MAXBUFFSIZE];
-	int i;
+int geterrormsg(char *code, char *msg, int len) {
+  char buf[MAXBUFFSIZE];
+  int i;
 
-	if( code == NULL || msg == NULL )
-	   return 0;
+  if (code == NULL || msg == NULL)
+    return 0;
 
-	 memset(msg, 0, len);
+  memset(msg, 0, len);
 
-	 memset(buf, 0, sizeof(buf));
-	 for(i=0; i<ERRORMSGNUM; i++){
-	 	if (spreadchar(code ,errormsg[i], msg) == 1 ){
-	 		return 1;
-	 	}
-	 	memset(buf, 0, sizeof(buf));
-	 }
-	 return 0;
+  memset(buf, 0, sizeof(buf));
+  for (i = 0; i < ERRORMSGNUM; i++) {
+    if (spreadchar(code, errormsg[i], msg) == 1) {
+      return 1;
+    }
+    memset(buf, 0, sizeof(buf));
+  }
+  return 0;
 }
 
-int printerrormsg(char *name, int line, char * code){
-	char buff[MAXBUFFSIZE];
-	int ilen ;
-	char *p;
+int printerrormsg(char *name, int line, char *code) {
+  char buff[MAXBUFFSIZE];
+  int ilen;
+  char *p;
 
-	if( code == NULL || line <=0 || name == NULL)
-		return 0;
-	ilen = sizeof(buff);
-	memset(buff,0, ilen);
+  if (code == NULL || line <= 0 || name == NULL)
+    return 0;
+  ilen = sizeof(buff);
+  memset(buff, 0, ilen);
 
-	com_sprintf(buff,sizeof(buff), "%06d:%4s:%s", line, code, name);
+  com_sprintf(buff, sizeof(buff), "%06d:%4s:%s", line, code, name);
 
-	p = buff + strlen(buff);
-	ilen -= strlen(buff)+1;
+  p = buff + strlen(buff);
+  ilen -= strlen(buff) + 1;
 
-	if( geterrormsg(code,p, ilen) == 0){
-		printf("printerrmsg: no error message for '%4s'\n",  code);
-		return 0;
-	}
+  if (geterrormsg(code, p, ilen) == 0) {
+    printf("printerrmsg: no error message for '%4s'\n", code);
+    return 0;
+  }
 
-	fputs(buff, pfile);
-	fputs("\n", pfile);
+  fputs(buff, pfile);
+  fputs("\n", pfile);
 
-	return 1;
+  return 1;
 }
 
-int printmsg(char *format, ...){
-	va_list list;
-	va_start(list, format);
-	vfprintf(pfile, format, list);
-	va_end(list);
-	return 1;
+int printmsg(char *format, ...) {
+  va_list list;
+  va_start(list, format);
+  vfprintf(pfile, format, list);
+  va_end(list);
+  return 1;
 }

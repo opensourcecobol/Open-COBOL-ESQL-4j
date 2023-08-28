@@ -1,0 +1,10 @@
+#!/bin/bash
+
+clang-format -i \
+define.h \
+errorfile.c \
+ocesql.c \
+ocesql.h \
+ocesqlutil.c \
+ocesqlutil.h \
+ppout.c

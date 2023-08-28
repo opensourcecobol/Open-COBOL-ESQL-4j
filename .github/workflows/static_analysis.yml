@@ -1,0 +1,25 @@
+name: static analysis
+
+on:
+  push:
+  pull_request:
+    types: [opened, reopened, review_requested, synchronize]
+
+jobs:
+  static_analysis:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout Open COBOL ESQL 4J
+        uses: actions/checkout@v3
+
+      # Install static analysis tools
+      - name: Install static analysis tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang-format cppcheck
+
+      # check if source code is formatted
+      - name: Check format with clang-format
+        run: |
+          ./check-format
