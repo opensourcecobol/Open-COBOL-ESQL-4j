@@ -1,0 +1,116 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+    types: [opened, reopened, review_requested, synchronize]
+  workflow_dispatch:
+
+env:
+  COBOL4J_LIB_DIR: /usr/lib/opensourcecobol4j
+  COBOL4J_SQLITE_JDBC_PATH: /usr/lib/opensourcecobol4j/sqlite.jar
+  COBOL4J_LIBCOBJ_JAR_PATH: /usr/lib/opensourcecobol4j/libcobj.jar
+  OCESQL4J_LIB_DIR: /usr/lib/Open-COBOL-ESQL-4j
+  OCESQL4J_POSTGRESQL_JDBC_PATH: /usr/lib/Open-COBOL-ESQL-4j/postgresql.jar
+  OCESQL4J_OCESQL4J_JAR_PATH: /usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar
+  CLASSPATH: ":/usr/lib/opensourcecobol4j/sqlite.jar:/usr/lib/opensourcecobol4j/libcobj.jar:/usr/lib/Open-COBOL-ESQL-4j/postgresql.jar:/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar"
+
+jobs:
+  make-coverage-report:
+    runs-on: ubuntu-latest
+
+    # Start PostgreSQL 15 server
+    services:
+      postgres15:
+        image: postgres:15
+        ports: 
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: main_user
+          POSTGRES_DB: testdb
+          POSTGRES_HOST_AUTH_METHOD: 'trust'
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # Install dependencies
+      - name: Install dependencies on Ubuntu 22.04
+        run: |
+          sudo apt update -y
+          sudo apt install -y build-essential bison flex gettext texinfo automake autoconf curl gcovr
+
+      # Setup JDK
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 11
+
+      # Setup sbt
+      - name: Setup sbt
+        uses: olafurpg/setup-scala@v11
+        with:
+          java-version: zulu@1.11
+
+      # Checkout
+      - name: Checkout Open-COBOL-ESQL-4j
+        uses: actions/checkout@v3
+
+      # Install JDBC
+      - name: Install JDBC
+        run: |
+          sudo mkdir -p $COBOL4J_LIB_DIR $OCESQL4J_LIB_DIR
+          sudo curl -L -o $COBOL4J_SQLITE_JDBC_PATH https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
+          sudo curl -L -o $OCESQL4J_POSTGRESQL_JDBC_PATH https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
+          
+      # Checkout opensource COBOL 4J
+      - name: Checkout opensourcecobol 4J
+        uses: actions/checkout@v3
+        with:
+          repository: opensourcecobol/opensourcecobol4j
+          path: opensourcecobol4j
+      
+      # Install opensource COBOL 4J
+      - name: Install opensource COBOL 4J
+        run: |
+          cd opensourcecobol4j
+          ./configure --prefix=/usr/
+          make
+          sudo make install
+          cd ../
+
+      # Build and Install Open COBOL ESQL 4J
+      - name: Install Open COBOL ESQL 4J
+        run: |
+          cp $OCESQL4J_POSTGRESQL_JDBC_PATH dblibj/lib
+          cp $COBOL4J_LIBCOBJ_JAR_PATH dblibj/lib
+          sh configure CFLAGS='-fprofile-arcs -ftest-coverage' --prefix=/usr/
+          make
+          sudo make install
+
+      # Run Autotest for PostgreSQL 15
+      - name: Run tests for PostgreSQL 15
+        run: |
+          cd tests
+          cp ../.github/workflows/db-settings/embed_db_info_postgresql_15_coverage.sh embed_db_info.sh
+          make test
+
+      # Make a coverage report
+      - name: Make a coverage report
+        run: |
+          cd ocesql
+          gcov -l *.gcda
+          gcovr -r . --html -o report.html
+          mkdir coverage-report
+          cp *.gcno *.gcda *.gcov report.html coverage-report
+
+      # Upload a coverage report
+      - name: Archive a coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: ocesql/coverage-report/
