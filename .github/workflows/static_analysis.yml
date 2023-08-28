@@ -23,3 +23,8 @@ jobs:
       - name: Check format with clang-format
         run: |
           ./check-format
+
+      # Check C files in ocesql/ using cppcheck 
+      - name: Run cppcheck
+        run: |
+          cd ocesql && cppcheck define.h errorfile.c ocesql.c ocesql.h ocesqlutil.c ocesqlutil.h ppout.c
