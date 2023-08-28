@@ -19161,7 +19161,7 @@ then :
 fi
 
 
-ac_config_files="$ac_config_files Makefile ocesql/Makefile tests/Makefile"
+ac_config_files="$ac_config_files Makefile ocesql/Makefile tests/Makefile dblibj/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -20282,6 +20282,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "ocesql/Makefile") CONFIG_FILES="$CONFIG_FILES ocesql/Makefile" ;;
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
+    "dblibj/Makefile") CONFIG_FILES="$CONFIG_FILES dblibj/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
