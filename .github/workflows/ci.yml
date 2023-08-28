@@ -27,8 +27,8 @@ jobs:
     container:
       image: ${{ matrix.os }}
     
-    # Start PostgreSQL 9.6 server
     services:
+      # Start PostgreSQL 9.6 server
       postgres9_6:
         image: postgres:9.6
         ports: 
@@ -44,7 +44,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    # Start PostgreSQL 15 server
+      # Start PostgreSQL 15 server
       postgres15:
         image: postgres:15
         ports: 
@@ -94,7 +94,6 @@ jobs:
 
       # Install JDBC
       - name: Install JDBC
-        if: steps.java_lib_cache_id.outputs.cache-hit != 'true'
         run: |
           mkdir -p $COBOL4J_LIB_DIR $OCESQL4J_LIB_DIR
           curl -L -o $COBOL4J_SQLITE_JDBC_PATH https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
@@ -114,7 +113,6 @@ jobs:
           ./configure --prefix=/usr/
           make
           make install
-          cd ../
 
       # Build and Install Open COBOL ESQL 4J
       - name: Install Open COBOL ESQL 4J
@@ -139,6 +137,7 @@ jobs:
           cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
           make test
 
+  # Create an issue if one or more tests fail in scheduled tests
   create-issue-on-failure:
     needs: Open-COBOL-ESQL-4j-tests
     if: failure() && github.event_name == 'schedule'
