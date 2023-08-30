@@ -11,7 +11,6 @@ on:
 
 env:
   COBOL4J_LIB_DIR: /usr/lib/opensourcecobol4j
-  COBOL4J_SQLITE_JDBC_PATH: /usr/lib/opensourcecobol4j/sqlite.jar
   COBOL4J_LIBCOBJ_JAR_PATH: /usr/lib/opensourcecobol4j/libcobj.jar
   OCESQL4J_LIB_DIR: /usr/lib/Open-COBOL-ESQL-4j
   OCESQL4J_POSTGRESQL_JDBC_PATH: /usr/lib/Open-COBOL-ESQL-4j/postgresql.jar
@@ -96,7 +95,6 @@ jobs:
       - name: Install JDBC
         run: |
           mkdir -p $COBOL4J_LIB_DIR $OCESQL4J_LIB_DIR
-          curl -L -o $COBOL4J_SQLITE_JDBC_PATH https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
           curl -L -o $OCESQL4J_POSTGRESQL_JDBC_PATH https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
           
       # Checkout opensource COBOL 4J
@@ -110,6 +108,7 @@ jobs:
       - name: Install opensource COBOL 4J
         run: |
           cd opensourcecobol4j
+          curl -L -k -o libcobj/sqlite-jdbc/sqlite.jar https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
           ./configure --prefix=/usr/
           make
           make install
