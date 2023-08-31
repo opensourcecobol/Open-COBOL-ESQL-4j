@@ -1,0 +1,18 @@
+#!/bin/bash
+
+CHECK_RESULT=$(clang-format --dry-run \
+define.h \
+errorfile.c \
+ocesql.c \
+ocesql.h \
+ocesqlutil.c \
+ocesqlutil.h \
+ppout.c 2>&1)
+
+if [ -z "$CHECK_RESULT" ]
+then
+	true
+else
+	echo ${CHECK_RESULT}
+	false
+fi

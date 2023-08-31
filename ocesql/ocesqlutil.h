@@ -20,13 +20,16 @@
 #ifndef OCESQLUTIL_H
 #define OCESQLUTIL_H
 
+#include <stddef.h>
+#include <stdio.h>
+
 char *com_strdup(const char *);
 int com_sprintf(char *, size_t, const char *, ...);
 char *com_strcat(char *, size_t, const char *);
-void com_fopen(FILE**, const char *,const char *);
-char *com_strcpy(char *, size_t, const char*);
-char *com_strncpy(char *, size_t, const char*, size_t);
-void com_dupenv(char **, size_t *,const char *);
+void com_fopen(FILE **, const char *, const char *);
+char *com_strcpy(char *, size_t, const char *);
+char *com_strncpy(char *, size_t, const char *, size_t);
+void com_dupenv(char **, size_t *, const char *);
 int com_getpid(void);
 int com_unlink(const char *);
 void com_readline(FILE *, char *, int *, int *);

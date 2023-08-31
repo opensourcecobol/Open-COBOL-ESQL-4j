@@ -5,9 +5,6 @@ on:
   pull_request:
     types: [opened, reopened, review_requested, synchronize]
   workflow_dispatch:
-  # Run tests 10:00 PM (JST) every day
-  schedule:
-    - cron: '0 13 * * *'
 
 env:
   COBOL4J_LIB_DIR: /usr/lib/opensourcecobol4j
@@ -18,18 +15,13 @@ env:
   CLASSPATH: ":/usr/lib/opensourcecobol4j/sqlite.jar:/usr/lib/opensourcecobol4j/libcobj.jar:/usr/lib/Open-COBOL-ESQL-4j/postgresql.jar:/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar"
 
 jobs:
-  Open-COBOL-ESQL-4j-tests:
-    strategy:
-      matrix:
-        os: ["ubuntu:22.04", "almalinux:9"]
+  make-coverage-report:
     runs-on: ubuntu-latest
-    container:
-      image: ${{ matrix.os }}
-    
+
+    # Start PostgreSQL 15 server
     services:
-      # Start PostgreSQL 9.6 server
-      postgres9_6:
-        image: postgres:9.6
+      postgres15:
+        image: postgres:15
         ports: 
           - 5432:5432
         env:
@@ -43,36 +35,12 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      # Start PostgreSQL 15 server
-      postgres15:
-        image: postgres:15
-        ports: 
-          - 5433:5432
-        env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_USER: main_user
-          POSTGRES_DB: testdb
-          POSTGRES_HOST_AUTH_METHOD: 'trust'
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
-      # Install dependencies (Ubuntu 22.04)
+      # Install dependencies
       - name: Install dependencies on Ubuntu 22.04
-        if: matrix.os == 'ubuntu:22.04'
         run: |
-          apt update -y
-          apt install -y build-essential bison flex gettext texinfo automake autoconf curl
-
-      # Install dependencies (Almalinux 9)
-      - name: Install dependencies on AlmaLinux 9
-        if: matrix.os == 'almalinux:9'
-        run: |
-          dnf -y update
-          dnf install -y gcc gcc-c++ make bison flex automake autoconf diffutils gettext
+          sudo apt update -y
+          sudo apt install -y build-essential bison flex gettext texinfo automake autoconf curl gcovr
 
       # Setup JDK
       - name: Setup JDK
@@ -94,8 +62,8 @@ jobs:
       # Install JDBC
       - name: Install JDBC
         run: |
-          mkdir -p $COBOL4J_LIB_DIR $OCESQL4J_LIB_DIR
-          curl -L -o $OCESQL4J_POSTGRESQL_JDBC_PATH https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
+          sudo mkdir -p $COBOL4J_LIB_DIR $OCESQL4J_LIB_DIR
+          sudo curl -L -o $OCESQL4J_POSTGRESQL_JDBC_PATH https://jdbc.postgresql.org/download/postgresql-42.2.24.jre6.jar
           
       # Checkout opensource COBOL 4J
       - name: Checkout opensourcecobol 4J
@@ -111,42 +79,36 @@ jobs:
           curl -L -k -o libcobj/sqlite-jdbc/sqlite.jar https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
           ./configure --prefix=/usr/
           make
-          make install
+          sudo make install
 
       # Build and Install Open COBOL ESQL 4J
       - name: Install Open COBOL ESQL 4J
         run: |
           cp $OCESQL4J_POSTGRESQL_JDBC_PATH dblibj/lib
           cp $COBOL4J_LIBCOBJ_JAR_PATH dblibj/lib
-          sh configure --prefix=/usr/
+          sh configure CFLAGS='-fprofile-arcs -ftest-coverage' --prefix=/usr/
           make
-          make install
-
-      # Run Autotest for PostgreSQL 9.6
-      - name: Run tests for PostgreSQL 9.6
-        run: |
-          cd tests
-          cp ../.github/workflows/db-settings/embed_db_info_postgresql_9.6.sh embed_db_info.sh
-          make test
+          sudo make install
 
       # Run Autotest for PostgreSQL 15
       - name: Run tests for PostgreSQL 15
         run: |
           cd tests
-          cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
+          cp ../.github/workflows/db-settings/embed_db_info_postgresql_15_coverage.sh embed_db_info.sh
           make test
 
-  # Create an issue if one or more tests fail in scheduled tests
-  create-issue-on-failure:
-    needs: Open-COBOL-ESQL-4j-tests
-    if: failure() && github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create an Issue
-        uses: imjohnbo/issue-bot@v3
+      # Make a coverage report
+      - name: Make a coverage report
+        run: |
+          cd ocesql
+          gcov -l *.gcda
+          gcovr -r . --html -o report.html
+          mkdir coverage-report
+          cp *.gcno *.gcda *.gcov report.html coverage-report
+
+      # Upload a coverage report
+      - name: Archive a coverage report
+        uses: actions/upload-artifact@v3
         with:
-          assignees: "yutaro-sakamoto"
-          title: A scheduled build is failed
-          body: |
-            Scheduled build is failed.
-            See ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          name: code-coverage-report
+          path: ocesql/coverage-report/

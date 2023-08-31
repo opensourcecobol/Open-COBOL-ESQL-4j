@@ -1,13 +1,6 @@
 # Database Settings ----------
-#DB_NAME=
-#DB_HOST=
-#DB_PORT=
-#DB_USER=
-#DB_PASSWORD=
-
-# example
 DB_NAME=testdb
-DB_HOST=oc4j_db
+DB_HOST=postgres15
 DB_PORT=5432
 DB_USER=main_user
 DB_PASSWORD=password

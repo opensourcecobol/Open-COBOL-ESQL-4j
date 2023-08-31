@@ -1,5 +1,16 @@
 NEWS - user visible changes				-*- outline -*-
 
+* Open COBOL ESQL 4J 1.0.3
+
+** New Features
+    (1) Implement the bulk fetch
+
+** Improve the performance
+    (1) Refactor the runtime library entirely and remove overheads
+    (2) Implement caching for SQL statements
+
+-----------------------------------------------------------------------
+
 * Open COBOL ESQL 4J 1.0.2
 
 ** New Features

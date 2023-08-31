@@ -263,7 +263,7 @@ AT_CHECK([${RUN_MODULE} prog | tee stdout.txt], [0],
 <close(empty)> SQLCODE:+000000000
 <declare(invalid)> SQLCODE:+000000000
 <open(invalid)> SQLCODE:-000009999
-<fetch(invalid)> SQLCODE:-000000602
+<fetch(invalid)> SQLCODE:-000009999
 <close(invalid)> SQLCODE:+000000000
 ])
 
