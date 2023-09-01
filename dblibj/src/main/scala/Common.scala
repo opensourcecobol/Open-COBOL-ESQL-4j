@@ -22,11 +22,11 @@ object Common {
       case None                 => setLibErrorStatus(OCDB_EMPTY(), state)
       case Some(q) if q.isEmpty => setLibErrorStatus(OCDB_EMPTY(), state)
       case Some(q) => {
-        OCDBExec(id, q, state)
+        ocdbExec(id, q, state)
         val success = setResultStatus(id, state)
         if (success && (q == "COMMIT" || q == "ROLLBACK")) {
           clearCursorMap(id, state)
-          OCDBExec(id, "BEGIN", state)
+          ocdbExec(id, "BEGIN", state)
           setResultStatus(id, state)
         }
       }
@@ -108,7 +108,7 @@ object Common {
       return ()
     }
 
-    OCDBExecParams(
+    ocdbExecParams(
       id,
       query.getOrElse(""),
       state.globalState.sqlVarQueue,
@@ -121,7 +121,7 @@ object Common {
         .getOrElse("") == "COMMIT" || query.getOrElse("") == "ROLLBACK")
     ) {
       clearCursorMap(id, state)
-      OCDBExec(id, "BEGIN", state)
+      ocdbExec(id, "BEGIN", state)
       setResultStatus(id, state)
     }
   }
@@ -196,7 +196,7 @@ object Common {
     }
   }
 
-  def OCDBExec(id: Int, query: String, state: OCDBState): Unit = {
+  def ocdbExec(id: Int, query: String, state: OCDBState): Unit = {
     val keyAndValue = lookUpConnList(id, state)
     if (keyAndValue.isEmpty) {
       return ()
@@ -206,11 +206,11 @@ object Common {
     val key = kv._1
     val pConn = kv._2
 
-    val result = OCDB_PGExec(pConn.connAddr, query)
+    val result = ocdbPGExec(pConn.connAddr, query)
     setConnList(key, pConn.setResult(result), state)
   }
 
-  def OCDBExecParams(
+  def ocdbExecParams(
       id: Int,
       query: String,
       sqlVarQueue: Queue[SQLVar],
@@ -220,7 +220,7 @@ object Common {
       case None => logLn(s"id=${id},pConn=")
       case Some((key, pConn)) => {
         logLn(s"id=${id},pConn=${pConn}")
-        val result = OCDB_PGExecParam(pConn.connAddr, query, sqlVarQueue)
+        val result = ocdbPGExecParam(pConn.connAddr, query, sqlVarQueue)
         val globalState = state.globalState
         val newPConn = pConn.setResult(Right(ESuccess())).setResult(result)
         val newConnMap = globalState.connectionMap + (key -> newPConn)
@@ -232,13 +232,13 @@ object Common {
       }
     }
 
-  /** Equivalent to OCDB_PGExec in dblib/ocpgsql.c [remark]
+  /** Equivalent to ocdbPGExec in dblib/ocpgsql.c [remark]
     * 決して実行されないと思われる処理を書いていない
     * @param connAddr
     * @param query
     * @return
     */
-  def OCDB_PGExec(connAddr: Option[Connection], query: String): ExecResult = {
+  def ocdbPGExec(connAddr: Option[Connection], query: String): ExecResult = {
     logLn(s"CONNADDR ${connAddr}, EXEC SQL ${query}")
     connAddr match {
       case None => Left(new SQLException())
@@ -258,24 +258,24 @@ object Common {
     }
   }
 
-  def OCDB_Finish(id: Int, state: OCDBState): Unit =
+  def ocdbFinish(id: Int, state: OCDBState): Unit =
     lookUpConnList(id, state) match {
       case None => ()
       case Some((key, pConn)) => {
-        OCDB_PGFinish(pConn.connAddr, state)
+        ocdbPGFinish(pConn.connAddr, state)
         logLn(s"connection id ${id} released.")
         freeConnLists(id, state)
       }
     }
 
-  def OCDB_PGFinish(conn: Option[Connection], state: OCDBState): Unit =
+  def ocdbPGFinish(conn: Option[Connection], state: OCDBState): Unit =
     conn match {
       case None    => ()
       case Some(c) => c.close()
     }
 
   // [remark] rollBakckOneModeに関連した処理の実装
-  def OCDB_PGExecParam(
+  def ocdbPGExecParam(
       connAddr: Option[Connection],
       query: String,
       params: Queue[SQLVar]

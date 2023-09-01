@@ -105,7 +105,7 @@ object OCESQLConnectCore {
     }
 
     // [remark] トランザクションがどこでとじられるのか不明のため一時的に消去
-    OCDBExec(connectId, "BEGIN", state)
+    ocdbExec(connectId, "BEGIN", state)
 
     if (setResultStatus(connectId, state)) {
       return 1
@@ -206,7 +206,7 @@ object OCESQLConnectCore {
     val returnValue = addConnList(dbType, connName, connAddr, state)
 
     if (returnValue == INVALID_CONN_ID) {
-      OCDB_PGFinish(connAddr, state)
+      ocdbPGFinish(connAddr, state)
       return INVALID_CONN_ID
     }
 

@@ -364,7 +364,7 @@ object Cursor {
       if (setResultStatus(id, state)) {
         if (query == "COMMIT" || query == "ROLLBACK") {
           clearCursorMap(id, state)
-          OCDBExec(id, "BEGIN", state)
+          ocdbExec(id, "BEGIN", state)
         }
         0
       } else {
@@ -378,7 +378,7 @@ object Cursor {
           if (prepare.nParams != nParams) {
             errorProc(prepare)
           } else {
-            OCDBExecParams(
+            ocdbExecParams(
               id,
               prepare.query,
               state.globalState.sqlVarQueue,
@@ -387,7 +387,7 @@ object Cursor {
             endProc(prepare.query)
           }
         } else {
-          OCDBExec(id, prepare.query, state)
+          ocdbExec(id, prepare.query, state)
           endProc(prepare.query)
         }
       case _ => 1
@@ -459,7 +459,7 @@ object Cursor {
     } else {
       s"DECLARE ${cname} CURSOR FOR ${query}"
     }
-    val result = OCDB_PGExec(conn, command)
+    val result = ocdbPGExec(conn, command)
     result match {
       case Left(e) =>
         logLn(e.getMessage())
@@ -482,7 +482,7 @@ object Cursor {
     } else {
       s"DECLARE ${cname} CURSOR FOR ${query}"
     }
-    val result = OCDB_PGExecParam(conn, command, sqlVarQueue)
+    val result = ocdbPGExecParam(conn, command, sqlVarQueue)
     result match {
       case Left(e) =>
         logLn(e.getMessage())
@@ -526,7 +526,7 @@ object Cursor {
       case OCDB_READ_PREVIOUS() => "BACKWARD"
       case _                    => "FORWARD"
     }
-    OCDBExec(conn.id, s"FETCH ${strReadMode} ${count} FROM ${cname}", state)
+    ocdbExec(conn.id, s"FETCH ${strReadMode} ${count} FROM ${cname}", state)
   }
 
   def OCDBCursorFetchOne(
@@ -553,15 +553,15 @@ object Cursor {
   ): Unit = {
     fetchMode match {
       case OCDB_READ_PREVIOUS() =>
-        OCDBExec(
+        ocdbExec(
           conn.id,
           s"FETCH BACKWARD ${GlobalState.getFetchRecords} FROM ${cname}",
           state
         )
       case OCDB_READ_CURRENT() =>
-        OCDBExec(conn.id, s"FETCH FORWARD 0 FROM ${cname}", state)
+        ocdbExec(conn.id, s"FETCH FORWARD 0 FROM ${cname}", state)
       case OCDB_READ_NEXT() =>
-        OCDBExec(
+        ocdbExec(
           conn.id,
           s"FETCH FORWARD ${GlobalState.getFetchRecords} FROM ${cname}",
           state
@@ -583,5 +583,5 @@ object Cursor {
       cname: String,
       state: OCDBState
   ): ExecResult =
-    OCDB_PGExec(conn, s"CLOSE ${cname}")
+    ocdbPGExec(conn, s"CLOSE ${cname}")
 }
