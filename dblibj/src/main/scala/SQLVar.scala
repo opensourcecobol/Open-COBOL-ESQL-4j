@@ -104,7 +104,7 @@ class SQLVar(
 }
 
 object SQLVar {
-  def defaultValue = new SQLVar(0, 0, 0, None, None, None, 0)
+  def defaultValue: SQLVar = new SQLVar(0, 0, 0, None, None, None, 0)
 
   def resetSqlVarQueue(state: OCDBState): Unit = {
     val globalState = state.globalState

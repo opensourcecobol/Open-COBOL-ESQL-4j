@@ -82,7 +82,7 @@ class SqlCA(
 
 object SqlCA {
   val SQLERRMC_LEN: Int = 70
-  def defaultValue =
+  def defaultValue: SqlCA =
     new SqlCA(
       getArray(0, 8),
       0,
