@@ -22,11 +22,11 @@ object Common {
       case None                 => setLibErrorStatus(OCDB_EMPTY(), state)
       case Some(q) if q.isEmpty => setLibErrorStatus(OCDB_EMPTY(), state)
       case Some(q) => {
-        OCDBExec(id, q, state)
+        ocdbExec(id, q, state)
         val success = setResultStatus(id, state)
         if (success && (q == "COMMIT" || q == "ROLLBACK")) {
           clearCursorMap(id, state)
-          OCDBExec(id, "BEGIN", state)
+          ocdbExec(id, "BEGIN", state)
           setResultStatus(id, state)
         }
       }
@@ -51,39 +51,53 @@ object Common {
             cursorMap.get(cursor) match {
               case None => setLibErrorStatus(OCDB_EMPTY(), state)
               case Some(c) =>
-                c.fetchRecords match {
-                  case Nil => {
-                    if (c.overFetch) {
-                      ocesqlExec(
-                        id,
-                        Some(s"FETCH BACKWARD 1 from ${cursor}"),
-                        state
-                      )
-                    }
-                    ocesqlExec(id, query, state)
-                  }
-                  case _ => {
-                    ocesqlExec(
-                      id,
-                      Some(
-                        s"FETCH BACKWARD ${c.fetchRecords.size + (if (c.overFetch) { 1 }
-                                                                  else { 0 })} from ${cursor}"
-                      ),
-                      state
-                    )
-                    ocesqlExec(id, query, state)
-                    val newCursor = c.setFetchRecords(Nil)
-                    val newCursorMap = cursorMap ++ Map(cursor -> newCursor)
-                    val newGlobalState =
-                      state.globalState.setCursorMap(newCursorMap)
-                    state.updateGlobalState(newGlobalState)
-                  }
-                }
+                execFetchWhereCurrentOf(c, cursor, cursorMap, id, query, state)
             }
           }
         }
     }
   }
+
+  private def execFetchWhereCurrentOf(
+      c: Cursor,
+      cursor: String,
+      cursorMap: CursorMap,
+      id: Int,
+      query: Option[String],
+      state: OCDBState
+  ): Unit =
+    c.fetchRecords match {
+      case Nil => {
+        if (c.overFetch) {
+          ocesqlExec(
+            id,
+            Some(s"FETCH BACKWARD 1 from ${cursor}"),
+            state
+          )
+        }
+        ocesqlExec(id, query, state)
+      }
+      case _ => {
+        val fetchSize = if (c.overFetch) {
+          c.fetchRecords.size + 1
+        } else {
+          c.fetchRecords.size
+        }
+        ocesqlExec(
+          id,
+          Some(
+            s"FETCH BACKWARD ${fetchSize} from ${cursor}"
+          ),
+          state
+        )
+        ocesqlExec(id, query, state)
+        val newCursor = c.setFetchRecords(Nil)
+        val newCursorMap = cursorMap ++ Map(cursor -> newCursor)
+        val newGlobalState =
+          state.globalState.setCursorMap(newCursorMap)
+        state.updateGlobalState(newGlobalState)
+      }
+    }
 
   def ocesqlExecParams(
       id: Int,
@@ -108,7 +122,7 @@ object Common {
       return ()
     }
 
-    OCDBExecParams(
+    ocdbExecParams(
       id,
       query.getOrElse(""),
       state.globalState.sqlVarQueue,
@@ -121,7 +135,7 @@ object Common {
         .getOrElse("") == "COMMIT" || query.getOrElse("") == "ROLLBACK")
     ) {
       clearCursorMap(id, state)
-      OCDBExec(id, "BEGIN", state)
+      ocdbExec(id, "BEGIN", state)
       setResultStatus(id, state)
     }
   }
@@ -196,7 +210,7 @@ object Common {
     }
   }
 
-  def OCDBExec(id: Int, query: String, state: OCDBState): Unit = {
+  def ocdbExec(id: Int, query: String, state: OCDBState): Unit = {
     val keyAndValue = lookUpConnList(id, state)
     if (keyAndValue.isEmpty) {
       return ()
@@ -206,11 +220,11 @@ object Common {
     val key = kv._1
     val pConn = kv._2
 
-    val result = OCDB_PGExec(pConn.connAddr, query)
+    val result = ocdbPGExec(pConn.connAddr, query)
     setConnList(key, pConn.setResult(result), state)
   }
 
-  def OCDBExecParams(
+  def ocdbExecParams(
       id: Int,
       query: String,
       sqlVarQueue: Queue[SQLVar],
@@ -220,7 +234,7 @@ object Common {
       case None => logLn(s"id=${id},pConn=")
       case Some((key, pConn)) => {
         logLn(s"id=${id},pConn=${pConn}")
-        val result = OCDB_PGExecParam(pConn.connAddr, query, sqlVarQueue)
+        val result = ocdbPGExecParam(pConn.connAddr, query, sqlVarQueue)
         val globalState = state.globalState
         val newPConn = pConn.setResult(Right(ESuccess())).setResult(result)
         val newConnMap = globalState.connectionMap + (key -> newPConn)
@@ -232,13 +246,13 @@ object Common {
       }
     }
 
-  /** Equivalent to OCDB_PGExec in dblib/ocpgsql.c [remark]
+  /** Equivalent to ocdbPGExec in dblib/ocpgsql.c [remark]
     * 決して実行されないと思われる処理を書いていない
     * @param connAddr
     * @param query
     * @return
     */
-  def OCDB_PGExec(connAddr: Option[Connection], query: String): ExecResult = {
+  def ocdbPGExec(connAddr: Option[Connection], query: String): ExecResult = {
     logLn(s"CONNADDR ${connAddr}, EXEC SQL ${query}")
     connAddr match {
       case None => Left(new SQLException())
@@ -258,24 +272,24 @@ object Common {
     }
   }
 
-  def OCDB_Finish(id: Int, state: OCDBState): Unit =
+  def ocdbFinish(id: Int, state: OCDBState): Unit =
     lookUpConnList(id, state) match {
       case None => ()
       case Some((key, pConn)) => {
-        OCDB_PGFinish(pConn.connAddr, state)
+        ocdbPGFinish(pConn.connAddr, state)
         logLn(s"connection id ${id} released.")
         freeConnLists(id, state)
       }
     }
 
-  def OCDB_PGFinish(conn: Option[Connection], state: OCDBState): Unit =
+  def ocdbPGFinish(conn: Option[Connection], state: OCDBState): Unit =
     conn match {
       case None    => ()
       case Some(c) => c.close()
     }
 
   // [remark] rollBakckOneModeに関連した処理の実装
-  def OCDB_PGExecParam(
+  def ocdbPGExecParam(
       connAddr: Option[Connection],
       query: String,
       params: Queue[SQLVar]
@@ -363,15 +377,15 @@ object Common {
     updateConnList(key, (_ => c), state)
 
   def setLibErrorStatus(errorCode: SqlCode, state: OCDBState): Int =
-    OCDB_PGsetLibErrorStatus(errorCode, state)
+    ocdbPGsetLibErrorStatus(errorCode, state)
 
   def setResultStatus(id: Int, state: OCDBState): Boolean =
     lookUpConnList(id, state) match {
       case None             => false
-      case Some((_, pConn)) => OCDB_PGsetResultStatus(pConn.result, state)
+      case Some((_, pConn)) => ocdbPGsetResultStatus(pConn.result, state)
     }
 
-  def OCDB_PGsetResultStatus(result: ExecResult, state: OCDBState): Boolean = {
+  def ocdbPGsetResultStatus(result: ExecResult, state: OCDBState): Boolean = {
     val (sqlCode, sqlState) = result match {
       case Right(_) => {
         (OCPG_NO_ERROR, "00000")
@@ -418,7 +432,7 @@ object Common {
     return result.isRight
   }
 
-  /** Implementation of OCDB_PGSetResultStatus in dblib/ocpgsql.c
+  /** Implementation of ocdbPGsetResultStatus in dblib/ocpgsql.c
     * (Open-COBOL-ESQL) Regardless of the pretious SQL execution, sqlErrorCode
     * is zero. If the pretious SQL execution fails, sqlState equals to
     * PSQLState.
@@ -444,7 +458,7 @@ object Common {
     Common.resolveCONNID(cid, state.globalState.connectionMap)
   }
 
-  def OCDB_PGsetLibErrorStatus(errorCode: SqlCode, state: OCDBState): Int = {
+  def ocdbPGsetLibErrorStatus(errorCode: SqlCode, state: OCDBState): Int = {
     val (code, sqlState) = errorCode match {
       case OCDB_NO_ERROR()           => (OCPG_NO_ERROR, "00000")
       case OCDB_NOT_FOUND()          => (OCPG_NOT_FOUND, "02000")

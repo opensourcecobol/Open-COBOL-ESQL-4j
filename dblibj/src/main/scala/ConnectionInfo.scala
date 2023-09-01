@@ -11,7 +11,7 @@ class ConnectionInfo(
     val errorMessage: Option[String],
     val pid: Option[String]
 ) {
-  def setId(id: Int) = new ConnectionInfo(
+  def setId(id: Int): ConnectionInfo = new ConnectionInfo(
     id,
     cid,
     dbType,
@@ -21,7 +21,7 @@ class ConnectionInfo(
     errorMessage,
     pid
   )
-  def setCid(cid: String) = new ConnectionInfo(
+  def setCid(cid: String): ConnectionInfo = new ConnectionInfo(
     id,
     cid,
     dbType,
@@ -31,7 +31,7 @@ class ConnectionInfo(
     errorMessage,
     pid
   )
-  def setDbType(dbType: DBtype) = new ConnectionInfo(
+  def setDbType(dbType: DBtype): ConnectionInfo = new ConnectionInfo(
     id,
     cid,
     dbType,
@@ -41,7 +41,29 @@ class ConnectionInfo(
     errorMessage,
     pid
   )
-  def setConnAddr(connAddr: Option[Connection]) = new ConnectionInfo(
+  def setConnAddr(connAddr: Option[Connection]): ConnectionInfo =
+    new ConnectionInfo(
+      id,
+      cid,
+      dbType,
+      connAddr,
+      resAddr,
+      result,
+      errorMessage,
+      pid
+    )
+  def setResAddr(resAddr: Option[Connection]): ConnectionInfo =
+    new ConnectionInfo(
+      id,
+      cid,
+      dbType,
+      connAddr,
+      resAddr,
+      result,
+      errorMessage,
+      pid
+    )
+  def setResult(result: ExecResult): ConnectionInfo = new ConnectionInfo(
     id,
     cid,
     dbType,
@@ -51,37 +73,18 @@ class ConnectionInfo(
     errorMessage,
     pid
   )
-  def setResAddr(resAddr: Option[Connection]) = new ConnectionInfo(
-    id,
-    cid,
-    dbType,
-    connAddr,
-    resAddr,
-    result,
-    errorMessage,
-    pid
-  )
-  def setResult(result: ExecResult) = new ConnectionInfo(
-    id,
-    cid,
-    dbType,
-    connAddr,
-    resAddr,
-    result,
-    errorMessage,
-    pid
-  )
-  def setErrorMessage(errorMessage: Option[String]) = new ConnectionInfo(
-    id,
-    cid,
-    dbType,
-    connAddr,
-    resAddr,
-    result,
-    errorMessage,
-    pid
-  )
-  def setPid(pid: Option[String]) = new ConnectionInfo(
+  def setErrorMessage(errorMessage: Option[String]): ConnectionInfo =
+    new ConnectionInfo(
+      id,
+      cid,
+      dbType,
+      connAddr,
+      resAddr,
+      result,
+      errorMessage,
+      pid
+    )
+  def setPid(pid: Option[String]): ConnectionInfo = new ConnectionInfo(
     id,
     cid,
     dbType,

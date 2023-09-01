@@ -92,8 +92,8 @@ object GlobalState {
   val SWITCH_PIC_N_ENV_VAR_NAME = "OCESQL4J_UTF16BE"
   val FETCH_RECORDS_ENV_VAR_NAME = "OCESQL4J_FETCH_RECORDS"
 
-  def getFetchRecords = fetch_records
-  def setFetchRecords(x: Int) = {
+  def getFetchRecords: Int = fetch_records
+  def setFetchRecords(x: Int): Unit = {
     if (x > 0) {
       fetch_records = x
     }

@@ -52,7 +52,7 @@ object Select {
       return ()
     }
 
-    val fields = OCDBNfields(id, state)
+    val fields = ocdbNfields(id, state)
     if (fields != nResParams) {
       errorLogLn(
         s"ResParams(${nResParams}) and fields(${fields}) are different"
@@ -69,7 +69,7 @@ object Select {
             if (i >= fields) {
               ()
             } else {
-              OCDBGetValue(rs, sv, i + 1) match {
+              ocdbGetValue(rs, sv, i + 1) match {
                 case Some(str) =>
                   createCobolData(sv, 0, str, state.globalState.occursInfo)
                 case _ => ()
@@ -106,7 +106,7 @@ object Select {
       return ()
     }
 
-    val fields = OCDBNfields(id, state)
+    val fields = ocdbNfields(id, state)
     if (fields != nResParams) {
       errorLogLn(
         s"ResParams(${nResParams}) and fields(${fields}) are different"
@@ -138,7 +138,7 @@ object Select {
     for (index <- 0 until occursInfo.iter) {
       if (rs.next()) {
         for ((sv, j) <- sqlVarQueue.zipWithIndex) {
-          OCDBGetValue(rs, sv, j + 1) match {
+          ocdbGetValue(rs, sv, j + 1) match {
             case None         => ()
             case Some(retStr) => createCobolData(sv, index, retStr, occursInfo)
           }
@@ -167,7 +167,7 @@ object Select {
     while (rs.next()) {
       rowNum = rowNum + 1
       for ((sv, j) <- sqlVarQueue.zipWithIndex) {
-        var retStrA = OCDBGetValue(rs, sv, j + 1)
+        var retStrA = ocdbGetValue(rs, sv, j + 1)
         var retStr: Array[Byte] = retStrA.get
         var ret = createCobolData(sv, rowNum - 1, retStr, occursInfo)
       }
@@ -175,7 +175,7 @@ object Select {
     rowNum
   }
 
-  def OCDB_PGntuples(conn: ConnectionInfo): Int =
+  def ocdbPGntuples(conn: ConnectionInfo): Int =
     conn.result match {
       case Right(EResultSet(rs)) => {
         rs.last()
@@ -186,13 +186,13 @@ object Select {
       case _ => OCDB_INVALID_NUMBER
     }
 
-  def OCDBNfields(id: Int, state: OCDBState): Int =
+  def ocdbNfields(id: Int, state: OCDBState): Int =
     lookUpConnList(id, state) match {
       case None             => OCDB_INVALID_NUMBER
-      case Some((_, pConn)) => OCDB_PGnfields(pConn)
+      case Some((_, pConn)) => ocdbPGnfields(pConn)
     }
 
-  def OCDB_PGnfields(conn: ConnectionInfo): Int = {
+  def ocdbPGnfields(conn: ConnectionInfo): Int = {
     conn.result match {
       case Right(EResultSet(rs)) => rs.getMetaData.getColumnCount
       case Right(_)              => OCDB_INVALID_NUMBER
@@ -202,7 +202,7 @@ object Select {
 
   val dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss")
 
-  def OCDBGetValue(rs: ResultSet, sv: SQLVar, i: Int): Option[Array[Byte]] = {
+  def ocdbGetValue(rs: ResultSet, sv: SQLVar, i: Int): Option[Array[Byte]] = {
     lazy val stringConverter = {
       for {
         s <- Option(rs.getString(i))

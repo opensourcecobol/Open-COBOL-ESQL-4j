@@ -568,7 +568,7 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
     if (cursor.nParams > 0) {
       // TODO the following code should be improved
       val args = cursor.sqlVarQueue.map(sv => createRealData(sv, 0, state))
-      OCDBCursorDeclareParams(
+      ocdbCursorDeclareParams(
         cursor.connId,
         cursor.name,
         cursor.query,
@@ -579,7 +579,7 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
     } else {
       cursor.sp match {
         case q :: _ =>
-          OCDBCursorDeclare(
+          ocdbCursorDeclare(
             cursor.connId,
             cursor.name,
             q.query,
@@ -587,7 +587,7 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
             state
           )
         case _ =>
-          OCDBCursorDeclare(
+          ocdbCursorDeclare(
             cursor.connId,
             cursor.name,
             cursor.query,
@@ -601,7 +601,7 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
       return 1
     }
 
-    OCDBCursorOpen(cursor.connId, name, state)
+    ocdbCursorOpen(cursor.connId, name, state)
     if (!setResultStatus(cursor.connId, state)) {
       return 1
     }
@@ -679,7 +679,7 @@ class OCESQLCursorOpenParams extends CobolRunnableWrapper {
       return 1
     }
 
-    OCDBCursorOpen(cursor.connId, name, state)
+    ocdbCursorOpen(cursor.connId, name, state)
     if (!setResultStatus(cursor.connId, state)) {
       return 1
     }
@@ -701,13 +701,13 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
       cname: Option[String],
       id: Int
   ): Int = {
-    OCDBCursorFetchOne(id, name, OCDB_READ_NEXT(), state)
+    ocdbCursorFetchOne(id, name, OCDB_READ_NEXT(), state)
     val resultStatus = setResultStatus(id, state)
     if (!resultStatus) {
       return 1
     }
 
-    val fields = OCDBNfields(id, state)
+    val fields = ocdbNfields(id, state)
 
     if (fields != state.globalState.sqlResVarQueue.length) {
       errorLogLn(
@@ -742,7 +742,7 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
                   ) {
                     if (i < fields) {
                       fetchRecord =
-                        fetchRecord ::: List(OCDBGetValue(rs, sv, i + 1))
+                        fetchRecord ::: List(ocdbGetValue(rs, sv, i + 1))
                     }
                   }
                   fetchRecords = fetchRecords ::: List(fetchRecord)
@@ -862,7 +862,7 @@ class OCESQLCursorFetchOccurs extends CobolRunnableWrapper {
       }
       case Some(cursor) => {
         val id = cursor.connId
-        OCDBCursorFetchOccurs(
+        ocdbCursorFetchOccurs(
           id,
           name,
           OCDB_READ_NEXT(),
@@ -872,7 +872,7 @@ class OCESQLCursorFetchOccurs extends CobolRunnableWrapper {
         if (state.sqlCA.code < 0) {
           return 1
         }
-        val fields = OCDBNfields(id, state)
+        val fields = ocdbNfields(id, state)
 
         if (fields != state.globalState.sqlResVarQueue.length) {
           errorLogLn(
@@ -953,7 +953,7 @@ class OCESQLCursorClose extends CobolRunnableWrapper {
         }
         case Some(cursor) => {
           logLn(s"Connect ID: ${cursor.connId}")
-          OCDBCursorClose(cursor.connId, name, state)
+          ocdbCursorClose(cursor.connId, name, state)
           if (setResultStatus(cursor.connId, state)) {
             updateCursorMap(name, cursor.setIsOpened(false), state)
             return 0
