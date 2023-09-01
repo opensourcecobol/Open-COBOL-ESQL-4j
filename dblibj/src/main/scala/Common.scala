@@ -363,7 +363,7 @@ object Common {
     updateConnList(key, (_ => c), state)
 
   def setLibErrorStatus(errorCode: SqlCode, state: OCDBState): Int =
-    OCDB_PGsetLibErrorStatus(errorCode, state)
+    ocdbPGsetLibErrorStatus(errorCode, state)
 
   def setResultStatus(id: Int, state: OCDBState): Boolean =
     lookUpConnList(id, state) match {
@@ -444,7 +444,7 @@ object Common {
     Common.resolveCONNID(cid, state.globalState.connectionMap)
   }
 
-  def OCDB_PGsetLibErrorStatus(errorCode: SqlCode, state: OCDBState): Int = {
+  def ocdbPGsetLibErrorStatus(errorCode: SqlCode, state: OCDBState): Int = {
     val (code, sqlState) = errorCode match {
       case OCDB_NO_ERROR()           => (OCPG_NO_ERROR, "00000")
       case OCDB_NOT_FOUND()          => (OCPG_NOT_FOUND, "02000")

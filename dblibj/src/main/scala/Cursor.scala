@@ -394,7 +394,7 @@ object Cursor {
     }
   }
 
-  def OCDBCursorDeclare(
+  def ocdbCursorDeclare(
       id: Int,
       cname: String,
       query: String,
@@ -405,7 +405,7 @@ object Cursor {
       case None => ()
       case Some((_, pConn)) => {
         val result =
-          OCDB_PGCursorDeclear(pConn.connAddr, cname, query, withHold, state)
+          ocdbPGCursorDeclear(pConn.connAddr, cname, query, withHold, state)
         result match {
           case Right(EResultSet(rs)) =>
             updateConnList(id, pConn.setResult(result), state)
@@ -417,7 +417,7 @@ object Cursor {
       }
     }
 
-  def OCDBCursorDeclareParams(
+  def ocdbCursorDeclareParams(
       id: Int,
       cname: String,
       query: String,
@@ -428,7 +428,7 @@ object Cursor {
     lookUpConnList(id, state) match {
       case None => ()
       case Some((_, pConn)) => {
-        val result = OCDB_PGCursorDeclareParams(
+        val result = ocdbPGCursorDeclareParams(
           pConn.connAddr,
           cname,
           query,
@@ -447,7 +447,7 @@ object Cursor {
       }
     }
 
-  def OCDB_PGCursorDeclear(
+  def ocdbPGCursorDeclear(
       conn: Option[Connection],
       cname: String,
       query: String,
@@ -469,7 +469,7 @@ object Cursor {
     result
   }
 
-  def OCDB_PGCursorDeclareParams(
+  def ocdbPGCursorDeclareParams(
       conn: Option[Connection],
       cname: String,
       query: String,
@@ -492,14 +492,14 @@ object Cursor {
     result
   }
 
-  def OCDBCursorOpen(id: Int, cname: String, state: OCDBState): Unit =
+  def ocdbCursorOpen(id: Int, cname: String, state: OCDBState): Unit =
     lookUpConnList(id, state) match {
       case None => ()
       case Some((_, pConn)) =>
         updateConnList(id, pConn.setResult(Right(ESuccess())), state)
     }
 
-  def OCDBCursorFetchOccurs(
+  def ocdbCursorFetchOccurs(
       id: Int,
       cname: String,
       fetchMode: ReadDirection,
@@ -511,11 +511,11 @@ object Cursor {
       case Some((_, pConn)) => {
         logLn(s"addr:${pConn.connAddr
             .getOrElse("")}, cname:${cname}, mode:${fetchMode}, count:${count}")
-        OCDB_PGCursorFetchOccurs(pConn, cname, fetchMode, count, state)
+        ocdbPGCursorFetchOccurs(pConn, cname, fetchMode, count, state)
       }
     }
 
-  def OCDB_PGCursorFetchOccurs(
+  def ocdbPGCursorFetchOccurs(
       conn: ConnectionInfo,
       cname: String,
       fetchMode: ReadDirection,
@@ -529,7 +529,7 @@ object Cursor {
     ocdbExec(conn.id, s"FETCH ${strReadMode} ${count} FROM ${cname}", state)
   }
 
-  def OCDBCursorFetchOne(
+  def ocdbCursorFetchOne(
       id: Int,
       cname: String,
       fetchMode: ReadDirection,
@@ -541,11 +541,11 @@ object Cursor {
         logLn(
           s"addr:${pConn.connAddr.getOrElse("")}, cname:${cname}, mode:${fetchMode}"
         )
-        OCDB_PGCursorFetchOne(pConn, cname, fetchMode, state)
+        ocdbPGCursorFetchOne(pConn, cname, fetchMode, state)
       }
     }
 
-  def OCDB_PGCursorFetchOne(
+  def ocdbPGCursorFetchOne(
       conn: ConnectionInfo,
       cname: String,
       fetchMode: ReadDirection,
@@ -569,16 +569,16 @@ object Cursor {
     }
   }
 
-  def OCDBCursorClose(id: Int, cname: String, state: OCDBState): Unit =
+  def ocdbCursorClose(id: Int, cname: String, state: OCDBState): Unit =
     lookUpConnList(id, state) match {
       case None => ()
       case Some((_, pConn)) => {
-        val res = OCDB_PGCursorClose(pConn.connAddr, cname, state)
+        val res = ocdbPGCursorClose(pConn.connAddr, cname, state)
         updateConnList(id, pConn.setResult(res), state)
       }
     }
 
-  def OCDB_PGCursorClose(
+  def ocdbPGCursorClose(
       conn: Option[Connection],
       cname: String,
       state: OCDBState
