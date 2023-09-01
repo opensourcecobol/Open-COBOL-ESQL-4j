@@ -41,26 +41,28 @@ class ConnectionInfo(
     errorMessage,
     pid
   )
-  def setConnAddr(connAddr: Option[Connection]): ConnectionInfo = new ConnectionInfo(
-    id,
-    cid,
-    dbType,
-    connAddr,
-    resAddr,
-    result,
-    errorMessage,
-    pid
-  )
-  def setResAddr(resAddr: Option[Connection]): ConnectionInfo = new ConnectionInfo(
-    id,
-    cid,
-    dbType,
-    connAddr,
-    resAddr,
-    result,
-    errorMessage,
-    pid
-  )
+  def setConnAddr(connAddr: Option[Connection]): ConnectionInfo =
+    new ConnectionInfo(
+      id,
+      cid,
+      dbType,
+      connAddr,
+      resAddr,
+      result,
+      errorMessage,
+      pid
+    )
+  def setResAddr(resAddr: Option[Connection]): ConnectionInfo =
+    new ConnectionInfo(
+      id,
+      cid,
+      dbType,
+      connAddr,
+      resAddr,
+      result,
+      errorMessage,
+      pid
+    )
   def setResult(result: ExecResult): ConnectionInfo = new ConnectionInfo(
     id,
     cid,
@@ -71,16 +73,17 @@ class ConnectionInfo(
     errorMessage,
     pid
   )
-  def setErrorMessage(errorMessage: Option[String]): ConnectionInfo = new ConnectionInfo(
-    id,
-    cid,
-    dbType,
-    connAddr,
-    resAddr,
-    result,
-    errorMessage,
-    pid
-  )
+  def setErrorMessage(errorMessage: Option[String]): ConnectionInfo =
+    new ConnectionInfo(
+      id,
+      cid,
+      dbType,
+      connAddr,
+      resAddr,
+      result,
+      errorMessage,
+      pid
+    )
   def setPid(pid: Option[String]): ConnectionInfo = new ConnectionInfo(
     id,
     cid,

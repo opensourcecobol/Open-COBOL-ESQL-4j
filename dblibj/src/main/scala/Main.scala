@@ -707,7 +707,7 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
       return 1
     }
 
-    val fields = OCDBNfields(id, state)
+    val fields = ocdbNfields(id, state)
 
     if (fields != state.globalState.sqlResVarQueue.length) {
       errorLogLn(
@@ -742,7 +742,7 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
                   ) {
                     if (i < fields) {
                       fetchRecord =
-                        fetchRecord ::: List(OCDBGetValue(rs, sv, i + 1))
+                        fetchRecord ::: List(ocdbGetValue(rs, sv, i + 1))
                     }
                   }
                   fetchRecords = fetchRecords ::: List(fetchRecord)
@@ -872,7 +872,7 @@ class OCESQLCursorFetchOccurs extends CobolRunnableWrapper {
         if (state.sqlCA.code < 0) {
           return 1
         }
-        val fields = OCDBNfields(id, state)
+        val fields = ocdbNfields(id, state)
 
         if (fields != state.globalState.sqlResVarQueue.length) {
           errorLogLn(

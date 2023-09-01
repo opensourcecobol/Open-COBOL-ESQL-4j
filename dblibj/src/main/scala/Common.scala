@@ -368,10 +368,10 @@ object Common {
   def setResultStatus(id: Int, state: OCDBState): Boolean =
     lookUpConnList(id, state) match {
       case None             => false
-      case Some((_, pConn)) => OCDB_PGsetResultStatus(pConn.result, state)
+      case Some((_, pConn)) => ocdbPGsetResultStatus(pConn.result, state)
     }
 
-  def OCDB_PGsetResultStatus(result: ExecResult, state: OCDBState): Boolean = {
+  def ocdbPGsetResultStatus(result: ExecResult, state: OCDBState): Boolean = {
     val (sqlCode, sqlState) = result match {
       case Right(_) => {
         (OCPG_NO_ERROR, "00000")
@@ -418,7 +418,7 @@ object Common {
     return result.isRight
   }
 
-  /** Implementation of OCDB_PGSetResultStatus in dblib/ocpgsql.c
+  /** Implementation of ocdbPGsetResultStatus in dblib/ocpgsql.c
     * (Open-COBOL-ESQL) Regardless of the pretious SQL execution, sqlErrorCode
     * is zero. If the pretious SQL execution fails, sqlState equals to
     * PSQLState.

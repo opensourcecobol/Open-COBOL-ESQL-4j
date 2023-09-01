@@ -186,7 +186,7 @@ object OCESQLConnectCore {
       encoding: String,
       state: OCDBState
   ): Int = {
-    val connAddr = OCDB_PGconnect(
+    val connAddr = ocdbPGconnect(
       dbname,
       host,
       port,
@@ -272,7 +272,7 @@ object OCESQLConnectCore {
     state.updateGlobalState(newGlobalState)
   }
 
-  private def OCDB_PGconnect(
+  private def ocdbPGconnect(
       dbname: Option[String],
       host: Option[String],
       port: Option[String],
@@ -282,7 +282,7 @@ object OCESQLConnectCore {
       encoding: String,
       state: OCDBState
   ): Option[Connection] =
-    execute_connect(dbname, host, port, user, passwd, encoding, state) match {
+    executeConnect(dbname, host, port, user, passwd, encoding, state) match {
       case None => None
       case Some(c) => {
         c.setAutoCommit(autoCommit)
@@ -294,7 +294,7 @@ object OCESQLConnectCore {
       }
     }
 
-  private def execute_connect(
+  private def executeConnect(
       dbname: Option[String],
       host: Option[String],
       port: Option[String],
