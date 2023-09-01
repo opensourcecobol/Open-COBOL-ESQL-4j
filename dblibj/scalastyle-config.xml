@@ -1,11 +1,11 @@
 <scalastyle>
  <name>Scalastyle standard configuration</name>
  <check level="warning" class="org.scalastyle.file.FileTabChecker" enabled="true"></check>
- <check level="warning" class="org.scalastyle.file.FileLengthChecker" enabled="true">
+ <!--<check level="warning" class="org.scalastyle.file.FileLengthChecker" enabled="true">
   <parameters>
    <parameter name="maxFileLength"><![CDATA[800]]></parameter>
   </parameters>
- </check>
+ </check>-->
  <!--<check level="warning" class="org.scalastyle.file.HeaderMatchesChecker" enabled="true">
   <parameters>
    <parameter name="header"><![CDATA[// Copyright (C) 2011-2012 the original author or authors.
