@@ -628,7 +628,7 @@ object Common {
       index: Int,
       str: scala.Array[Byte]
   ): Unit = {
-    val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
+    val finalBuf: scala.Array[Byte] = scala.Array.fill(sv.length)('0'.toByte)
     val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if (isNegative) { 1 }
     else { 0 }
@@ -636,10 +636,6 @@ object Common {
       val index = str.indexOf('.')
       if (index < 0) { str.length }
       else { index }
-    }
-
-    for (i <- 0 until finalBuf.length) {
-      finalBuf(i) = '0'.toByte
     }
 
     if (sv.power >= 0) {
@@ -674,7 +670,7 @@ object Common {
       index: Int,
       str: scala.Array[Byte]
   ): Unit = {
-    val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
+    val finalBuf: scala.Array[Byte] = scala.Array.fill(sv.length)('0'.toByte)
     val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if (isNegative) { 1 }
     else { 0 }
@@ -682,10 +678,6 @@ object Common {
       val index = str.indexOf('.')
       if (index < 0) { str.length }
       else { index }
-    }
-
-    for (i <- 0 until finalBuf.length) {
-      finalBuf(i) = '0'.toByte
     }
 
     if (sv.power >= 0) {
@@ -715,9 +707,7 @@ object Common {
       val finalByte = finalBuf(finalBuf.length - 1)
       finalBuf(finalBuf.length - 1) = (finalByte + 0x40).toByte
     }
-    for (i <- 0 until finalBuf.length) {
-      addr.setByte(i, finalBuf(i))
-    }
+    addr.memcpy(finalBuf)
   }
 
   private def createCobolDataSignedNumberLs(
@@ -726,7 +716,7 @@ object Common {
       i: Int,
       str: scala.Array[Byte]
   ): Unit = {
-    val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
+    val finalBuf: scala.Array[Byte] = scala.Array.fill(sv.length)('0'.toByte)
     val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if (isNegative) { 1 }
     else { 0 }
@@ -734,10 +724,6 @@ object Common {
       val index = str.indexOf('.')
       if (index < 0) { str.length }
       else { index }
-    }
-
-    for (i <- 0 until finalBuf.length) {
-      finalBuf(i) = '0'.toByte
     }
 
     if (sv.power >= 0) {
@@ -765,9 +751,7 @@ object Common {
 
     finalBuf(0) = (if (isNegative) { '-' }
                    else { '+' }).toByte
-    for (i <- 0 until finalBuf.length) {
-      addr.setByte(i, finalBuf(i))
-    }
+    addr.memcpy(finalBuf)
   }
 
   private def getPackedIndexAndByte(
