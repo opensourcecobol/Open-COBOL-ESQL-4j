@@ -409,6 +409,16 @@ object SQLVar {
       }
     }
 
+    var (realData, realDataLen) = setDataRealDataSignedNumberPd(v, bytes, sign)
+
+    v.setRealData(Some(realData)).setRealDataLength(realDataLen)
+  }
+
+  private def setDataRealDataSignedNumberPd(
+      v: SQLVar,
+      bytes: Array[Byte],
+      sign: Int
+  ): (CobolDataStorage, Int) = {
     // 0.00XYZW の場合
     var (realData, realDataLen) = if (-v.power > v.length) {
       val realDataLen = v.power + 2
@@ -442,7 +452,6 @@ object SQLVar {
       val realBytes = removeInitZeroes(tmpData, tmpDataLen)
       (new CobolDataStorage(realBytes), realBytes.length)
     }
-
     if (sign < 0) {
       var tmpData = new CobolDataStorage(realDataLen + 1)
       tmpData.getSubDataStorage(1).memcpy(realData, realDataLen)
@@ -450,8 +459,7 @@ object SQLVar {
       realData = tmpData
       realDataLen += 1
     }
-
-    v.setRealData(Some(realData)).setRealDataLength(realDataLen)
+    (realData, realDataLen)
   }
 
   private def createRealDataJapanese(v: SQLVar): SQLVar = {
