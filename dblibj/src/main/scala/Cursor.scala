@@ -337,46 +337,53 @@ object Cursor {
 
   // TODO implement
   private def showQueryInfoMap(): Unit = ()
+  private def ocesqlExecPrepareErrorProc(
+      prepare: QueryInfo,
+      nParams: Int,
+      state: OCDBState
+  ): Int = {
+    errorLogLn(
+      s"A number of parameters(${nParams}) and prepared sql parameters(${prepare.nParams} is unmatch.)"
+    )
+    setLibErrorStatus(OCDB_EMPTY(), state)
+    val sqlCA = state.sqlCA
+    val errorMessageBytes =
+      "A number of paramteters and prepared sql parameters is unmatch"
+        .getBytes()
+    val newSqlCA = sqlCA
+      .setErrmc(errorMessageBytes)
+      .setErrml(errorMessageBytes.length.toShort)
+    state.updateSQLCA(newSqlCA)
+    1
+  }
 
+  private def ocesqlExecPrepareEndProc(
+      id: Int,
+      query: String,
+      state: OCDBState
+  ): Int = {
+    if (setResultStatus(id, state)) {
+      if (query == "COMMIT" || query == "ROLLBACK") {
+        clearCursorMap(id, state)
+        ocdbExec(id, "BEGIN", state)
+      }
+      0
+    } else {
+      1
+    }
+  }
   def ocesqlExecPrepare(
       id: Int,
       sname: Option[String],
       nParams: Int,
       state: OCDBState
   ): Int = {
-    val errorProc = (prepare: QueryInfo) => {
-      errorLogLn(
-        s"A number of parameters(${nParams}) and prepared sql parameters(${prepare.nParams} is unmatch.)"
-      )
-      setLibErrorStatus(OCDB_EMPTY(), state)
-      val sqlCA = state.sqlCA
-      val errorMessageBytes =
-        "A number of paramteters and prepared sql parameters is unmatch"
-          .getBytes()
-      val newSqlCA = sqlCA
-        .setErrmc(errorMessageBytes)
-        .setErrml(errorMessageBytes.length.toShort)
-      state.updateSQLCA(newSqlCA)
-      1
-    }
-
-    val endProc = (query: String) => {
-      if (setResultStatus(id, state)) {
-        if (query == "COMMIT" || query == "ROLLBACK") {
-          clearCursorMap(id, state)
-          ocdbExec(id, "BEGIN", state)
-        }
-        0
-      } else {
-        1
-      }
-    }
 
     getPrepareFromMap(sname, state) match {
       case Some(prepare) if prepare.query.length != 0 =>
         if (nParams > 0) {
           if (prepare.nParams != nParams) {
-            errorProc(prepare)
+            ocesqlExecPrepareErrorProc(prepare, nParams, state)
           } else {
             ocdbExecParams(
               id,
@@ -384,11 +391,11 @@ object Cursor {
               state.globalState.sqlVarQueue,
               state
             )
-            endProc(prepare.query)
+            ocesqlExecPrepareEndProc(id, prepare.query, state)
           }
         } else {
           ocdbExec(id, prepare.query, state)
-          endProc(prepare.query)
+          ocesqlExecPrepareEndProc(id, prepare.query, state)
         }
       case _ => 1
     }
