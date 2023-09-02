@@ -809,31 +809,7 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
       case Some(cursor) => {
         val id = cursor.connId
 
-        val retCode = cursor.fetchRecords match {
-          case Nil => {
-            reFetch(state, name, cname, id)
-            getCursorFromMap(name, state) match {
-              case None => {
-                setLibErrorStatus(OCDB_NOT_FOUND(), state)
-                1
-              }
-              case Some(cursor) =>
-                cursor.fetchRecords match {
-                  case Nil => {
-                    if (state.sqlCA.code != -9999) {
-                      setLibErrorStatus(OCDB_NOT_FOUND(), state)
-                    }
-                    1
-                  }
-                  case record :: restRecords => {
-                    popRecord(state, record, restRecords, id, name)
-                  }
-                }
-            }
-          }
-          case record :: restRecords =>
-            popRecord(state, record, restRecords, id, name)
-        }
+        val retCode = getRecord(cursor, name, cname, id, state)
 
         val newTuples = cursor.tuples + state.sqlCA.errd(2)
         for {
@@ -847,6 +823,39 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
       }
     }
   }
+
+  private def getRecord(
+      cursor: Cursor,
+      name: String,
+      cname: Option[String],
+      id: Int,
+      state: OCDBState
+  ): Int =
+    cursor.fetchRecords match {
+      case Nil => {
+        reFetch(state, name, cname, id)
+        getCursorFromMap(name, state) match {
+          case None => {
+            setLibErrorStatus(OCDB_NOT_FOUND(), state)
+            1
+          }
+          case Some(cursor) =>
+            cursor.fetchRecords match {
+              case Nil => {
+                if (state.sqlCA.code != -9999) {
+                  setLibErrorStatus(OCDB_NOT_FOUND(), state)
+                }
+                1
+              }
+              case record :: restRecords => {
+                popRecord(state, record, restRecords, id, name)
+              }
+            }
+        }
+      }
+      case record :: restRecords =>
+        popRecord(state, record, restRecords, id, name)
+    }
 }
 
 object OCESQLCursorFetchOccurs {
