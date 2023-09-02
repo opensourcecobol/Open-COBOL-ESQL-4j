@@ -433,6 +433,17 @@ object Common {
     }
 
     // Update SQLCA
+    ocdbPGsetResultStatusSaveState(sqlState, sqlCode, errMsgInfo, state)
+
+    return result.isRight
+  }
+
+  def ocdbPGsetResultStatusSaveState(
+      sqlState: String,
+      sqlCode: Int,
+      errMsgInfo: Option[(scala.Array[Byte], Int)],
+      state: OCDBState
+  ): Unit = {
     val sqlCA = state.sqlCA
     val tmpSqlCA = sqlCA.setCode(sqlCode).setState(sqlState.getBytes)
     val newSqlCA = errMsgInfo match {
@@ -443,8 +454,6 @@ object Common {
       case _ => tmpSqlCA
     }
     state.updateSQLCA(newSqlCA)
-
-    return result.isRight
   }
 
   /** Implementation of ocdbPGsetResultStatus in dblib/ocpgsql.c
