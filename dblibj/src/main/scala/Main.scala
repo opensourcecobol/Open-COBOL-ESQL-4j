@@ -541,16 +541,41 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
     state.updateSQLCA(SqlCA.defaultValue)
     logLn(s"cname=#${cname.getOrElse("")}#")
 
+    var cursor = getCursor(name, cname, state) match {
+      case None    => return 1
+      case Some(c) => c
+    }
+
+    updateCursorMap(name, cursor, state)
+    dispatch(cursor, state)
+
+    if (!setResultStatus(cursor.connId, state)) {
+      return 1
+    }
+
+    ocdbCursorOpen(cursor.connId, name, state)
+    if (!setResultStatus(cursor.connId, state)) {
+      return 1
+    }
+    updateCursorMap(name, cursor.setIsOpened(true), state)
+    return 0
+  }
+
+  private def getCursor(
+      name: String,
+      cname: Option[String],
+      state: OCDBState
+  ): Option[Cursor] = {
     if (name == "") {
       setLibErrorStatus(OCDB_EMPTY(), state)
-      return 1
+      return None
     }
     val optionCursor = getCursorFromMap(name, state)
 
     if (optionCursor.isEmpty) {
       errorLogLn(s"cursor ${name} not registered.")
       setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
-      return 1
+      return None
     }
 
     var cursor_ = optionCursor.getOrElse(Cursor.defaultValue)
@@ -559,13 +584,14 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
       logLn(s"cursor ${cname} already opened")
       if (!setResultStatus(cursor_.connId, state)) {
         errorLogLn(s"cursor ${name} close failed")
-        return 1
+        return None
       }
     }
 
-    var cursor = cursor_.setIsOpened(false)
-    updateCursorMap(name, cursor, state)
+    Some(cursor_.setIsOpened(false))
+  }
 
+  private def dispatch(cursor: Cursor, state: OCDBState): Unit = {
     if (cursor.nParams > 0) {
       // TODO the following code should be improved
       val args = cursor.sqlVarQueue.map(sv => createRealData(sv, 0, state))
@@ -597,17 +623,6 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
           )
       }
     }
-
-    if (!setResultStatus(cursor.connId, state)) {
-      return 1
-    }
-
-    ocdbCursorOpen(cursor.connId, name, state)
-    if (!setResultStatus(cursor.connId, state)) {
-      return 1
-    }
-    updateCursorMap(name, cursor.setIsOpened(true), state)
-    return 0
   }
 }
 
