@@ -139,7 +139,7 @@ jobs:
   # Create an issue if one or more tests fail in scheduled tests
   create-issue-on-failure:
     needs: Open-COBOL-ESQL-4j-tests
-    if: failure() && github.event_name == 'schedule'
+    if: failure() && github.event_name == 'schedule' && github.actor == 'opensourcecobol'
     runs-on: ubuntu-latest
     steps:
       - name: Create an Issue
