@@ -641,20 +641,10 @@ class OCESQLCursorOpenParams extends CobolRunnableWrapper {
     state.initSqlca()
     logLn(s"cname=#${cname.getOrElse("")}#")
 
-    if (name == "") {
-      setLibErrorStatus(OCDB_EMPTY(), state)
-      return 1
+    val cursor = getCursor(name, state) match {
+      case None    => return 1
+      case Some(c) => c
     }
-
-    val optionCursor = getCursorFromMap(name, state)
-
-    if (optionCursor.isEmpty) {
-      errorLogLn(s"cursor ${name} not registered.")
-      setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
-      return 1
-    }
-
-    val cursor = optionCursor.getOrElse(Cursor.defaultValue)
 
     cursor.sp match {
       case Nil => {
@@ -688,6 +678,22 @@ class OCESQLCursorOpenParams extends CobolRunnableWrapper {
     // TODO implement precisely
 
     updateState(cursor.setIsOpened(false), name, state)
+  }
+
+  private def getCursor(name: String, state: OCDBState): Option[Cursor] = {
+    if (name == "") {
+      setLibErrorStatus(OCDB_EMPTY(), state)
+      return None
+    }
+
+    getCursorFromMap(name, state) match {
+      case None => {
+        errorLogLn(s"cursor ${name} not registered.")
+        setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
+        None
+      }
+      case Some(c) => Some(c)
+    }
   }
 
   private def updateState(
