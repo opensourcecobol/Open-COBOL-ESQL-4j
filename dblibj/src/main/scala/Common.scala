@@ -154,42 +154,57 @@ object Common {
       case Some(q) =>
         cursorName match {
           case None => setLibErrorStatus(OCDB_EMPTY(), state)
-          case Some(cursor) => {
-            val cursorMap = state.globalState.cursorMap
-            cursorMap.get(cursor) match {
-              case None =>
-                setLibErrorStatus(OCDB_EMPTY(), state)
-              case Some(c) =>
-                c.fetchRecords match {
-                  case Nil => {
-                    if (c.overFetch) {
-                      ocesqlExec(
-                        id,
-                        Some(s"FETCH BACKWARD 1 from ${cursor}"),
-                        state
-                      )
-                    }
-                    ocesqlExecParams(id, query, nParams, state)
-                  }
-                  case _ => {
-                    ocesqlExec(
-                      id,
-                      Some(
-                        s"FETCH BACKWARD ${(if (c.overFetch) {
-                                              c.fetchRecords.size + 1
-                                            } else { c.fetchRecords.size })} from ${cursor}"
-                      ),
-                      state
-                    )
-                    ocesqlExecParams(id, query, nParams, state)
-                    val newCursor = c.setFetchRecords(Nil)
-                    val newCursorMap = cursorMap ++ Map(cursor -> newCursor)
-                    val newGlobalState =
-                      state.globalState.setCursorMap(newCursorMap)
-                    state.updateGlobalState(newGlobalState)
-                  }
-                }
+          case Some(cursor) =>
+            mainProcOcesqlExecParamsWhereCurrentOf(
+              cursor,
+              id,
+              query,
+              nParams,
+              state
+            )
+        }
+    }
+  }
+
+  private def mainProcOcesqlExecParamsWhereCurrentOf(
+      cursor: String,
+      id: Int,
+      query: Option[String],
+      nParams: Int,
+      state: OCDBState
+  ): Unit = {
+    val cursorMap = state.globalState.cursorMap
+    cursorMap.get(cursor) match {
+      case None =>
+        setLibErrorStatus(OCDB_EMPTY(), state)
+      case Some(c) =>
+        c.fetchRecords match {
+          case Nil => {
+            if (c.overFetch) {
+              ocesqlExec(
+                id,
+                Some(s"FETCH BACKWARD 1 from ${cursor}"),
+                state
+              )
             }
+            ocesqlExecParams(id, query, nParams, state)
+          }
+          case _ => {
+            ocesqlExec(
+              id,
+              Some(
+                s"FETCH BACKWARD ${(if (c.overFetch) {
+                                      c.fetchRecords.size + 1
+                                    } else { c.fetchRecords.size })} from ${cursor}"
+              ),
+              state
+            )
+            ocesqlExecParams(id, query, nParams, state)
+            val newCursor = c.setFetchRecords(Nil)
+            val newCursorMap = cursorMap ++ Map(cursor -> newCursor)
+            val newGlobalState =
+              state.globalState.setCursorMap(newCursorMap)
+            state.updateGlobalState(newGlobalState)
           }
         }
     }
@@ -418,6 +433,17 @@ object Common {
     }
 
     // Update SQLCA
+    ocdbPGsetResultStatusSaveState(sqlState, sqlCode, errMsgInfo, state)
+
+    return result.isRight
+  }
+
+  def ocdbPGsetResultStatusSaveState(
+      sqlState: String,
+      sqlCode: Int,
+      errMsgInfo: Option[(scala.Array[Byte], Int)],
+      state: OCDBState
+  ): Unit = {
     val sqlCA = state.sqlCA
     val tmpSqlCA = sqlCA.setCode(sqlCode).setState(sqlState.getBytes)
     val newSqlCA = errMsgInfo match {
@@ -428,8 +454,6 @@ object Common {
       case _ => tmpSqlCA
     }
     state.updateSQLCA(newSqlCA)
-
-    return result.isRight
   }
 
   /** Implementation of ocdbPGsetResultStatus in dblib/ocpgsql.c
@@ -558,7 +582,7 @@ object Common {
     addr.memset(0, sv.length)
   }
 
-  // inpure function
+  // scalastyle:off cyclomatic.complexity
   def createCobolData(
       sv: SQLVar,
       index: Int,
@@ -595,6 +619,7 @@ object Common {
         createCobolDataJapaneseVarying(sv, addr, index, resultData)
     }
   }
+  // scalastyle:on cyclomatic.complexity
 
   // [TODO] improve the algorithm
   private def createCobolDataUnsignedNumber(
@@ -603,7 +628,7 @@ object Common {
       index: Int,
       str: scala.Array[Byte]
   ): Unit = {
-    val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
+    val finalBuf: scala.Array[Byte] = scala.Array.fill(sv.length)('0'.toByte)
     val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if (isNegative) { 1 }
     else { 0 }
@@ -611,10 +636,6 @@ object Common {
       val index = str.indexOf('.')
       if (index < 0) { str.length }
       else { index }
-    }
-
-    for (i <- 0 until finalBuf.length) {
-      finalBuf(i) = '0'.toByte
     }
 
     if (sv.power >= 0) {
@@ -640,9 +661,7 @@ object Common {
       }
     }
 
-    for (i <- 0 until finalBuf.length) {
-      addr.setByte(i, finalBuf(i))
-    }
+    addr.memcpy(finalBuf)
   }
 
   private def createCobolDataSignedNumberTc(
@@ -651,7 +670,7 @@ object Common {
       index: Int,
       str: scala.Array[Byte]
   ): Unit = {
-    val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
+    val finalBuf: scala.Array[Byte] = scala.Array.fill(sv.length)('0'.toByte)
     val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if (isNegative) { 1 }
     else { 0 }
@@ -659,10 +678,6 @@ object Common {
       val index = str.indexOf('.')
       if (index < 0) { str.length }
       else { index }
-    }
-
-    for (i <- 0 until finalBuf.length) {
-      finalBuf(i) = '0'.toByte
     }
 
     if (sv.power >= 0) {
@@ -692,9 +707,7 @@ object Common {
       val finalByte = finalBuf(finalBuf.length - 1)
       finalBuf(finalBuf.length - 1) = (finalByte + 0x40).toByte
     }
-    for (i <- 0 until finalBuf.length) {
-      addr.setByte(i, finalBuf(i))
-    }
+    addr.memcpy(finalBuf)
   }
 
   private def createCobolDataSignedNumberLs(
@@ -703,7 +716,7 @@ object Common {
       i: Int,
       str: scala.Array[Byte]
   ): Unit = {
-    val finalBuf: scala.Array[Byte] = new scala.Array(sv.length)
+    val finalBuf: scala.Array[Byte] = scala.Array.fill(sv.length)('0'.toByte)
     val isNegative = str(0) == '-'.toByte
     val valueFirstIndex = if (isNegative) { 1 }
     else { 0 }
@@ -711,10 +724,6 @@ object Common {
       val index = str.indexOf('.')
       if (index < 0) { str.length }
       else { index }
-    }
-
-    for (i <- 0 until finalBuf.length) {
-      finalBuf(i) = '0'.toByte
     }
 
     if (sv.power >= 0) {
@@ -742,9 +751,7 @@ object Common {
 
     finalBuf(0) = (if (isNegative) { '-' }
                    else { '+' }).toByte
-    for (i <- 0 until finalBuf.length) {
-      addr.setByte(i, finalBuf(i))
-    }
+    addr.memcpy(finalBuf)
   }
 
   private def getPackedIndexAndByte(
@@ -895,6 +902,8 @@ object Common {
     // TODO Implement
   }
 
+  // scalastyle:off method.length
+  // scalastyle:off cyclomatic.complexity
   private def sqlStateToSqlCode(state: String): Int = state match {
     case "02000" => OCPG_NOT_FOUND
     case "YE002" => OCPG_EMPTY
@@ -912,5 +921,6 @@ object Common {
 
     case _ => OCDB_UNKNOWN_ERROR
   }
-
+  // scalastyle:on method.length
+  // scalastyle:on cyclomatic.complexity
 }

@@ -49,6 +49,7 @@ object OCESQLConnectCore {
       case Some(name) => defaultName
     }
 
+  // scalastyle:off method.length
   private def connectMain(
       name: Option[String],
       user: Option[String],
@@ -92,13 +93,7 @@ object OCESQLConnectCore {
 
     logLn(s"publish connect Id: ${connectId}")
 
-    if (connectId == OCDB_CONN_FAIL_CONNECT) {
-      setLibErrorStatus(OCDB_CONNECT(), state)
-      errorLogLn(s"connection failed. connect param is :${connStr}")
-      return 1
-    }
-
-    if (connectId == INVALID_CONN_ID) {
+    if (connectId == OCDB_CONN_FAIL_CONNECT || connectId == INVALID_CONN_ID) {
       setLibErrorStatus(OCDB_CONNECT(), state)
       errorLogLn(s"connection failed. connect param is :${connStr}")
       return 1
@@ -114,6 +109,7 @@ object OCESQLConnectCore {
     logLn(s"Connection success. connectId = ${connectId}, dbname=")
     0
   }
+  // scalastyle:on method.length
 
   private def checkType(dbType: DBtype): Boolean = true
 
