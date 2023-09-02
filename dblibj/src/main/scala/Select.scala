@@ -60,7 +60,14 @@ object Select {
       setLibErrorStatus(OCDB_EMPTY(), state)
       return ()
     }
+    saveResultSetInSqlResVarQueue(rs, fields, state)
+  }
 
+  private def saveResultSetInSqlResVarQueue(
+      rs: Option[ResultSet],
+      fields: Int,
+      state: OCDBState
+  ): Unit =
     rs match {
       case None => errorProc(state)
       case Some(rs) =>
@@ -80,7 +87,6 @@ object Select {
           errorProc(state)
         }
     }
-  }
 
   def ocesqlExecSelectIntoOccurs(
       id: Int,
@@ -202,6 +208,8 @@ object Select {
 
   val dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss")
 
+  // scalastyle:off method.length
+  // scalastyle:off cyclomatic.complexity
   def ocdbGetValue(rs: ResultSet, sv: SQLVar, i: Int): Option[Array[Byte]] = {
     lazy val stringConverter = {
       for {
@@ -267,4 +275,6 @@ object Select {
       case e: Throwable => None
     }
   }
+  // scalastyle:on method.length
+  // scalastyle:on cyclomatic.complexity
 }
