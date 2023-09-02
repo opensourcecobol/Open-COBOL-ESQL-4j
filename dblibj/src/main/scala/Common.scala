@@ -902,6 +902,8 @@ object Common {
     // TODO Implement
   }
 
+  // scalastyle:off method.length
+  // scalastyle:off cyclomatic.complexity
   private def sqlStateToSqlCode(state: String): Int = state match {
     case "02000" => OCPG_NOT_FOUND
     case "YE002" => OCPG_EMPTY
@@ -919,5 +921,6 @@ object Common {
 
     case _ => OCDB_UNKNOWN_ERROR
   }
-
+  // scalastyle:on method.length
+  // scalastyle:on cyclomatic.complexity
 }
