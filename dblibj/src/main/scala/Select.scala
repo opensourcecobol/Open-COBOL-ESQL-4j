@@ -60,7 +60,14 @@ object Select {
       setLibErrorStatus(OCDB_EMPTY(), state)
       return ()
     }
+    saveResultSetInSqlResVarQueue(rs, fields, state)
+  }
 
+  private def saveResultSetInSqlResVarQueue(
+      rs: Option[ResultSet],
+      fields: Int,
+      state: OCDBState
+  ): Unit =
     rs match {
       case None => errorProc(state)
       case Some(rs) =>
@@ -80,7 +87,6 @@ object Select {
           errorProc(state)
         }
     }
-  }
 
   def ocesqlExecSelectIntoOccurs(
       id: Int,
