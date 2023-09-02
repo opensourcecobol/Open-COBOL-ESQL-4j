@@ -202,6 +202,8 @@ object Select {
 
   val dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss")
 
+  // scalastyle:off method.length
+  // scalastyle:off cyclomatic.complexity
   def ocdbGetValue(rs: ResultSet, sv: SQLVar, i: Int): Option[Array[Byte]] = {
     lazy val stringConverter = {
       for {
@@ -267,4 +269,6 @@ object Select {
       case e: Throwable => None
     }
   }
+  // scalastyle:on method.length
+  // scalastyle:on cyclomatic.complexity
 }

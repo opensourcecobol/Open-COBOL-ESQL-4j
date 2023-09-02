@@ -457,7 +457,8 @@ object Common {
   def resolveCONNID(cid: String, state: OCDBState): Option[ConnectionInfo] = {
     Common.resolveCONNID(cid, state.globalState.connectionMap)
   }
-
+  // scalastyle:off method.length
+  // scalastyle:off cyclomatic.complexity
   def ocdbPGsetLibErrorStatus(errorCode: SqlCode, state: OCDBState): Int = {
     val (code, sqlState) = errorCode match {
       case OCDB_NO_ERROR()           => (OCPG_NO_ERROR, "00000")
@@ -514,6 +515,8 @@ object Common {
       RESULT_SUCCESS
     }
   }
+  // scalastyle:on method.length
+  // scalastyle:on cyclomatic.complexity
 
   def getCString(storage: CobolDataStorage): Option[String] = {
     try {

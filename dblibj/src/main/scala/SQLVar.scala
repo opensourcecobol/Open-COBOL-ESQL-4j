@@ -42,6 +42,8 @@ class SQLVar(
     }
   }
 
+  // scalastyle:off method.length
+  // scalastyle:off cyclomatic.complexity
   def setParam(
       stmt: PreparedStatement,
       index: Int,
@@ -101,6 +103,8 @@ class SQLVar(
       case Types.VARCHAR   => stmt.setString(index, str)
     }
   }
+  // scalastyle:on method.length
+  // scalastyle:on cyclomatic.complexity
 }
 
 object SQLVar {
