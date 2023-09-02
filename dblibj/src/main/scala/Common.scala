@@ -665,9 +665,7 @@ object Common {
       }
     }
 
-    for (i <- 0 until finalBuf.length) {
-      addr.setByte(i, finalBuf(i))
-    }
+    addr.memcpy(finalBuf)
   }
 
   private def createCobolDataSignedNumberTc(
