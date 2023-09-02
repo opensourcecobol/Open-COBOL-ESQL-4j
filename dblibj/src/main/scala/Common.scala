@@ -154,42 +154,57 @@ object Common {
       case Some(q) =>
         cursorName match {
           case None => setLibErrorStatus(OCDB_EMPTY(), state)
-          case Some(cursor) => {
-            val cursorMap = state.globalState.cursorMap
-            cursorMap.get(cursor) match {
-              case None =>
-                setLibErrorStatus(OCDB_EMPTY(), state)
-              case Some(c) =>
-                c.fetchRecords match {
-                  case Nil => {
-                    if (c.overFetch) {
-                      ocesqlExec(
-                        id,
-                        Some(s"FETCH BACKWARD 1 from ${cursor}"),
-                        state
-                      )
-                    }
-                    ocesqlExecParams(id, query, nParams, state)
-                  }
-                  case _ => {
-                    ocesqlExec(
-                      id,
-                      Some(
-                        s"FETCH BACKWARD ${(if (c.overFetch) {
-                                              c.fetchRecords.size + 1
-                                            } else { c.fetchRecords.size })} from ${cursor}"
-                      ),
-                      state
-                    )
-                    ocesqlExecParams(id, query, nParams, state)
-                    val newCursor = c.setFetchRecords(Nil)
-                    val newCursorMap = cursorMap ++ Map(cursor -> newCursor)
-                    val newGlobalState =
-                      state.globalState.setCursorMap(newCursorMap)
-                    state.updateGlobalState(newGlobalState)
-                  }
-                }
+          case Some(cursor) =>
+            mainProcOcesqlExecParamsWhereCurrentOf(
+              cursor,
+              id,
+              query,
+              nParams,
+              state
+            )
+        }
+    }
+  }
+
+  private def mainProcOcesqlExecParamsWhereCurrentOf(
+      cursor: String,
+      id: Int,
+      query: Option[String],
+      nParams: Int,
+      state: OCDBState
+  ): Unit = {
+    val cursorMap = state.globalState.cursorMap
+    cursorMap.get(cursor) match {
+      case None =>
+        setLibErrorStatus(OCDB_EMPTY(), state)
+      case Some(c) =>
+        c.fetchRecords match {
+          case Nil => {
+            if (c.overFetch) {
+              ocesqlExec(
+                id,
+                Some(s"FETCH BACKWARD 1 from ${cursor}"),
+                state
+              )
             }
+            ocesqlExecParams(id, query, nParams, state)
+          }
+          case _ => {
+            ocesqlExec(
+              id,
+              Some(
+                s"FETCH BACKWARD ${(if (c.overFetch) {
+                                      c.fetchRecords.size + 1
+                                    } else { c.fetchRecords.size })} from ${cursor}"
+              ),
+              state
+            )
+            ocesqlExecParams(id, query, nParams, state)
+            val newCursor = c.setFetchRecords(Nil)
+            val newCursorMap = cursorMap ++ Map(cursor -> newCursor)
+            val newGlobalState =
+              state.globalState.setCursorMap(newCursorMap)
+            state.updateGlobalState(newGlobalState)
           }
         }
     }
