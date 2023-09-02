@@ -582,7 +582,7 @@ object Common {
     addr.memset(0, sv.length)
   }
 
-  // inpure function
+  // scalastyle:off cyclomatic.complexity
   def createCobolData(
       sv: SQLVar,
       index: Int,
@@ -619,6 +619,7 @@ object Common {
         createCobolDataJapaneseVarying(sv, addr, index, resultData)
     }
   }
+  // scalastyle:on cyclomatic.complexity
 
   // [TODO] improve the algorithm
   private def createCobolDataUnsignedNumber(
