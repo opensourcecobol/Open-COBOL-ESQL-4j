@@ -342,8 +342,16 @@ object SQLVar {
       }
     }
 
+    var (realData, realDataLen) = setDataRealDataUnsignedNumberPd(v, bytes)
+    v.setRealData(Some(realData)).setRealDataLength(realDataLen)
+  }
+
+  private def setDataRealDataUnsignedNumberPd(
+      v: SQLVar,
+      bytes: Array[Byte]
+  ): (CobolDataStorage, Int) =
     // 0.00XYZW の場合
-    var (realData, realDataLen) = if (-v.power > v.length) {
+    if (-v.power > v.length) {
       val realDataLen = v.power + 2
       var realData = new CobolDataStorage(realDataLen)
       realData.memset('0'.toByte, realDataLen)
@@ -375,9 +383,6 @@ object SQLVar {
       val realBytes = removeInitZeroes(tmpData, tmpDataLen)
       (new CobolDataStorage(realBytes), realBytes.length)
     }
-
-    v.setRealData(Some(realData)).setRealDataLength(realDataLen)
-  }
 
   private def createRealDataSignedNumberPd(v: SQLVar): SQLVar = {
     val data = v.addr.getOrElse(nullDataStorage)
