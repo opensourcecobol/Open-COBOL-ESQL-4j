@@ -804,24 +804,31 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
       case None => {
         errorLogLn(s"cursor ${name} not registered.")
         setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
-        return 1
+        1
       }
       case Some(cursor) => {
         val id = cursor.connId
-
         val retCode = getRecord(cursor, name, cname, id, state)
-
-        val newTuples = cursor.tuples + state.sqlCA.errd(2)
-        for {
-          cursor_name <- cname
-          c <- state.globalState.cursorMap.get(cursor_name)
-        } yield updateCursorMap(name, c.setTuples(newTuples), state)
-        var sqlCA = state.sqlCA
-        sqlCA.errd(2) = newTuples
-        state.updateSQLCA(sqlCA)
-        return retCode
+        setFinalState(name, cname, cursor, state)
+        retCode
       }
     }
+  }
+
+  private def setFinalState(
+      name: String,
+      cname: Option[String],
+      cursor: Cursor,
+      state: OCDBState
+  ): Unit = {
+    val newTuples = cursor.tuples + state.sqlCA.errd(2)
+    for {
+      cursor_name <- cname
+      c <- state.globalState.cursorMap.get(cursor_name)
+    } yield updateCursorMap(name, c.setTuples(newTuples), state)
+    var sqlCA = state.sqlCA
+    sqlCA.errd(2) = newTuples
+    state.updateSQLCA(sqlCA)
   }
 
   private def getRecord(
@@ -895,59 +902,74 @@ class OCESQLCursorFetchOccurs extends CobolRunnableWrapper {
         val fields = ocdbNfields(id, state)
 
         if (fields != state.globalState.sqlResVarQueue.length) {
-          errorLogLn(
-            s"A number of parameters ${state.globalState.sqlResVarQueue.length} " +
-              s"and results(${fields} is unmatch."
-          )
-          setLibErrorStatus(OCDB_EMPTY(), state)
-          val sqlCA = state.sqlCA
-          state.updateSQLCA(
-            sqlCA
-              .setErrmc(
-                OCESQLCursorFetchOccurs.ERROR_MESSAGE_NUMBER_OF_PARAMETER
-              )
-              .setErrml(
-                OCESQLCursorFetchOccurs.ERROR_MESSAGE_NUMBER_OF_PARAMETER.length.toShort
-              )
-          )
-          return 1
+          return lengthUnmatchError(fields, state)
         }
 
-        val option_tuple = lookUpConnList(id, state) match {
-          case Some((_, conn)) =>
-            conn.result match {
-              case Right(EResultSet(rs)) => {
-                val tuples = resultSetToSqlVar(
-                  rs,
-                  0,
-                  0,
-                  state.globalState.sqlResVarQueue,
-                  state.globalState.occursInfo
-                )
-                updateCursorMap(name, cursor.setTuples(tuples), state)
-                Option(tuples)
-              }
-              case _ => {
-                setLibErrorStatus(OCDB_NOT_FOUND(), state)
-                None
-              }
-            }
+        val optionTuple = getTuple(id, name, cursor, state)
+        setFinalState(optionTuple, state)
+      }
+    }
+  }
+
+  private def lengthUnmatchError(fields: Int, state: OCDBState): Int = {
+    errorLogLn(
+      s"A number of parameters ${state.globalState.sqlResVarQueue.length} " +
+        s"and results(${fields} is unmatch."
+    )
+    setLibErrorStatus(OCDB_EMPTY(), state)
+    val sqlCA = state.sqlCA
+    state.updateSQLCA(
+      sqlCA
+        .setErrmc(
+          OCESQLCursorFetchOccurs.ERROR_MESSAGE_NUMBER_OF_PARAMETER
+        )
+        .setErrml(
+          OCESQLCursorFetchOccurs.ERROR_MESSAGE_NUMBER_OF_PARAMETER.length.toShort
+        )
+    )
+    1
+  }
+
+  private def getTuple(
+      id: Int,
+      name: String,
+      cursor: Cursor,
+      state: OCDBState
+  ): Option[Int] =
+    lookUpConnList(id, state) match {
+      case Some((_, conn)) =>
+        conn.result match {
+          case Right(EResultSet(rs)) => {
+            val tuples = resultSetToSqlVar(
+              rs,
+              0,
+              0,
+              state.globalState.sqlResVarQueue,
+              state.globalState.occursInfo
+            )
+            updateCursorMap(name, cursor.setTuples(tuples), state)
+            Option(tuples)
+          }
           case _ => {
             setLibErrorStatus(OCDB_NOT_FOUND(), state)
             None
           }
         }
-
-        var sqlCA = state.sqlCA
-        sqlCA.errd(2) = option_tuple.getOrElse(0)
-        val newSqlCA = option_tuple match {
-          case Some(tuples) => sqlCA.setCode(0)
-          case _            => sqlCA
-        }
-        state.updateSQLCA(newSqlCA)
-        0
+      case _ => {
+        setLibErrorStatus(OCDB_NOT_FOUND(), state)
+        None
       }
     }
+
+  private def setFinalState(optionTuple: Option[Int], state: OCDBState): Int = {
+    var sqlCA = state.sqlCA
+    sqlCA.errd(2) = optionTuple.getOrElse(0)
+    val newSqlCA = optionTuple match {
+      case Some(tuples) => sqlCA.setCode(0)
+      case _            => sqlCA
+    }
+    state.updateSQLCA(newSqlCA)
+    0
   }
 }
 
