@@ -638,9 +638,9 @@ class OCESQLCursorOpenParams extends CobolRunnableWrapper {
       return 1
     }
 
-    val cursor_ = optionCursor.getOrElse(Cursor.defaultValue)
+    val cursor = optionCursor.getOrElse(Cursor.defaultValue)
 
-    cursor_.sp match {
+    cursor.sp match {
       case Nil => {
         errorLogLn(s"prepare sql in cursor ${name} not registred.")
         setLibErrorStatus(OCDB_INVALID_STMT(), state)
@@ -662,18 +662,24 @@ class OCESQLCursorOpenParams extends CobolRunnableWrapper {
       case _ => ()
     }
 
-    if (cursor_.isOpened) {
+    if (cursor.isOpened) {
       logLn(s"cursor ${cname} already opened")
-      if (!setResultStatus(cursor_.connId, state)) {
+      if (!setResultStatus(cursor.connId, state)) {
         errorLogLn(s"cursor ${name} close failed")
         return 1
       }
     }
+    // TODO implement precisely
 
-    val cursor = cursor_.setIsOpened(false)
+    updateState(cursor.setIsOpened(false), name, state)
+  }
+
+  private def updateState(
+      cursor: Cursor,
+      name: String,
+      state: OCDBState
+  ): Int = {
     updateCursorMap(name, cursor, state)
-
-    // TODO implement
 
     if (!setResultStatus(cursor.connId, state)) {
       return 1
