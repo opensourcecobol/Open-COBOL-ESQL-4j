@@ -207,11 +207,7 @@ object SQLVar {
     v.setRealData(Some(storage)).setRealDataLength(bytes.length)
   }
 
-  // TODO improve the algorithm
-  private def removeInitZeroes(
-      data: CobolDataStorage,
-      len: Int
-  ): Array[Byte] = {
+  private def firstIndexOfNonZeroByte(data: CobolDataStorage, len: Int): Int = {
     var i = 0
     if (data.getByte(i) == '-'.toByte || data.getByte(i) == '+'.toByte) {
       i += 1
@@ -220,6 +216,15 @@ object SQLVar {
     while (i < len && data.getByte(i) == '0') {
       i += 1
     }
+    i
+  }
+
+  // TODO improve the algorithm
+  private def removeInitZeroes(
+      data: CobolDataStorage,
+      len: Int
+  ): Array[Byte] = {
+    val i = firstIndexOfNonZeroByte(data, len)
 
     val digits = if (i == len) {
       val arr = new Array[Byte](1)
