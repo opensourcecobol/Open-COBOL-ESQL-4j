@@ -2,6 +2,7 @@ import jp.osscons.opensourcecobol.libcobj.call.CobolRunnable
 import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
 import scala.collection.immutable._
 import java.nio.ByteBuffer
+import java.sql.ResultSet
 import Operation._
 import Common._
 import ConstValues._
@@ -739,22 +740,7 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
                 errorLogLn(s"cursor ${name} not registered.")
                 setLibErrorStatus(OCDB_WARNING_UNKNOWN_PORTAL(), state)
               }
-              case Some(cursor) => {
-                var fetchRecords = List.empty[List[Option[Array[Byte]]]]
-                while (rs.next()) {
-                  var fetchRecord = List.empty[Option[Array[Byte]]]
-                  for (
-                    (sv, i) <- state.globalState.sqlResVarQueue.zipWithIndex
-                  ) {
-                    if (i < fields) {
-                      fetchRecord =
-                        fetchRecord ::: List(ocdbGetValue(rs, sv, i + 1))
-                    }
-                  }
-                  fetchRecords = fetchRecords ::: List(fetchRecord)
-                }
-                updateFetchRecords(name, fetchRecords, true, state)
-              }
+              case Some(cursor) => saveRecords(rs, fields, name, state)
             }
           }
           case _ =>
@@ -762,6 +748,25 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
         }
     }
     return 0
+  }
+
+  private def saveRecords(
+      rs: ResultSet,
+      fields: Int,
+      name: String,
+      state: OCDBState
+  ): Unit = {
+    var fetchRecords = List.empty[List[Option[Array[Byte]]]]
+    while (rs.next()) {
+      var fetchRecord = List.empty[Option[Array[Byte]]]
+      for ((sv, i) <- state.globalState.sqlResVarQueue.zipWithIndex) {
+        if (i < fields) {
+          fetchRecord = fetchRecord ::: List(ocdbGetValue(rs, sv, i + 1))
+        }
+      }
+      fetchRecords = fetchRecords ::: List(fetchRecord)
+    }
+    updateFetchRecords(name, fetchRecords, true, state)
   }
 
   def popRecord(
