@@ -402,13 +402,12 @@ void ppoutputconnect(struct cb_exec_list *list) {
   return;
 }
 
-void _ppoutputparam(char *varface, int type, int digits, int scale,
-                    int iteration) {
+static void _ppoutputparamheader(const char *mod, int type, int digits,
+                                 int scale) {
   char buff[256];
 
   memset(buff, 0, sizeof(buff));
-  com_sprintf(buff, sizeof(buff),
-              "OCESQL%5sCALL \"OCESQLSetSQLParams\" USING\n", " ");
+  com_sprintf(buff, sizeof(buff), "OCESQL%5sCALL \"%s\" USING\n", " ", mod);
   fputs(buff, outfile);
 
   memset(buff, 0, sizeof(buff));
@@ -422,6 +421,59 @@ void _ppoutputparam(char *varface, int type, int digits, int scale,
   memset(buff, 0, sizeof(buff));
   com_sprintf(buff, sizeof(buff), "OCESQL%10sBY VALUE %d\n", " ", scale);
   fputs(buff, outfile);
+}
+
+static void _ppoutputparamfooter() {
+  char buff[256];
+  memset(buff, 0, sizeof(buff));
+
+  com_sprintf(buff, sizeof(buff), "OCESQL%5sEND-CALL\n", " ");
+  fputs(buff, outfile);
+}
+
+void __ppoutputparambyfield(const char *mod, struct cb_field *field, int type,
+                            int digits, int scale, int iteration) {
+
+  char buff[256];
+
+  _ppoutputparamheader(mod, type, digits, scale);
+
+  memset(buff, 0, sizeof(buff));
+  com_sprintf(buff, sizeof(buff), "OCESQL%10sBY REFERENCE %s", " ",
+              field->sname);
+  fputs(buff, outfile);
+  struct cb_field *f = field->parent;
+
+  while (f) {
+    memset(buff, 0, sizeof(buff));
+    com_sprintf(buff, sizeof(buff), "\nOCESQL%10s          OF %s", " ",
+                f->sname);
+    fputs(buff, outfile);
+    if (f->parent) {
+      memset(buff, 0, sizeof(buff));
+      com_sprintf(buff, sizeof(buff), "\n");
+      fputs(buff, outfile);
+    }
+    f = f->parent;
+  }
+
+  memset(buff, 0, sizeof(buff));
+  if (iteration > 0) {
+    com_sprintf(buff, sizeof(buff), "(1)\n", " ");
+  } else {
+    com_sprintf(buff, sizeof(buff), "\n");
+  }
+  fputs(buff, outfile);
+
+  _ppoutputparamfooter(type, digits, scale);
+}
+
+void __ppoutputparam(const char *mod, char *varface, int type, int digits,
+                     int scale, int iteration) {
+  char buff[256];
+
+  _ppoutputparamheader(mod, type, digits, scale);
+
   memset(buff, 0, sizeof(buff));
   if (iteration > 0) {
     com_sprintf(buff, sizeof(buff), "OCESQL%10sBY REFERENCE %s(1)\n", " ",
@@ -432,11 +484,18 @@ void _ppoutputparam(char *varface, int type, int digits, int scale,
   }
   fputs(buff, outfile);
 
-  memset(buff, 0, sizeof(buff));
+  _ppoutputparamfooter();
+}
 
-  com_sprintf(buff, sizeof(buff), "OCESQL%5sEND-CALL\n", " ");
-  fputs(buff, outfile);
-  return;
+void _ppoutputparambyfield(struct cb_field *field, int type, int digits,
+                           int scale, int iteration) {
+  __ppoutputparambyfield("OCESQLSetSQLParams", field, type, digits, scale,
+                         iteration);
+}
+void _ppoutputparam(char *varface, int type, int digits, int scale,
+                    int iteration) {
+  __ppoutputparam("OCESQLSetSQLParams", varface, type, digits, scale,
+                  iteration);
 }
 
 int ppoutputparam(struct cb_hostreference_list *host_list, int iteration) {
@@ -477,7 +536,7 @@ int ppoutputparam(struct cb_hostreference_list *host_list, int iteration) {
         printerrormsg(f->sname, host_list->lineno, buff);
         return count;
       }
-      _ppoutputparam(f->sname, type, digits, scale, iteration);
+      _ppoutputparambyfield(f, type, digits, scale, iteration);
       count++;
       f = f->sister;
     }
@@ -489,41 +548,16 @@ int ppoutputparam(struct cb_hostreference_list *host_list, int iteration) {
   return count;
 }
 
+void ppoutputresparambyfield(struct cb_field *field, int type, int digits,
+                             int scale, int iteration) {
+  __ppoutputparambyfield("OCESQLSetResultParams", field, type, digits, scale,
+                         iteration);
+}
+
 void ppoutputresparam(char *varface, int type, int digits, int scale,
                       int iteration) {
-  char buff[256];
-
-  memset(buff, 0, sizeof(buff));
-  com_sprintf(buff, sizeof(buff),
-              "OCESQL%5sCALL \"OCESQLSetResultParams\" USING\n", " ");
-  fputs(buff, outfile);
-
-  memset(buff, 0, sizeof(buff));
-  com_sprintf(buff, sizeof(buff), "OCESQL%10sBY VALUE %d\n", " ", type);
-  fputs(buff, outfile);
-
-  memset(buff, 0, sizeof(buff));
-  com_sprintf(buff, sizeof(buff), "OCESQL%10sBY VALUE %d\n", " ", digits);
-  fputs(buff, outfile);
-
-  memset(buff, 0, sizeof(buff));
-  com_sprintf(buff, sizeof(buff), "OCESQL%10sBY VALUE %d\n", " ", scale);
-  fputs(buff, outfile);
-  memset(buff, 0, sizeof(buff));
-  if (iteration > 0) {
-    com_sprintf(buff, sizeof(buff), "OCESQL%10sBY REFERENCE %s(1)\n", " ",
-                varface);
-  } else {
-    com_sprintf(buff, sizeof(buff), "OCESQL%10sBY REFERENCE %s\n", " ",
-                varface);
-  }
-  fputs(buff, outfile);
-
-  memset(buff, 0, sizeof(buff));
-
-  com_sprintf(buff, sizeof(buff), "OCESQL%5sEND-CALL\n", " ");
-  fputs(buff, outfile);
-  return;
+  __ppoutputparam("OCESQLSetResultParams", varface, type, digits, scale,
+                  iteration);
 }
 
 void ppoutputresgroup(struct cb_field *cf, int lineno, int iteration) {
