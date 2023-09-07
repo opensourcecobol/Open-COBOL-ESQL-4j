@@ -580,7 +580,7 @@ void ppoutputresgroup(struct cb_field *cf, int lineno, int iteration) {
   if (type == HVARTYPE_GROUP) {
     ppoutputresgroup(cf->children, lineno, iteration);
   } else {
-    ppoutputresparam(cf->sname, type, digits, scale, iteration);
+    ppoutputresparambyfield(cf, type, digits, scale, iteration);
   }
 
   if (cf->sister != NULL) {
@@ -1695,8 +1695,7 @@ void ppbuff(struct cb_exec_list *list) {
             printerrormsg(child->sname, wk_res_host->lineno, buff);
             return;
           }
-          ppoutputresparam(child->sname, var_type, var_len, var_scale,
-                           iteration);
+          ppoutputresparambyfield(child, var_type, var_len, var_scale, iteration);
           child = child->sister;
           reshostreferenceCount++;
         }
