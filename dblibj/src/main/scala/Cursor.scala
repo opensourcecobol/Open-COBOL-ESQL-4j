@@ -308,7 +308,7 @@ object Cursor {
           setLibErrorStatus(OCDB_INVALID_STMT(), state)
         }
         case Some(prepare) => {
-          if (addCursorMapWithPrepare(id, cname_, prepare, state)) {
+          if (!addCursorMapWithPrepare(id, cname_, prepare, state)) {
             setLibErrorStatus(OCDB_WARNING_PORTAL_EXISTS(), state)
           }
         }
