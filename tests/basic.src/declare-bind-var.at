@@ -336,7 +336,50 @@ AT_DATA([prog.cbl], [
 ])
 
 
-AT_CHECK([ocesql prog.cbl prog.cob > /dev/null])
+AT_CHECK([ocesql prog.cbl prog.cob], [0],
+[precompile start: prog.cbl
+=======================================================
+              LIST OF CALLED DB Library API            @&t@
+=======================================================
+Generate:OCESQLConnect
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLCursorDeclareParams
+Generate:OCESQLCursorOpen
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorClose
+Generate:OCESQLCursorDeclareParams
+Generate:OCESQLCursorOpen
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorClose
+Generate:OCESQLCursorDeclareParams
+Generate:OCESQLCursorOpen
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorClose
+Generate:OCESQLCursorDeclareParams
+Generate:OCESQLCursorOpen
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorClose
+Generate:OCESQLCursorDeclareParams
+Generate:OCESQLCursorOpen
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorClose
+Generate:OCESQLCursorDeclareParams
+Generate:OCESQLCursorOpen
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorClose
+Generate:OCESQLDisconnect
+Generate:ROLLBACK
+=======================================================
+])
 AT_CHECK([${EMBED_DB_INFO} prog.cob])
 AT_CHECK([${COMPILE} -I ../../ prog.cob])
 AT_CHECK([java prog], [0],

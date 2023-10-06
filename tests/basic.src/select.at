@@ -168,10 +168,25 @@ AT_DATA([prog.cbl], [
            
            ADD 1 TO LOG-COUNT.
       ******************************************************************
-
-
 ])
-AT_CHECK([ocesql prog.cbl prog.cob > /dev/null])
+
+AT_CHECK([ocesql prog.cbl prog.cob], [0],
+[precompile start: prog.cbl
+=======================================================
+              LIST OF CALLED DB Library API            @&t@
+=======================================================
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLConnect
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLCursorClose
+Generate:OCESQLExec
+Generate:OCESQLDisconnect
+Generate:ROLLBACK
+=======================================================
+])
 AT_CHECK([${EMBED_DB_INFO} prog.cob])
 AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog], [0],
