@@ -336,6 +336,7 @@ AT_DATA([prog.cbl], [
 ])
 
 
+AT_CHECK([${EMBED_DB_INFO} prog.cbl])
 AT_CHECK([ocesql prog.cbl prog.cob], [0],
 [precompile start: prog.cbl
 =======================================================
@@ -380,7 +381,6 @@ Generate:OCESQLDisconnect
 Generate:ROLLBACK
 =======================================================
 ])
-AT_CHECK([${EMBED_DB_INFO} prog.cob])
 AT_CHECK([${COMPILE} -I ../../ prog.cob])
 AT_CHECK([java prog], [0],
 [0005 MIYAGI GORO            -200

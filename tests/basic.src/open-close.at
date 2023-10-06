@@ -131,6 +131,7 @@ AT_DATA([prog.cbl], [
 
 ])
 
+AT_CHECK([${EMBED_DB_INFO} prog.cbl])
 AT_CHECK([ocesql prog.cbl prog.cob], [0],
 [precompile start: prog.cbl
 =======================================================
@@ -147,7 +148,6 @@ Generate:OCESQLDisconnect
 Generate:ROLLBACK
 =======================================================
 ])
-AT_CHECK([${EMBED_DB_INFO} prog.cob])
 AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog], [0],
 [<log> test case 0001: success

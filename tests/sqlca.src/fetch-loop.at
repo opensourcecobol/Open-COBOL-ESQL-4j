@@ -237,6 +237,7 @@ AT_DATA([prog.cbl], [
       ******************************************************************
 ])
 
+AT_CHECK([${EMBED_DB_INFO} prog.cbl])
 AT_CHECK([ocesql prog.cbl prog.cob], [0],
 [precompile start: prog.cbl
 =======================================================
@@ -267,7 +268,6 @@ Generate:OCESQLDisconnect
 Generate:ROLLBACK
 =======================================================
 ])
-AT_CHECK([${EMBED_DB_INFO} prog.cob])
 AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog | tee stdout.txt], [0],
 [<declare(valid)> SQLCODE:+000000000

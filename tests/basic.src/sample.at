@@ -10,16 +10,16 @@ AT_DATA([prog.cbl], [
       ******************************************************************
        WORKING-STORAGE             SECTION.
        01  TEST-DATA.
-         03 FILLER       PIC X(28) VALUE "0001ï¿½kï¿½Cï¿½@ï¿½ï¿½ï¿½Y          0400".
-         03 FILLER       PIC X(28) VALUE "0002ï¿½ÂXï¿½@ï¿½ï¿½ï¿½Y          0350".
-         03 FILLER       PIC X(28) VALUE "0003ï¿½Hï¿½cï¿½@ï¿½Oï¿½Y          0300".
-         03 FILLER       PIC X(28) VALUE "0004ï¿½ï¿½ï¿½@ï¿½lï¿½Y          025p".
-         03 FILLER       PIC X(28) VALUE "0005ï¿½{ï¿½ï¿½@ï¿½Ü˜Y          020p".
-         03 FILLER       PIC X(28) VALUE "0006ï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½Zï¿½Y          0150".
-         03 FILLER       PIC X(28) VALUE "0007ï¿½È–Ø@ï¿½ï¿½ï¿½Y          010p".
-         03 FILLER       PIC X(28) VALUE "0008ï¿½ï¿½ï¿½@ï¿½ï¿½ï¿½Y          0050".
-         03 FILLER       PIC X(28) VALUE "0009ï¿½Qï¿½nï¿½@ï¿½ï¿½Y          020p".
-         03 FILLER       PIC X(28) VALUE "0010ï¿½ï¿½Ê@ï¿½\ï¿½Y          0350".
+         03 FILLER       PIC X(28) VALUE "0001–kŠC@‘¾˜Y          0400".
+         03 FILLER       PIC X(28) VALUE "0002ÂX@ŽŸ˜Y          0350".
+         03 FILLER       PIC X(28) VALUE "0003H“c@ŽO˜Y          0300".
+         03 FILLER       PIC X(28) VALUE "0004ŠâŽè@Žl˜Y          025p".
+         03 FILLER       PIC X(28) VALUE "0005‹{é@ŒÜ˜Y          020p".
+         03 FILLER       PIC X(28) VALUE "0006•Ÿ“‡@˜Z˜Y          0150".
+         03 FILLER       PIC X(28) VALUE "0007“È–Ø@Žµ˜Y          010p".
+         03 FILLER       PIC X(28) VALUE "0008ˆïé@”ª˜Y          0050".
+         03 FILLER       PIC X(28) VALUE "0009ŒQ”n@‹ã˜Y          020p".
+         03 FILLER       PIC X(28) VALUE "0010é‹Ê@\˜Y          0350".
        01  TEST-DATA-R   REDEFINES TEST-DATA.
          03  TEST-TBL    OCCURS  10.
            05  TEST-NO             PIC S9(04).
@@ -77,13 +77,13 @@ AT_DATA([prog.cbl], [
       *    INSERT ROWS USING LITERAL
            EXEC SQL
       *         INSERT INTO EMP VALUES (46, 'KAGOSHIMA ROKURO', -320)
-               INSERT INTO EMP VALUES (46, 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½Zï¿½Y', -320)
+               INSERT INTO EMP VALUES (46, 'Ž­Ž™“‡@˜Z˜Y', -320)
            END-EXEC.
            IF  SQLCODE NOT = ZERO PERFORM ERROR-RTN.
 
            EXEC SQL
       *         INSERT INTO EMP VALUES (47, 'OKINAWA SHICHIRO', 480)
-               INSERT INTO EMP VALUES (47, 'ï¿½ï¿½ï¿½ï¿½@ï¿½ï¿½ï¿½Y', 480)
+               INSERT INTO EMP VALUES (47, '‰«“ê@Žµ˜Y', 480)
            END-EXEC.
            IF  SQLCODE NOT = ZERO PERFORM ERROR-RTN.
 
@@ -140,10 +140,10 @@ AT_DATA([prog.cbl], [
                  DISPLAY SQLERRMC
            END-EVALUATE.
       ******************************************************************  
-
 ])
+
+AT_CHECK([${EMBED_DB_INFO} prog.cbl])
 AT_CHECK([ocesql prog.cbl])
-AT_CHECK([${EMBED_DB_INFO} prog.cob])
 AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog], [0], [success
 ])
