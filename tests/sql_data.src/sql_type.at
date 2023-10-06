@@ -477,7 +477,86 @@ AT_DATA([prog.cbl], [
 
 ])
 
-AT_CHECK([ocesql prog.cbl prog.cob > /dev/null])
+AT_CHECK([ocesql prog.cbl prog.cob], [0],
+[precompile start: prog.cbl
+=======================================================
+              LIST OF CALLED DB Library API            @&t@
+=======================================================
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:COMMIT
+Generate:OCESQLExecSelectIntoOccurs
+Generate:OCESQLConnect
+Generate:OCESQLExec
+Generate:OCESQLDisconnect
+=======================================================
+])
 AT_CHECK([${EMBED_DB_INFO} prog.cob])
 AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog], [0],
