@@ -166,8 +166,27 @@ AT_DATA([prog.cbl], [
 
 
 ])
-AT_CHECK([ocesql prog.cbl prog.cob > /dev/null])
-AT_CHECK([${EMBED_DB_INFO} prog.cob])
+
+AT_CHECK([${EMBED_DB_INFO} prog.cbl])
+AT_CHECK([ocesql prog.cbl prog.cob], [0],
+[precompile start: prog.cbl
+=======================================================
+              LIST OF CALLED DB Library API            @&t@
+=======================================================
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLCursorFetchOne
+Generate:OCESQLConnect
+Generate:OCESQLExec
+Generate:OCESQLExec
+Generate:OCESQLExecParams
+Generate:OCESQLCursorDeclare
+Generate:OCESQLCursorOpen
+Generate:OCESQLCursorClose
+Generate:OCESQLExec
+Generate:OCESQLDisconnect
+Generate:ROLLBACK
+=======================================================
+])
 AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog], [0],
 [+0001, ñkäCÅ@ëæòY          , +0400

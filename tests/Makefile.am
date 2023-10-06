@@ -40,7 +40,8 @@ sqlca_DEPENDENCIES = \
 misc_DEPENDENCIES = \
 	misc.src/long-sql.at \
 	misc.src/include.at \
-	misc.src/fetch-sqlca.at
+	misc.src/fetch-sqlca.at \
+	misc.src/group-sub.at
 
 EXTRA_DIST = $(srcdir)/package.m4 \
 	$(TESTS) \
