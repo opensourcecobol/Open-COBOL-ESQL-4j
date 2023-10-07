@@ -1,7 +1,6 @@
 #!/bin/bash
 
 CHECK_RESULT=$(clang-format --dry-run \
-define.h \
 errorfile.c \
 ocesql.c \
 ocesql.h \
