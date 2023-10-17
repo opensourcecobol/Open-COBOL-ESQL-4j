@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   # Run tests 10:00 PM (JST) every day
   schedule:
-    - cron: '0 13 * * *'
+    - cron: '3 11 * * *'
 
 env:
   COBOL4J_LIB_DIR: /usr/lib/opensourcecobol4j
@@ -64,6 +64,8 @@ jobs:
       - name: Install dependencies on Ubuntu 22.04
         if: matrix.os == 'ubuntu:22.04'
         run: |
+          # test
+          exit 1
           apt update -y
           apt install -y build-essential bison flex gettext texinfo automake autoconf curl
 
@@ -138,7 +140,8 @@ jobs:
   # Create an issue if one or more tests fail in scheduled tests
   create-issue-on-failure:
     needs: Open-COBOL-ESQL-4j-tests
-    if: failure() && github.event_name == 'schedule' && github.actor == 'opensourcecobol'
+    #if: failure() && github.event_name == 'schedule' && github.actor == 'opensourcecobol'
+    if: ${{ always() && github.event_name == 'schedule' && github.actor == 'yutaro-sakamoto' && needs.Open-COBOL-ESQL-4j-tests.result == 'failure' }}
     runs-on: ubuntu-latest
     steps:
       - name: Create an Issue
