@@ -1,4 +1,4 @@
-name: tests
+name: Make a coverage report
 
 on:
   push:
