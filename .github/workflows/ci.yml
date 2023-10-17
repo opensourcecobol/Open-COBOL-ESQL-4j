@@ -15,7 +15,7 @@ env:
   OCESQL4J_LIB_DIR: /usr/lib/Open-COBOL-ESQL-4j
   OCESQL4J_POSTGRESQL_JDBC_PATH: /usr/lib/Open-COBOL-ESQL-4j/postgresql.jar
   OCESQL4J_OCESQL4J_JAR_PATH: /usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar
-  CLASSPATH: ":/usr/lib/opensourcecobol4j/sqlite.jar:/usr/lib/opensourcecobol4j/libcobj.jar:/usr/lib/Open-COBOL-ESQL-4j/postgresql.jar:/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar"
+  CLASSPATH: ":/usr/lib/opensourcecobol4j/libcobj.jar:/usr/lib/Open-COBOL-ESQL-4j/postgresql.jar:/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar"
 
 jobs:
   Open-COBOL-ESQL-4j-tests:
@@ -108,7 +108,6 @@ jobs:
       - name: Install opensource COBOL 4J
         run: |
           cd opensourcecobol4j
-          curl -L -k -o libcobj/sqlite-jdbc/sqlite.jar https://github.com/xerial/sqlite-jdbc/releases/download/3.36.0.3/sqlite-jdbc-3.36.0.3.jar
           ./configure --prefix=/usr/
           make
           make install
