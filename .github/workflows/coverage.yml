@@ -69,7 +69,7 @@ jobs:
       - name: Install opensource COBOL 4J
         run: |
           cd opensourcecobol4j
-          .k/configure --prefix=/usr/
+          ./configure --prefix=/usr/
           make
           sudo make install
 

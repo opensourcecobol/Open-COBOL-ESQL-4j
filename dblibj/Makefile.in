@@ -277,8 +277,7 @@ SETTING_FILES = \
     scalastyle-config.xml
 
 JAR_DEPENDENCIES = \
-    lib/libcobj.jar \
-    lib/postgresql.jar
+    lib/libcobj.jar
 
 TARGET_JAR = target/scala-2.13/ocesql4j.jar
 all: all-am
