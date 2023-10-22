@@ -16,6 +16,7 @@ env:
   OCESQL4J_OCESQL4J_JAR_PATH: /usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar
   CLASSPATH: ":/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar"
 
+
 jobs:
   Open-COBOL-ESQL-4j-tests:
     strategy:
@@ -126,18 +127,3 @@ jobs:
           cd tests
           cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
           make test
-
-  # Create an issue if one or more tests fail in scheduled tests
-  create-issue-on-failure:
-    needs: Open-COBOL-ESQL-4j-tests
-    if: failure() && github.event_name == 'schedule' && github.actor == 'opensourcecobol'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create an Issue
-        uses: imjohnbo/issue-bot@v3
-        with:
-          assignees: "yutaro-sakamoto"
-          title: A scheduled build is failed
-          body: |
-            Scheduled build is failed.
-            See ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
