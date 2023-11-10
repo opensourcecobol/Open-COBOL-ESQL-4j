@@ -13,6 +13,8 @@ import scala.collection.immutable.Queue
 import scala.runtime.Statics
 import org.postgresql.util.PSQLException
 
+import java.util.concurrent.ConcurrentHashMap
+
 object Common {
   var internalState: GlobalState = GlobalState.initialGlobalState
 
@@ -302,7 +304,18 @@ object Common {
       case None    => ()
       case Some(c) => c.close()
     }
+  private val preparedStatementCache
+      : ConcurrentHashMap[String, PreparedStatement] =
+    new ConcurrentHashMap[String, PreparedStatement]()
 
+  def getPreparedStatementCacheKey(
+      connection: Connection,
+      query: String
+  ): String = {
+    val connectionHash = Integer.toHexString(connection.hashCode())
+    val queryHash = Integer.toHexString(query.hashCode())
+    s"$connectionHash-$queryHash"
+  }
   // [remark] rollBakckOneModeに関連した処理の実装
   def ocdbPGExecParam(
       connAddr: Option[Connection],
@@ -314,7 +327,10 @@ object Common {
       case None => Left(new SQLException())
       case Some(c) =>
         try {
-          val stmt = c.prepareStatement(query)
+          val stmt = preparedStatementCache.computeIfAbsent(
+            getPreparedStatementCacheKey(c, query),
+            _ => c.prepareStatement(query)
+          )
           val metaData: ParameterMetaData =
             PreparedStatementCache.getParameterMetaDataFromCache(query, stmt)
           for ((param, i) <- params.zipWithIndex) {
