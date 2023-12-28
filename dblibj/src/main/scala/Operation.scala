@@ -14,11 +14,16 @@ object Operation {
   case class LogOutputError() extends LogLevel
   case class LogOutputDebug() extends LogLevel
 
-  def log(msg: String): Unit = {
+  def isLoggingEnable(): Boolean = {
     getLogLevel() match {
-      case LogOutputDebug() =>
-        writeLog(msg, getLogFilePath())
-      case _ => ()
+      case LogOutputDebug() => true
+      case _ => false
+    }
+  }
+
+  def log(msg:String): Unit = {
+    if(isLoggingEnable()){
+      writeLog(msg, getLogFilePath())
     }
   }
 

@@ -1225,11 +1225,12 @@ class OCESQLEndSQL extends CobolRunnableWrapper {
   parseSqlCA = false
 
   override def execute(args: Seq[CobolDataStorage], state: OCDBState): Int = {
-    logLn("#debug start dump var_list")
-    showSqlVarQueue(state.globalState.sqlVarQueue)
-    logLn("#debug start dump res_list")
-    showSqlVarQueue(state.globalState.sqlResVarQueue)
-
+    if(isLoggingEnable()){
+      logLn("#debug start cump var_list")
+      showSqlVarQueue(state.globalState.sqlVarQueue)
+      logLn("#debug start dump res_list")
+      showSqlVarQueue(state.globalState.sqlResVarQueue)
+    }
     resetSqlVarQueue(state)
     0
   }
