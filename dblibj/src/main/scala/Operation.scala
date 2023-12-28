@@ -17,12 +17,12 @@ object Operation {
   def isLoggingEnable(): Boolean = {
     getLogLevel() match {
       case LogOutputDebug() => true
-      case _ => false
+      case _                => false
     }
   }
 
-  def log(msg:String): Unit = {
-    if(isLoggingEnable()){
+  def log(msg: String): Unit = {
+    if (isLoggingEnable()) {
       writeLog(msg, getLogFilePath())
     }
   }
