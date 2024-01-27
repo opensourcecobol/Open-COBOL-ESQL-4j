@@ -100,9 +100,9 @@ jobs:
       
       # Install opensource COBOL 4J
       - name: Install opensource COBOL 4J
+        working-directory: opensourcecobol4j
         run: |
-          cd opensourcecobol4j
-          ./configure --prefix=/usr/
+          ./configure --prefix=/usr/ CFLAGS='-Werror'
           make
           make install
 
@@ -110,20 +110,20 @@ jobs:
       - name: Install Open COBOL ESQL 4J
         run: |
           cp $COBOL4J_LIBCOBJ_JAR_PATH dblibj/lib
-          sh configure --prefix=/usr/
+          sh configure --prefix=/usr/ CFLAGS='-Werror'
           make
           make install
 
       # Run Autotest for PostgreSQL 9.6
       - name: Run tests for PostgreSQL 9.6
+        working-directory: tests
         run: |
-          cd tests
           cp ../.github/workflows/db-settings/embed_db_info_postgresql_9.6.sh embed_db_info.sh
           make test
 
       # Run Autotest for PostgreSQL 15
       - name: Run tests for PostgreSQL 15
+        working-directory: tests
         run: |
-          cd tests
           cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
           make test

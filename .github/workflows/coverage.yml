@@ -69,7 +69,7 @@ jobs:
       - name: Install opensource COBOL 4J
         run: |
           cd opensourcecobol4j
-          ./configure --prefix=/usr/
+          ./configure --prefix=/usr/ CFLAGS='-Werror'
           make
           sudo make install
 
@@ -77,7 +77,7 @@ jobs:
       - name: Install Open COBOL ESQL 4J
         run: |
           cp $COBOL4J_LIBCOBJ_JAR_PATH dblibj/lib
-          sh configure CFLAGS='-fprofile-arcs -ftest-coverage' --prefix=/usr/
+          sh configure CFLAGS='-fprofile-arcs -ftest-coverage -Werror' --prefix=/usr/
           make
           sudo make install
 

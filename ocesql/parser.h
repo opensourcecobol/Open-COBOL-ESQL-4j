@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -30,6 +31,10 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
+
 #ifndef YY_YY_PARSER_H_INCLUDED
 # define YY_YY_PARSER_H_INCLUDED
 /* Debug traces.  */
@@ -40,71 +45,80 @@
 extern int yydebug;
 #endif
 
-/* Token type.  */
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    SELECT = 258,
-    SELECTFROM = 259,
-    TOKEN = 260,
-    CURNAME = 261,
-    HOSTTOKEN = 262,
-    WORD = 263,
-    PICTURE = 264,
-    INSERT = 265,
-    UPDATE = 266,
-    DISCONNECT = 267,
-    DELETE = 268,
-    EXECUTE = 269,
-    OTHERFUNC = 270,
-    INTO = 271,
-    NUMERIC = 272,
-    END_EXEC = 273,
-    EXECSQL = 274,
-    EXECSQL_INCLUDE = 275,
-    PREPARE = 276,
-    FROM = 277,
-    DECLARE = 278,
-    CURSOR = 279,
-    FOR = 280,
-    WORKINGBEGIN = 281,
-    WORKINGEND = 282,
-    HOSTVARIANTBEGIN = 283,
-    HOSTVARIANTEND = 284,
-    INCLUDE_FILE = 285,
-    INCLUDE_SQLCA = 286,
-    SQLCA = 287,
-    IDENTIFIED_BY = 288,
-    COMMIT_WORK = 289,
-    ROLLBACK_WORK = 290,
-    CONNECT = 291,
-    USING = 292,
-    OPEN = 293,
-    CLOSE = 294,
-    FETCH = 295,
-    TRAILING = 296,
-    COMP_1 = 297,
-    COMP_2 = 298,
-    COMP_3 = 299,
-    USAGE = 300,
-    SIGN = 301,
-    LEADING = 302,
-    SEPARATE = 303,
-    AT = 304,
-    IS = 305,
-    ARE = 306,
-    VALUE = 307,
-    VARYING = 308,
-    ALL = 309,
-    OCCURS = 310,
-    EXTERNAL = 311,
-    TIMES = 312,
-    CONST = 313,
-    WHERECURRENTOF = 314
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    SELECT = 258,                  /* SELECT  */
+    SELECTFROM = 259,              /* SELECTFROM  */
+    TOKEN = 260,                   /* TOKEN  */
+    CURNAME = 261,                 /* CURNAME  */
+    HOSTTOKEN = 262,               /* HOSTTOKEN  */
+    WORD = 263,                    /* WORD  */
+    PICTURE = 264,                 /* PICTURE  */
+    INSERT = 265,                  /* INSERT  */
+    UPDATE = 266,                  /* UPDATE  */
+    DISCONNECT = 267,              /* DISCONNECT  */
+    DELETE = 268,                  /* DELETE  */
+    EXECUTE = 269,                 /* EXECUTE  */
+    OTHERFUNC = 270,               /* OTHERFUNC  */
+    INTO = 271,                    /* INTO  */
+    NUMERIC = 272,                 /* NUMERIC  */
+    END_EXEC = 273,                /* END_EXEC  */
+    EXECSQL = 274,                 /* EXECSQL  */
+    EXECSQL_INCLUDE = 275,         /* EXECSQL_INCLUDE  */
+    PREPARE = 276,                 /* PREPARE  */
+    FROM = 277,                    /* FROM  */
+    DECLARE = 278,                 /* DECLARE  */
+    CURSOR = 279,                  /* CURSOR  */
+    FOR = 280,                     /* FOR  */
+    WORKINGBEGIN = 281,            /* WORKINGBEGIN  */
+    WORKINGEND = 282,              /* WORKINGEND  */
+    HOSTVARIANTBEGIN = 283,        /* HOSTVARIANTBEGIN  */
+    HOSTVARIANTEND = 284,          /* HOSTVARIANTEND  */
+    INCLUDE_FILE = 285,            /* INCLUDE_FILE  */
+    INCLUDE_SQLCA = 286,           /* INCLUDE_SQLCA  */
+    SQLCA = 287,                   /* SQLCA  */
+    IDENTIFIED_BY = 288,           /* IDENTIFIED_BY  */
+    COMMIT_WORK = 289,             /* COMMIT_WORK  */
+    ROLLBACK_WORK = 290,           /* ROLLBACK_WORK  */
+    CONNECT = 291,                 /* CONNECT  */
+    USING = 292,                   /* USING  */
+    OPEN = 293,                    /* OPEN  */
+    CLOSE = 294,                   /* CLOSE  */
+    FETCH = 295,                   /* FETCH  */
+    TRAILING = 296,                /* TRAILING  */
+    COMP_1 = 297,                  /* COMP_1  */
+    COMP_2 = 298,                  /* COMP_2  */
+    COMP_3 = 299,                  /* COMP_3  */
+    USAGE = 300,                   /* USAGE  */
+    SIGN = 301,                    /* SIGN  */
+    LEADING = 302,                 /* LEADING  */
+    SEPARATE = 303,                /* SEPARATE  */
+    AT = 304,                      /* AT  */
+    IS = 305,                      /* IS  */
+    ARE = 306,                     /* ARE  */
+    VALUE = 307,                   /* VALUE  */
+    VARYING = 308,                 /* VARYING  */
+    ALL = 309,                     /* ALL  */
+    OCCURS = 310,                  /* OCCURS  */
+    EXTERNAL = 311,                /* EXTERNAL  */
+    TIMES = 312,                   /* TIMES  */
+    CONST = 313,                   /* CONST  */
+    WHERECURRENTOF = 314           /* WHERECURRENTOF  */
   };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Tokens.  */
+/* Token kinds.  */
+#define YYEMPTY -2
+#define YYEOF 0
+#define YYerror 256
+#define YYUNDEF 257
 #define SELECT 258
 #define SELECTFROM 259
 #define TOKEN 260
@@ -165,19 +179,18 @@ extern int yydebug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-
 union YYSTYPE
 {
-#line 51 "parser.y" /* yacc.c:1909  */
+#line 51 "parser.y"
 
 	char *s;
 	long int ld;
 	struct cb_sql_list	*l;
 	struct cb_hostreference_list *h;
 
-#line 179 "parser.h" /* yacc.c:1909  */
-};
+#line 192 "parser.h"
 
+};
 typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -186,6 +199,8 @@ typedef union YYSTYPE YYSTYPE;
 
 extern YYSTYPE yylval;
 
+
 int yyparse (void);
+
 
 #endif /* !YY_YY_PARSER_H_INCLUDED  */
