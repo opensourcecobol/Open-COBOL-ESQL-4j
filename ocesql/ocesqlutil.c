@@ -30,6 +30,8 @@
 #include <unistd.h>
 #endif
 
+#include "ocesql.h"
+
 char *com_strdup(const char *cid) {
 #ifdef _WIN32
   return _strdup(cid);
