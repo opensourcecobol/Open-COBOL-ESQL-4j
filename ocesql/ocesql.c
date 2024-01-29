@@ -170,10 +170,9 @@ struct cb_sql_list *cb_add_text_list(struct cb_sql_list *list,
 }
 
 char *cb_host_list_add(struct cb_hostreference_list *list, char *text) {
-  int hostno;
   char temps[BUFFSIZE];
 
-  hostno = cb_search_list(text);
+  cb_search_list(text);
 
   com_sprintf(temps, sizeof(temps), "?");
   return com_strdup(temps);
@@ -311,7 +310,6 @@ int main(int argc, char *argv[]) {
   const char *preopt = "-";
   int preoptlen = 1;
   char *opthead;
-  char *opt;
   char *optval;
 
   char *env;
@@ -320,7 +318,6 @@ int main(int argc, char *argv[]) {
 
   int i;
   int optind;
-  int optfile_idx = 1;
 
   for (optind = 1; optind < argc; optind++) {
     if (strncmp(prelopt, argv[optind], preloptlen) == 0) {

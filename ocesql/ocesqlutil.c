@@ -114,10 +114,10 @@ int com_unlink(const char *df) {
 
 void com_readline(FILE *readfile, char *inbuff, int *lineno, int *eofflg) {
 #ifdef _WIN32
-  char ipchar;
-  int n;
 
   if (readfile) {
+    int ipchar;
+    int n;
     ipchar = ' ';
 
     for (n = 0; ipchar != '\n'; n++) {
@@ -126,7 +126,7 @@ void com_readline(FILE *readfile, char *inbuff, int *lineno, int *eofflg) {
         *eofflg = 1;
         break;
       }
-      inbuff[n] = ipchar;
+      inbuff[n] = (char)ipchar;
     }
     inbuff[n] = '\0';
     *lineno = *lineno + 1;

@@ -101,16 +101,12 @@ char *substring(int len, char *wk_str, int flag_end) {
 }
 
 void sql_string(struct cb_exec_list *wk_text) {
-  char *intNUM;
   char sqlstr[5][256];
-  char compsql[15] = "OCESQL  &  \"\".";
-  char terminal[13] = "OCESQL     .";
 
   char *sqlloop;
   int sqlloop_len;
 
   struct cb_sql_list *wk_sql;
-  int len;
 
   wk_sql = wk_text->sql_list;
 
@@ -210,11 +206,11 @@ void ppoutputendcall(struct cb_exec_list *list) {
 void ppoutputopen(struct cb_exec_list *list) {
   struct cb_hostreference_list *wk_host;
   struct cb_exec_list *l;
-  char str_type[BUFFSIZE];
 
   l = list;
 
   if (l->hostreferenceCount != 0) {
+    char str_type[BUFFSIZE];
     com_strcpy(out, sizeof(out), "OCESQL ");
     com_strcat(out, sizeof(out), "   ");
     com_strcat(out, sizeof(out), strcall);
@@ -226,9 +222,8 @@ void ppoutputopen(struct cb_exec_list *list) {
     com_strcat(out, sizeof(out), strend);
     outwrite();
     wk_host = l->host_list;
-    int count = 0;
     for (; wk_host; wk_host = wk_host->next) {
-      count += ppoutputparam(wk_host, 0);
+      ppoutputparam(wk_host, 0);
     }
 
     com_strcpy(out, sizeof(out), "OCESQL ");
@@ -527,7 +522,6 @@ void ppoutputresparam(char *varface, int type, int digits, int scale,
 }
 
 void ppoutputresgroup(struct cb_field *cf, int lineno, int iteration) {
-  char buff[256];
   int type, digits, scale;
   int iret;
 
@@ -536,6 +530,7 @@ void ppoutputresgroup(struct cb_field *cf, int lineno, int iteration) {
 
   iret = gethostvarianttype(cf->sname, &type, &digits, &scale);
   if (iret != 0) {
+    char buff[256];
     printmsg("%s:%d\n", cf->sname, iret);
     memset(buff, 0, sizeof(buff));
     com_sprintf(buff, sizeof(buff), "E%03d", iret);
@@ -560,7 +555,6 @@ void ppoutputexecprepare(struct cb_exec_list *list) {
   char buff[256];
   struct cb_hostreference_list *host_list;
   int type, digits, scale;
-  int iret;
   char str_type[BUFFSIZE];
 
   memset(buff, 0, sizeof(buff));
@@ -572,7 +566,8 @@ void ppoutputexecprepare(struct cb_exec_list *list) {
   host_list = list->host_list;
   int count = 0;
   if (host_list) {
-    iret = gethostvarianttype(host_list->hostreference, &type, &digits, &scale);
+    int iret =
+        gethostvarianttype(host_list->hostreference, &type, &digits, &scale);
     if (iret != 0) {
       printmsg("%s:%d\n", host_list->hostreference, iret);
       memset(buff, 0, sizeof(buff));
@@ -1357,10 +1352,7 @@ void ppbuff(struct cb_exec_list *list) {
   int var_type;
   int var_len;
   int var_scale;
-  int count;
-  struct cb_exec_list *wk_head;
   struct cb_hostreference_list *wk_host;
-  char str_type[BUFFSIZE];
   struct cb_exec_list *l;
   int iret;
 
@@ -1389,7 +1381,7 @@ void ppbuff(struct cb_exec_list *list) {
   }
 
   if (strcmp(l->commandName, "WORKING_END") == 0) {
-    wk_head = l;
+    struct cb_exec_list *wk_head = l;
     outsqlfiller(wk_head);
   }
 
@@ -1452,6 +1444,7 @@ void ppbuff(struct cb_exec_list *list) {
   }
 
   if (strcmp(l->commandName, "SELECT") == 0) {
+    int count;
     if (l->res_host_list == NULL) {
       if (l->hostreferenceCount != 0) {
         com_strcpy(out, sizeof(out), "OCESQL ");
@@ -1559,6 +1552,7 @@ void ppbuff(struct cb_exec_list *list) {
       com_strcat(out, sizeof(out), l->sqlName);
       outwrite();
       if (l->hostreferenceCount != 0) {
+        char str_type[BUFFSIZE];
         com_strcpy(out, sizeof(out), "OCESQL ");
         com_strcat(out, sizeof(out), "       ");
         com_strcat(out, sizeof(out), strbyvalue);
@@ -1907,9 +1901,6 @@ void ppbuff(struct cb_exec_list *list) {
 
 void ppbuff_incfile(struct cb_exec_list *list) {
   struct cb_exec_list *l;
-  char buff[10];
-  char incmsg[256];
-  int len2;
 
   l = list;
 
@@ -1917,7 +1908,6 @@ void ppbuff_incfile(struct cb_exec_list *list) {
     char filename[512];
     FILE *incf;
     char incf_buff[BUFFSIZE + 1];
-    int retcode;
 
     memset(filename, 0, 512);
 
@@ -1935,6 +1925,7 @@ void ppbuff_incfile(struct cb_exec_list *list) {
         break;
 
       if (strlen(incf_buff) > MAX_LINESIZE) {
+        char buff[10];
         memset(buff, 0, sizeof(buff));
         com_sprintf(buff, sizeof(buff), "E%03d", ERR_EXCEED_LIMIT_LINE_LENGTH);
         printerrormsg("", lineNUM, buff);
@@ -1969,7 +1960,6 @@ void outwrite() {
 
 void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head) {
   FILE *readfile;
-  size_t len;
 
   struct cb_exec_list *l;
   l = head;
@@ -1990,6 +1980,7 @@ void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head) {
           strstr(inbuff, INC__END__MARK) != NULL) {
         continue;
       }
+      size_t len;
       if (head) {
         if (l->startLine <= lineNUM && l->endLine >= lineNUM) {
           if (strcmp(l->commandName, "WORKING_END") == 0) {
@@ -2048,10 +2039,10 @@ void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head) {
         fwrite(outbuff, len, 1, outfile);
       }
     }
-  }
 
-  fclose(readfile);
-  fclose(outfile);
+    fclose(readfile);
+    fclose(outfile);
+  }
 
   remove(ppin);
 }
@@ -2067,17 +2058,41 @@ void ppoutput_incfile(char *ppin, char *ppout, struct cb_exec_list *head) {
   outfile = fopen_or_die(ppout, "w");
 
   EOFFLG = 0;
-  if (readfile && outfile) {
-    int after_first_read = 0;
-    while (EOFflg != 1) {
-      if (after_first_read) {
-        fwrite(outbuff, len, 1, outfile);
-      }
-      com_readline(readfile, inbuff, &lineNUM, &EOFflg);
-      after_first_read = 1;
-      if (head) {
-        if (l->startLine <= lineNUM && l->endLine >= lineNUM) {
+  int after_first_read = 0;
+  while (EOFflg != 1) {
+    if (after_first_read) {
+      fwrite(outbuff, len, 1, outfile);
+    }
+    com_readline(readfile, inbuff, &lineNUM, &EOFflg);
+    after_first_read = 1;
+    if (head) {
+      if (l->startLine <= lineNUM && l->endLine >= lineNUM) {
+        if (strcmp(l->commandName, "INCFILE") == 0) {
+          inbuff[0] = 'O';
+          inbuff[1] = 'C';
+          inbuff[2] = 'E';
+          inbuff[3] = 'S';
+          inbuff[4] = 'Q';
+          inbuff[5] = 'L';
+          inbuff[6] = '*';
+        }
+
+        outbuff = inbuff;
+        len = strlen(outbuff);
+
+        if (EOFflg == 1) {
+          fputc('\n', outfile);
+        }
+      } else {
+        if (lineNUM - l->endLine == 1) {
           if (strcmp(l->commandName, "INCFILE") == 0) {
+            ppbuff_incfile(l);
+          }
+          if (l->next != NULL)
+            l = l->next;
+
+          if (l->startLine <= lineNUM && l->endLine >= lineNUM &&
+              (strcmp(l->commandName, "INCFILE") == 0)) {
             inbuff[0] = 'O';
             inbuff[1] = 'C';
             inbuff[2] = 'E';
@@ -2086,42 +2101,16 @@ void ppoutput_incfile(char *ppin, char *ppout, struct cb_exec_list *head) {
             inbuff[5] = 'L';
             inbuff[6] = '*';
           }
-
           outbuff = inbuff;
           len = strlen(outbuff);
-
-          if (EOFflg == 1) {
-            fputc('\n', outfile);
-          }
         } else {
-          if (lineNUM - l->endLine == 1) {
-            if (strcmp(l->commandName, "INCFILE") == 0) {
-              ppbuff_incfile(l);
-            }
-            if (l->next != NULL)
-              l = l->next;
-
-            if (l->startLine <= lineNUM && l->endLine >= lineNUM &&
-                (strcmp(l->commandName, "INCFILE") == 0)) {
-              inbuff[0] = 'O';
-              inbuff[1] = 'C';
-              inbuff[2] = 'E';
-              inbuff[3] = 'S';
-              inbuff[4] = 'Q';
-              inbuff[5] = 'L';
-              inbuff[6] = '*';
-            }
-            outbuff = inbuff;
-            len = strlen(outbuff);
-          } else {
-            outbuff = inbuff;
-            len = strlen(outbuff);
-          }
+          outbuff = inbuff;
+          len = strlen(outbuff);
         }
-      } else {
-        outbuff = inbuff;
-        len = strlen(outbuff);
       }
+    } else {
+      outbuff = inbuff;
+      len = strlen(outbuff);
     }
   }
   fclose(readfile);
@@ -2189,7 +2178,6 @@ void parameter_split(struct cb_field *vp_parent) {
   if (vp_len == NULL || vp_arr == NULL) {
     printmsg("parameter_split: memory allocation for cb_field failed.\n");
     goto die_parameter_split;
-    return;
   }
 
   memset(vp_len, 0, sizeof(struct cb_field));
@@ -2205,7 +2193,6 @@ void parameter_split(struct cb_field *vp_parent) {
   if (vp_len->sname == NULL) {
     printmsg("parameter_split: memory allocation for vp_len->sname failed.\n");
     goto die_parameter_split;
-    return;
   }
   com_sprintf(vp_len->sname, sizeof(vp_len->sname), "%s-LEN", basename);
   vp_len->level = vp_parent->level + 1;
@@ -2222,7 +2209,6 @@ void parameter_split(struct cb_field *vp_parent) {
   if (vp_arr->sname == NULL) {
     printmsg("parameter_split: memory allocation for vp_arr->sname failed.\n");
     goto die_parameter_split;
-    return;
   }
   com_sprintf(vp_arr->sname, sizeof(vp_arr->sname), "%s-ARR", basename);
   vp_arr->level = vp_parent->level + 1;

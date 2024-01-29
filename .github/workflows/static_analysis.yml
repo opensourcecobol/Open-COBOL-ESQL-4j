@@ -27,8 +27,9 @@ jobs:
 
       # Check C files in ocesql/ using cppcheck 
       - name: Run cppcheck
+        working-directory: ocesql
         run: |
-          cd ocesql && cppcheck errorfile.c ocesql.c ocesql.h ocesqlutil.c ocesqlutil.h ppout.c
+         ./cppcheck 
 
       # Check Scala files in dblibj/ using Scalastyle
       - name: Run Scalastyle

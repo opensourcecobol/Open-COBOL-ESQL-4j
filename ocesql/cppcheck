@@ -1,0 +1,8 @@
+#!/bin/bash
+cppcheck --error-exitcode=1 \
+    cppcheck errorfile.c ocesql.c ocesql.h ocesqlutil.c ocesqlutil.h ppout.c \
+    --enable=portability \
+    --enable=performance \
+    --suppress=unusedFunctions \
+    --suppress=toomanyconfigs \
+    --enable=style
