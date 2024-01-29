@@ -101,16 +101,12 @@ char *substring(int len, char *wk_str, int flag_end) {
 }
 
 void sql_string(struct cb_exec_list *wk_text) {
-  char *intNUM;
   char sqlstr[5][256];
-  char compsql[15] = "OCESQL  &  \"\".";
-  char terminal[13] = "OCESQL     .";
 
   char *sqlloop;
   int sqlloop_len;
 
   struct cb_sql_list *wk_sql;
-  int len;
 
   wk_sql = wk_text->sql_list;
 
@@ -226,9 +222,8 @@ void ppoutputopen(struct cb_exec_list *list) {
     com_strcat(out, sizeof(out), strend);
     outwrite();
     wk_host = l->host_list;
-    int count = 0;
     for (; wk_host; wk_host = wk_host->next) {
-      count += ppoutputparam(wk_host, 0);
+      ppoutputparam(wk_host, 0);
     }
 
     com_strcpy(out, sizeof(out), "OCESQL ");
@@ -1906,9 +1901,6 @@ void ppbuff(struct cb_exec_list *list) {
 
 void ppbuff_incfile(struct cb_exec_list *list) {
   struct cb_exec_list *l;
-  char buff[10];
-  char incmsg[256];
-  int len2;
 
   l = list;
 
@@ -1916,7 +1908,6 @@ void ppbuff_incfile(struct cb_exec_list *list) {
     char filename[512];
     FILE *incf;
     char incf_buff[BUFFSIZE + 1];
-    int retcode;
 
     memset(filename, 0, 512);
 
@@ -1934,6 +1925,7 @@ void ppbuff_incfile(struct cb_exec_list *list) {
         break;
 
       if (strlen(incf_buff) > MAX_LINESIZE) {
+        char buff[10];
         memset(buff, 0, sizeof(buff));
         com_sprintf(buff, sizeof(buff), "E%03d", ERR_EXCEED_LIMIT_LINE_LENGTH);
         printerrormsg("", lineNUM, buff);
@@ -1968,7 +1960,6 @@ void outwrite() {
 
 void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head) {
   FILE *readfile;
-  size_t len;
 
   struct cb_exec_list *l;
   l = head;
@@ -1989,6 +1980,7 @@ void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head) {
           strstr(inbuff, INC__END__MARK) != NULL) {
         continue;
       }
+      size_t len;
       if (head) {
         if (l->startLine <= lineNUM && l->endLine >= lineNUM) {
           if (strcmp(l->commandName, "WORKING_END") == 0) {
