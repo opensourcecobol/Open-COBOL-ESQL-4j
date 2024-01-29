@@ -210,11 +210,11 @@ void ppoutputendcall(struct cb_exec_list *list) {
 void ppoutputopen(struct cb_exec_list *list) {
   struct cb_hostreference_list *wk_host;
   struct cb_exec_list *l;
-  char str_type[BUFFSIZE];
 
   l = list;
 
   if (l->hostreferenceCount != 0) {
+    char str_type[BUFFSIZE];
     com_strcpy(out, sizeof(out), "OCESQL ");
     com_strcat(out, sizeof(out), "   ");
     com_strcat(out, sizeof(out), strcall);
@@ -527,7 +527,6 @@ void ppoutputresparam(char *varface, int type, int digits, int scale,
 }
 
 void ppoutputresgroup(struct cb_field *cf, int lineno, int iteration) {
-  char buff[256];
   int type, digits, scale;
   int iret;
 
@@ -536,6 +535,7 @@ void ppoutputresgroup(struct cb_field *cf, int lineno, int iteration) {
 
   iret = gethostvarianttype(cf->sname, &type, &digits, &scale);
   if (iret != 0) {
+    char buff[256];
     printmsg("%s:%d\n", cf->sname, iret);
     memset(buff, 0, sizeof(buff));
     com_sprintf(buff, sizeof(buff), "E%03d", iret);
@@ -560,7 +560,6 @@ void ppoutputexecprepare(struct cb_exec_list *list) {
   char buff[256];
   struct cb_hostreference_list *host_list;
   int type, digits, scale;
-  int iret;
   char str_type[BUFFSIZE];
 
   memset(buff, 0, sizeof(buff));
@@ -572,7 +571,8 @@ void ppoutputexecprepare(struct cb_exec_list *list) {
   host_list = list->host_list;
   int count = 0;
   if (host_list) {
-    iret = gethostvarianttype(host_list->hostreference, &type, &digits, &scale);
+    int iret =
+        gethostvarianttype(host_list->hostreference, &type, &digits, &scale);
     if (iret != 0) {
       printmsg("%s:%d\n", host_list->hostreference, iret);
       memset(buff, 0, sizeof(buff));
@@ -1357,10 +1357,7 @@ void ppbuff(struct cb_exec_list *list) {
   int var_type;
   int var_len;
   int var_scale;
-  int count;
-  struct cb_exec_list *wk_head;
   struct cb_hostreference_list *wk_host;
-  char str_type[BUFFSIZE];
   struct cb_exec_list *l;
   int iret;
 
@@ -1389,7 +1386,7 @@ void ppbuff(struct cb_exec_list *list) {
   }
 
   if (strcmp(l->commandName, "WORKING_END") == 0) {
-    wk_head = l;
+    struct cb_exec_list *wk_head = l;
     outsqlfiller(wk_head);
   }
 
@@ -1452,6 +1449,7 @@ void ppbuff(struct cb_exec_list *list) {
   }
 
   if (strcmp(l->commandName, "SELECT") == 0) {
+    int count;
     if (l->res_host_list == NULL) {
       if (l->hostreferenceCount != 0) {
         com_strcpy(out, sizeof(out), "OCESQL ");
@@ -1559,6 +1557,7 @@ void ppbuff(struct cb_exec_list *list) {
       com_strcat(out, sizeof(out), l->sqlName);
       outwrite();
       if (l->hostreferenceCount != 0) {
+        char str_type[BUFFSIZE];
         com_strcpy(out, sizeof(out), "OCESQL ");
         com_strcat(out, sizeof(out), "       ");
         com_strcat(out, sizeof(out), strbyvalue);
