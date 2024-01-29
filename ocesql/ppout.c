@@ -2048,10 +2048,10 @@ void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head) {
         fwrite(outbuff, len, 1, outfile);
       }
     }
-  }
 
-  fclose(readfile);
-  fclose(outfile);
+    fclose(readfile);
+    fclose(outfile);
+  }
 
   remove(ppin);
 }
@@ -2067,17 +2067,41 @@ void ppoutput_incfile(char *ppin, char *ppout, struct cb_exec_list *head) {
   outfile = fopen_or_die(ppout, "w");
 
   EOFFLG = 0;
-  if (readfile && outfile) {
-    int after_first_read = 0;
-    while (EOFflg != 1) {
-      if (after_first_read) {
-        fwrite(outbuff, len, 1, outfile);
-      }
-      com_readline(readfile, inbuff, &lineNUM, &EOFflg);
-      after_first_read = 1;
-      if (head) {
-        if (l->startLine <= lineNUM && l->endLine >= lineNUM) {
+  int after_first_read = 0;
+  while (EOFflg != 1) {
+    if (after_first_read) {
+      fwrite(outbuff, len, 1, outfile);
+    }
+    com_readline(readfile, inbuff, &lineNUM, &EOFflg);
+    after_first_read = 1;
+    if (head) {
+      if (l->startLine <= lineNUM && l->endLine >= lineNUM) {
+        if (strcmp(l->commandName, "INCFILE") == 0) {
+          inbuff[0] = 'O';
+          inbuff[1] = 'C';
+          inbuff[2] = 'E';
+          inbuff[3] = 'S';
+          inbuff[4] = 'Q';
+          inbuff[5] = 'L';
+          inbuff[6] = '*';
+        }
+
+        outbuff = inbuff;
+        len = strlen(outbuff);
+
+        if (EOFflg == 1) {
+          fputc('\n', outfile);
+        }
+      } else {
+        if (lineNUM - l->endLine == 1) {
           if (strcmp(l->commandName, "INCFILE") == 0) {
+            ppbuff_incfile(l);
+          }
+          if (l->next != NULL)
+            l = l->next;
+
+          if (l->startLine <= lineNUM && l->endLine >= lineNUM &&
+              (strcmp(l->commandName, "INCFILE") == 0)) {
             inbuff[0] = 'O';
             inbuff[1] = 'C';
             inbuff[2] = 'E';
@@ -2086,42 +2110,16 @@ void ppoutput_incfile(char *ppin, char *ppout, struct cb_exec_list *head) {
             inbuff[5] = 'L';
             inbuff[6] = '*';
           }
-
           outbuff = inbuff;
           len = strlen(outbuff);
-
-          if (EOFflg == 1) {
-            fputc('\n', outfile);
-          }
         } else {
-          if (lineNUM - l->endLine == 1) {
-            if (strcmp(l->commandName, "INCFILE") == 0) {
-              ppbuff_incfile(l);
-            }
-            if (l->next != NULL)
-              l = l->next;
-
-            if (l->startLine <= lineNUM && l->endLine >= lineNUM &&
-                (strcmp(l->commandName, "INCFILE") == 0)) {
-              inbuff[0] = 'O';
-              inbuff[1] = 'C';
-              inbuff[2] = 'E';
-              inbuff[3] = 'S';
-              inbuff[4] = 'Q';
-              inbuff[5] = 'L';
-              inbuff[6] = '*';
-            }
-            outbuff = inbuff;
-            len = strlen(outbuff);
-          } else {
-            outbuff = inbuff;
-            len = strlen(outbuff);
-          }
+          outbuff = inbuff;
+          len = strlen(outbuff);
         }
-      } else {
-        outbuff = inbuff;
-        len = strlen(outbuff);
       }
+    } else {
+      outbuff = inbuff;
+      len = strlen(outbuff);
     }
   }
   fclose(readfile);
@@ -2189,7 +2187,6 @@ void parameter_split(struct cb_field *vp_parent) {
   if (vp_len == NULL || vp_arr == NULL) {
     printmsg("parameter_split: memory allocation for cb_field failed.\n");
     goto die_parameter_split;
-    return;
   }
 
   memset(vp_len, 0, sizeof(struct cb_field));
@@ -2205,7 +2202,6 @@ void parameter_split(struct cb_field *vp_parent) {
   if (vp_len->sname == NULL) {
     printmsg("parameter_split: memory allocation for vp_len->sname failed.\n");
     goto die_parameter_split;
-    return;
   }
   com_sprintf(vp_len->sname, sizeof(vp_len->sname), "%s-LEN", basename);
   vp_len->level = vp_parent->level + 1;
@@ -2222,7 +2218,6 @@ void parameter_split(struct cb_field *vp_parent) {
   if (vp_arr->sname == NULL) {
     printmsg("parameter_split: memory allocation for vp_arr->sname failed.\n");
     goto die_parameter_split;
-    return;
   }
   com_sprintf(vp_arr->sname, sizeof(vp_arr->sname), "%s-ARR", basename);
   vp_arr->level = vp_parent->level + 1;
