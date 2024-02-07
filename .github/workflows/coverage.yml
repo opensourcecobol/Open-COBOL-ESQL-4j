@@ -43,7 +43,7 @@ jobs:
 
       # Setup JDK
       - name: Setup JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 11
@@ -56,11 +56,11 @@ jobs:
 
       # Checkout
       - name: Checkout Open-COBOL-ESQL-4j
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
           
       # Checkout opensource COBOL 4J
       - name: Checkout opensourcecobol 4J
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: opensourcecobol/opensourcecobol4j
           path: opensourcecobol4j
@@ -99,7 +99,7 @@ jobs:
 
       # Upload a coverage report
       - name: Archive a coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
           path: ocesql/coverage-report/
