@@ -901,11 +901,14 @@ object Common {
       i: Int,
       str: scala.Array[Byte]
   ): Unit = {
+    val length_bytes = ByteBuffer.wrap(new scala.Array[Byte](4));
     if (str.length >= sv.length) {
-      addr.memcpy(str, sv.length)
+      length_bytes.putInt(sv.length)
+      addr.memcpy(OCDB_VARCHAR_HEADER_BYTE, str, sv.length)
     } else {
-      addr.memset(' '.toByte, sv.length)
-      addr.memcpy(str, str.length)
+      length_bytes.putInt(str.length)
+      addr.memset(OCDB_VARCHAR_HEADER_BYTE, ' '.toByte, sv.length)
+      addr.memcpy(OCDB_VARCHAR_HEADER_BYTE, str, str.length)
     }
   }
 
