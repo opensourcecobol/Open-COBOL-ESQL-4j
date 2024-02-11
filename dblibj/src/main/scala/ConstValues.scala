@@ -144,4 +144,6 @@ object ConstValues {
   case class OCDB_READ_CURRENT() extends ReadDirection
 
   val DATA_SIZE_OF_SQL_COMMAND_LEN = 9
+
+  val OCDB_VARCHAR_HEADER_BYTE = 4
 }
