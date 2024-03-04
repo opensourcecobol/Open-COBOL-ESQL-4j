@@ -13,6 +13,9 @@ env:
   OCESQL4J_OCESQL4J_JAR_PATH: /usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar
   CLASSPATH: ":/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar"
 
+permissions:
+  contents: read
+
 jobs:
   make-coverage-report:
     runs-on: ubuntu-latest
@@ -36,6 +39,11 @@ jobs:
 
     steps:
       # Install dependencies
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
       - name: Install dependencies on Ubuntu 22.04
         run: |
           sudo apt update -y
@@ -43,24 +51,24 @@ jobs:
 
       # Setup JDK
       - name: Setup JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@9704b39bf258b59bc04b50fa2dd55e9ed76b47a8 # v4.1.0
         with:
           distribution: zulu
           java-version: 11
 
       # Setup sbt
       - name: Setup sbt
-        uses: olafurpg/setup-scala@v11
+        uses: olafurpg/setup-scala@3d6c824bc1a3ffa8bde6bf8b4865cb4387e3ac31 # v11
         with:
           java-version: zulu@1.11
 
       # Checkout
       - name: Checkout Open-COBOL-ESQL-4j
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
           
       # Checkout opensource COBOL 4J
       - name: Checkout opensourcecobol 4J
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           repository: opensourcecobol/opensourcecobol4j
           path: opensourcecobol4j
@@ -99,7 +107,7 @@ jobs:
 
       # Upload a coverage report
       - name: Archive a coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: code-coverage-report
           path: ocesql/coverage-report/
