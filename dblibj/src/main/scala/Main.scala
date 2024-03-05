@@ -24,8 +24,8 @@ trait CobolRunnableWrapper extends CobolRunnable {
     // Set PIC_N Charset
     if (CobolRunnableWrapper.firstRun) {
       GlobalState.setFetchRecords({
-        val envValue = System.getenv(GlobalState.FETCH_RECORDS_ENV_VAR_NAME)
-        val fetchRecords = Option(envValue) match {
+        val envValue = sys.env.get(GlobalState.FETCH_RECORDS_ENV_VAR_NAME)
+        val fetchRecords = envValue match {
           case Some(x) =>
             x.toIntOption match {
               case Some(fetchSize) if (fetchSize > 0) => fetchSize
@@ -109,10 +109,10 @@ class OCESQLIDConnect extends CobolRunnableWrapper {
 
     logLn("OCESQLIDConnect start")
     atdb match {
-      case None => errorProc
+      case None => errorProc()
       case Some(a) =>
         if (a.isEmpty) {
-          errorProc
+          errorProc()
         } else {
           OCESQLConnectCore.connect(user, passwd, name, atdb, state)
         }
@@ -578,7 +578,7 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
       return None
     }
 
-    var cursor_ = optionCursor.getOrElse(Cursor.defaultValue)
+    var cursor_ = optionCursor.getOrElse(Cursor.defaultValue())
 
     if (cursor_.isOpened) {
       logLn(s"cursor ${cname} already opened")

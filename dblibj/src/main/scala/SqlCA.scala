@@ -2,7 +2,7 @@ import SqlCA.SQLERRMC_LEN
 import jp.osscons.opensourcecobol.libcobj.data.CobolDataStorage
 
 import java.nio.ByteBuffer
-import scala.reflect.ClassManifest
+import scala.reflect.ClassTag
 
 class SqlCA(
     val caid: Array[Byte], // LEN = 8
@@ -95,7 +95,7 @@ object SqlCA {
       getArray(0, 5)
     )
 
-  private def getArray[A: ClassManifest](value: A, length: Int): Array[A] = {
+  private def getArray[A: ClassTag](value: A, length: Int): Array[A] = {
     var arr: Array[A] = new Array[A](length)
     for (i <- 0 to length - 1) { arr(i) = value }
     arr

@@ -42,7 +42,7 @@ object Operation {
   def errorLogLn(msg: String): Unit = errorLog(msg + "\n")
 
   def getLogLevel(): LogLevel =
-    Option(System.getenv("OCDB_LOGLEVEL")) match {
+    sys.env.get("OCDB_LOGLEVEL") match {
       case Some(envValue) if (envValue.toLowerCase == "nolog") =>
         LogOutputNothing()
       case Some(envValue) if (envValue.toLowerCase == "err") => LogOutputError()
@@ -52,7 +52,7 @@ object Operation {
     }
 
   def getLogFilePath(): String =
-    Option(System.getenv("OCDB_LOGFILE")) match {
+    sys.env.get("OCDB_LOGFILE") match {
       case Some(path) => path
       case _          => "/tmp/ocesql.log"
     }
