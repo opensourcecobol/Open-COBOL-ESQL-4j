@@ -109,10 +109,10 @@ class OCESQLIDConnect extends CobolRunnableWrapper {
 
     logLn("OCESQLIDConnect start")
     atdb match {
-      case None => errorProc
+      case None => errorProc()
       case Some(a) =>
         if (a.isEmpty) {
-          errorProc
+          errorProc()
         } else {
           OCESQLConnectCore.connect(user, passwd, name, atdb, state)
         }
@@ -578,7 +578,7 @@ class OCESQLCursorOpen extends CobolRunnableWrapper {
       return None
     }
 
-    var cursor_ = optionCursor.getOrElse(Cursor.defaultValue)
+    var cursor_ = optionCursor.getOrElse(Cursor.defaultValue())
 
     if (cursor_.isOpened) {
       logLn(s"cursor ${cname} already opened")

@@ -11,6 +11,6 @@ libraryDependencies ++= Seq(
 
 assemblyJarName := "ocesql4j.jar"
 
-scalacOptions := Seq("-unchecked", "-deprecation")
+scalacOptions := Seq("-Werror", "-deprecation", "-unchecked")
 
 ThisBuild / assemblyCacheUnzip := false
