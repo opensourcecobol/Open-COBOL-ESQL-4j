@@ -45,7 +45,7 @@ object OCESQLConnectCore {
       envKey: String
   ): Option[String] =
     defaultName match {
-      case None       => Option(System.getenv(envKey))
+      case None       => sys.env.get(envKey)
       case Some(name) => defaultName
     }
 
@@ -64,7 +64,7 @@ object OCESQLConnectCore {
     val (real_dbname, host, port) = parseDBName(dbname)
     val autoCommit = true
 
-    val cEncoding = Option(System.getenv("OCDB_DB_CHAR")).getOrElse("UTF-8")
+    val cEncoding = sys.env.get("OCDB_DB_CHAR").getOrElse("UTF-8")
 
     logLn("dbname   = " + name.getOrElse(""))
     logLn("user     = " + user.getOrElse(""))
@@ -282,7 +282,7 @@ object OCESQLConnectCore {
       case None => None
       case Some(c) => {
         c.setAutoCommit(autoCommit)
-        Option(System.getenv("OCDB_PG_IGNORE_ERROR")) match {
+        sys.env.get("OCDB_PG_IGNORE_ERROR") match {
           case None           => setRollBackOneMode(false, state)
           case Some(envValue) => setRollBackOneMode(envValue == "Y", state)
         }

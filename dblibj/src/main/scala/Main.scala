@@ -24,8 +24,8 @@ trait CobolRunnableWrapper extends CobolRunnable {
     // Set PIC_N Charset
     if (CobolRunnableWrapper.firstRun) {
       GlobalState.setFetchRecords({
-        val envValue = System.getenv(GlobalState.FETCH_RECORDS_ENV_VAR_NAME)
-        val fetchRecords = Option(envValue) match {
+        val envValue = sys.env.get(GlobalState.FETCH_RECORDS_ENV_VAR_NAME)
+        val fetchRecords = envValue match {
           case Some(x) =>
             x.toIntOption match {
               case Some(fetchSize) if (fetchSize > 0) => fetchSize
