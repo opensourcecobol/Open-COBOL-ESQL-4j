@@ -11,7 +11,7 @@ class ConnectTest extends FunSuite {
     )
   }
 
-  def ln(s: String): String = s + System.lineSeparator()
+  def ln(s: String): String = s + propOrElse("line.separator", "\n")
   def emptyOCBDState: OCDBState =
     new OCDBState(SqlCA.defaultValue, GlobalState.initialGlobalState)
 }
