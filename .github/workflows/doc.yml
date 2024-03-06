@@ -1,4 +1,4 @@
-name: tests
+name: doc
 
 on:
   push:
@@ -51,14 +51,14 @@ jobs:
         run: |
           ./configure --prefix=/usr/ CFLAGS='-Werror'
           make
-          make install
+          sudo make install
 
       # Checkout
       - name: Checkout Open-COBOL-ESQL-4j
         uses: actions/checkout@v4
 
       # Build documentation
-      - name: Install Open COBOL ESQL 4J
+      - name: Build documentation
         run: |
           cp $COBOL4J_LIBCOBJ_JAR_PATH dblibj/lib
           cd dblibj/
