@@ -128,9 +128,14 @@ jobs:
           cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
           OCDB_LOGFILE=debug make test
 
+      # Define the archive name
+      - name: Define the archive name
+        run: |
+          echo OCESQL_ARCHIVE_NAME=ocesql-${{ matrix.os }} | sed s/:/-/g >> $GITHUB_ENV
+
       # upload a log file
       - name: Upload a test log
         uses: actions/upload-artifact@v4
         with:
-          name: ocesql-${{ matrix.os }}.log
+          name: ${{ env.OCESQL_ARCHIVE_NAME }}.log
           path: /tmp/ocesql.log
