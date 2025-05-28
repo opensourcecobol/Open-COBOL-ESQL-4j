@@ -97,9 +97,9 @@ jobs:
         working-directory: ocesql
         run: |
           gcov -l ./*.gcda
-          gcovr -r . --html -o report.html
+          gcovr -r . --html --html-details --html-self-contained -o report.html --txt-metric=branch
           mkdir coverage-report
-          cp ./*.gcno ./*.gcda ./*.gcov report.html coverage-report
+          cp ./*.html coverage-report
 
       # Upload a coverage report
       - name: Archive a coverage report
