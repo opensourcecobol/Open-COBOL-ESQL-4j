@@ -3,7 +3,7 @@ name: tests
 on:
   push:
   pull_request:
-    types: [opened, reopened, review_requested, synchronize]
+    types: [opened, reopened, synchronize]
   workflow_dispatch:
   # Run tests 10:00 PM (JST) every day
   schedule:
