@@ -83,12 +83,12 @@
            
       *    CREATE TABLE 
            EXEC SQL
-                CREATE TABLE EMP
+         CREATE TABLE EMP
                 (
-                    EMP_NO     NUMERIC(4,0) NOT NULL,
+                    EMP_NO     NUMERIC(4,0) NOT NULL,                     
                     EMP_NAME   CHAR(20),
                     EMP_SALARY NUMERIC(4,0),
-                    CONSTRAINT IEMP_0 PRIMARY KEY (EMP_NO)
+                    CONSTRAINT IEMP_0 PRIMARY KEY            (EMP_NO)‚ 
                 )
            END-EXEC.
            IF  SQLCODE NOT = ZERO PERFORM ERROR-RTN STOP RUN.

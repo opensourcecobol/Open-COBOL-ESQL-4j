@@ -182,9 +182,12 @@ void sql_string(struct cb_exec_list *wk_text) {
                                   : p_line_len;
 
         // Do not split 2-bytes character into different lines
+        char c = p_line[len_to_write - 1];
         if (len_to_write == maximum_chars_in_single_line &&
             p_line_len > maximum_chars_in_single_line) {
-          len_to_write--;
+          if ((0x81 <= c && c <= 0x9F) || (0xE0 <= c && 0xFC)) {
+            len_to_write--;
+          }
         }
 
         fwrite(p_line, 1, len_to_write, outfile);
