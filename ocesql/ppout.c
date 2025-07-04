@@ -19,6 +19,7 @@
 
 #include "ocesql.h"
 #include "ocesqlutil.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -101,61 +102,107 @@ char *substring(int len, char *wk_str, int flag_end) {
 }
 
 void sql_string(struct cb_exec_list *wk_text) {
-  char sqlstr[5][256];
-
   char *sqlloop;
-  int sqlloop_len;
+  int sqlbody_len;
+  int sqllen;
 
   struct cb_sql_list *wk_sql;
 
-  wk_sql = wk_text->sql_list;
+  sqlbody_len = strlen(wk_text->sqlBody);
 
-  sqlloop_len = 0;
-  for (; wk_sql->next != NULL;) {
-    sqlloop_len += strlen(wk_sql->sqltext);
-    if (strcmp(wk_sql->next->sqltext, ",") != 0) {
-      sqlloop_len += strlen(" ");
-    }
-    wk_sql = wk_sql->next;
-  }
-  sqlloop_len += strlen(wk_sql->sqltext);
-
-  sqlloop = (char *)malloc((sqlloop_len + 1) * sizeof(char));
+  sqlloop = (char *)malloc(sqlbody_len + 1);
   if (sqlloop == NULL) {
     _printlog("memory allocation failed.\n");
     return;
   }
-  memset(sqlloop, 0, sqlloop_len + 1);
 
-  wk_sql = wk_text->sql_list;
-  for (; wk_sql->next != NULL;) {
-    com_strcat(sqlloop, sqlloop_len, wk_sql->sqltext);
-    if (strcmp(wk_sql->next->sqltext, ",") != 0) {
-      com_strcat(sqlloop, sqlloop_len, " ");
-    }
-    wk_sql = wk_sql->next;
-  }
-  com_strcat(sqlloop, sqlloop_len + 1, wk_sql->sqltext);
-
-  int sqllen = strlen(sqlloop);
+  strcpy(sqlloop, wk_text->sqlBody);
+  sqllen = strlen(sqlloop);
   fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", sqllen);
 
-  int i = 0;
-  const int maximum_chars_in_single_line = 58;
-  while (i < sqllen) {
-    fprintf(outfile, i == 0 ? "\nOCESQL     \"" : "\nOCESQL  &  \"");
-    int j;
-    for (j = 0; j < maximum_chars_in_single_line && i < sqllen; ++i, ++j) {
-      // Do not split 2-bytes character into different lines
-      if (j + 1 == maximum_chars_in_single_line) {
-        unsigned char c = sqlloop[i];
-        if ((0x81 <= c && c <= 0x9F) || (0xE0 <= c && 0xFC)) {
-          break;
-        }
-      }
-      fputc(sqlloop[i], outfile);
+  const int maximum_chars_in_single_line = 59;
+  const char *p_sql = sqlloop;
+  const char *sql_end = sqlloop + sqllen;
+  int is_first_chr = 1;
+
+  while (p_sql < sql_end) {
+    // Store the string up to the newline in a temp buffer
+    const char *p_line_end = p_sql;
+    while (p_line_end < sql_end && *p_line_end != '\n' && *p_line_end != '\r') {
+      p_line_end++;
     }
-    fprintf(outfile, i == sqllen ? "\"." : "\"");
+    size_t line_len = p_line_end - p_sql;
+    char *line_buff = (char *)malloc(line_len + 1);
+    if (line_buff == NULL) {
+      _printlog("memory allocation failed.\n");
+      free(sqlloop);
+      return;
+    }
+    strncpy(line_buff, p_sql, line_len);
+    line_buff[line_len] = '\0';
+
+    // Remove trailing spaces
+    char *end = line_buff + line_len - 1;
+    while (end >= line_buff && isspace((unsigned char)*end)) {
+      *end-- = '\0';
+    }
+
+    // Remove spaces from the A area
+    char *a_area = line_buff;
+    int i;
+    int a_len = 4;
+    for (i = 0; i < a_len && line_buff[i] != '\n'; i++) {
+      if (!isspace((unsigned char)line_buff[i])) {
+        break;
+      }
+    }
+    if (i == a_len) {
+      line_len = strlen(line_buff + a_len);
+      memmove(line_buff, line_buff + a_len, line_len + 1);
+    } else {
+      line_len = strlen(line_buff + 1);
+      memmove(line_buff, line_buff + 1, line_len + 1);
+    }
+
+    //  Output strings that fit within the B area to file.
+    // Output overflow characters to the next line.
+    if (strlen(line_buff) > 0) {
+      const char *p_line = line_buff;
+      while (*p_line) {
+        if (is_first_chr) {
+          fprintf(outfile, "\nOCESQL     \"");
+          is_first_chr = 0;
+        } else {
+          fprintf(outfile, "\"\nOCESQL  &  \"");
+        }
+
+        size_t p_line_len = strlen(p_line);
+        size_t len_to_write = (p_line_len > maximum_chars_in_single_line)
+                                  ? maximum_chars_in_single_line
+                                  : p_line_len;
+
+        // Do not split 2-bytes character into different lines
+        if (len_to_write == maximum_chars_in_single_line &&
+            p_line_len > maximum_chars_in_single_line) {
+          len_to_write--;
+        }
+
+        fwrite(p_line, 1, len_to_write, outfile);
+        p_line += len_to_write;
+      }
+    }
+
+    free(line_buff);
+    p_sql = p_line_end;
+    while (p_sql < sql_end && (*p_sql == '\n' || *p_sql == '\r')) {
+      p_sql++;
+    }
+  }
+
+  if (is_first_chr) {
+    fprintf(outfile, " \"\".");
+  } else {
+    fprintf(outfile, "\".");
   }
   fprintf(outfile, "\nOCESQL     02  FILLER PIC X(1) VALUE X\"00\".\n");
 
