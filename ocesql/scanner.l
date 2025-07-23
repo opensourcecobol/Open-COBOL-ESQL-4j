@@ -210,6 +210,10 @@ INT_CONSTANT {digit}+
 
 	"DECLARE" {
 		BEGIN ESQL_STATE;
+		yylval.s = com_strdup (yytext);
+		memset(commandname,0,sizeof(commandname));
+		com_strcpy(commandname,sizeof(commandname),yylval.s);
+		
 
 		return DECLARE;
 	}
@@ -418,7 +422,7 @@ INT_CONSTANT {digit}+
 	}
 
 	"CURSOR" {
-		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		    //strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -427,7 +431,7 @@ INT_CONSTANT {digit}+
 	 }
 
 	"FOR" {
-		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		    //strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 				yylval.s = com_strdup (yytext);
 				return TOKEN;
@@ -454,7 +458,10 @@ INT_CONSTANT {digit}+
 	}
 
 	"INTO" {
-		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+			if(strcmp(commandname, "SELECT") != 0){
+			    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+			}
+
 			if(flag_insqlstring && !flag_selectcommand){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -476,7 +483,9 @@ INT_CONSTANT {digit}+
 	}
 
 	{HOSTWORD} {
-		    strncat(sqlbody, " ?", sizeof(sqlbody) - strlen(sqlbody) - 1);
+			if(strcmp(commandname, "SELECT") != 0 || strcmp(yylval.s, "INTO") != 0){
+		    	strncat(sqlbody, " ?", sizeof(sqlbody) - strlen(sqlbody) - 1);
+			}
 			yylval.s = com_strdup (yytext + 1);
 			hostlineno = yylineno - includelinenum;
 
@@ -507,7 +516,10 @@ INT_CONSTANT {digit}+
 	}
 
 	({WORD}|{JPNWORD})+("."("*"|({WORD}|{JPNWORD})+))? {
-		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+			if(strcmp(commandname, "DECLARE") != 0){
+		    	strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+			}
+			//printf("dbg: commandname = %s, yytext=%s\n", commandname, yytext);
 			yylval.s = com_strdup (yytext);
 			return TOKEN;
 	}

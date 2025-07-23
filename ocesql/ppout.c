@@ -120,7 +120,6 @@ void sql_string(struct cb_exec_list *wk_text) {
   sqllen = strlen(sqlloop);
   fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", sqllen);
 
-  const int maximum_chars_in_single_line = 59;
   const char *p_sql = sqlloop;
   const char *sql_end = sqlloop + sqllen;
   int is_first_chr = 1;
@@ -148,7 +147,7 @@ void sql_string(struct cb_exec_list *wk_text) {
     }
 
     // Remove spaces from the A area
-    char *a_area = line_buff;
+    // char *a_area = line_buff;
     int i;
     int a_len = 4;
     for (i = 0; i < a_len && line_buff[i] != '\n'; i++) {
@@ -156,24 +155,34 @@ void sql_string(struct cb_exec_list *wk_text) {
         break;
       }
     }
-    if (i == a_len) {
+    if (i == a_len) { // A area is all spaces
       line_len = strlen(line_buff + a_len);
       memmove(line_buff, line_buff + a_len, line_len + 1);
-    } else {
+    } else { // A area has non-space characters
       line_len = strlen(line_buff + 1);
       memmove(line_buff, line_buff + 1, line_len + 1);
     }
 
-    //  Output strings that fit within the B area to file.
+    // Output strings that fit within the B area to file.
     // Output overflow characters to the next line.
     if (strlen(line_buff) > 0) {
       const char *p_line = line_buff;
+      int maximum_chars_in_single_line = 59;
+
       while (*p_line) {
+
         if (is_first_chr) {
           fprintf(outfile, "\nOCESQL     \"");
           is_first_chr = 0;
         } else {
           fprintf(outfile, "\"\nOCESQL  &  \"");
+
+          // Insert space if there is no space between this and the previous
+          // line
+          if (!isspace((unsigned char)*p_line)) {
+            fprintf(outfile, " ");
+            maximum_chars_in_single_line--;
+          }
         }
 
         size_t p_line_len = strlen(p_line);
