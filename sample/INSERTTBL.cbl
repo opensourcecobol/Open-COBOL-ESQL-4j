@@ -67,8 +67,8 @@
       *      EXEC SQL WHENEVER SQLERROR PERFORM ERROR-RTN END-EXEC.
            
       *    CONNECT
-           MOVE  "testdb"          TO   DBNAME.
-           MOVE  "postgres"        TO   USERNAME.
+           MOVE  "testdb@oc4j_db:5432"          TO   DBNAME.
+           MOVE  "main_user"        TO   USERNAME.
            MOVE  "password"        TO   PASSWD.
            EXEC SQL
                CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME 

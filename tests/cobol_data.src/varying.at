@@ -54,10 +54,11 @@ AT_DATA([prog.cbl], [
       *    PERFORM DISPLAY-TEST-RESULT.
            PERFORM UNTIL SQLCODE NOT = ZERO
               DISPLAY EMP-NAME-ARR
-              MOVE IDX TO EMP-NAME-LEN
+      *        MOVE IDX TO EMP-NAME-LEN
               EXEC SQL 
                   FETCH C1 INTO :EMP-NUM1, :EMP-NAME, :EMP-NUM2
               END-EXEC
+              DISPLAY EMP-NAME-LEN
       *        PERFORM DISPLAY-TEST-RESULT
            END-PERFORM.
 

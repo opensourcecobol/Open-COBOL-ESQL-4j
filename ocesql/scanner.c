@@ -2671,7 +2671,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"CONNECT");
-		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return CONNECT;
 	}
 	YY_BREAK
@@ -2777,7 +2777,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"FETCH");
-		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return FETCH;
 	}
 	YY_BREAK
@@ -2788,7 +2788,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT_RELEASE");
-		strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return COMMIT_WORK;
 	}
 	YY_BREAK
@@ -2799,7 +2799,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT_RELEASE");
-		strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return COMMIT_WORK;
 	}
 	YY_BREAK
@@ -2810,7 +2810,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT");
-		strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return COMMIT_WORK;
 	}
 	YY_BREAK
@@ -2821,7 +2821,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT");
-		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return COMMIT_WORK;
 	}
 	YY_BREAK
@@ -2832,7 +2832,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK_RELEASE");
-		strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return ROLLBACK_WORK;
 	}
 	YY_BREAK
@@ -2843,7 +2843,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK_RELEASE");
-		strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return ROLLBACK_WORK;
 	}
 	YY_BREAK
@@ -2854,7 +2854,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK");
-		strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return ROLLBACK_WORK;
 	}
 	YY_BREAK
@@ -2865,7 +2865,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK");
-		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return ROLLBACK_WORK;
 	}
 	YY_BREAK
@@ -3031,7 +3031,7 @@ case 35:
 YY_RULE_SETUP
 #line 442 "scanner.l"
 {
-		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		    //strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -3043,7 +3043,7 @@ case 36:
 YY_RULE_SETUP
 #line 451 "scanner.l"
 {
-		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		    //strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;

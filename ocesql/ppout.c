@@ -168,6 +168,7 @@ void sql_string(struct cb_exec_list *wk_text) {
     if (strlen(line_buff) > 0) {
       const char *p_line = line_buff;
       int maximum_chars_in_single_line = 59;
+      int is_first_line = 1;
 
       while (*p_line) {
 
@@ -179,11 +180,12 @@ void sql_string(struct cb_exec_list *wk_text) {
 
           // Insert space if there is no space between this and the previous
           // line
-          if (!isspace((unsigned char)*p_line)) {
+          if (!isspace((unsigned char)*p_line) && is_first_line) {
             fprintf(outfile, " ");
             maximum_chars_in_single_line--;
           }
         }
+        is_first_line = 0;
 
         size_t p_line_len = strlen(p_line);
         size_t len_to_write = (p_line_len > maximum_chars_in_single_line)
@@ -191,11 +193,14 @@ void sql_string(struct cb_exec_list *wk_text) {
                                   : p_line_len;
 
         // Do not split 2-bytes character into different lines
-        char c = p_line[len_to_write - 1];
+        unsigned char c1 = (unsigned char)p_line[len_to_write - 1];
         if (len_to_write == maximum_chars_in_single_line &&
             p_line_len > maximum_chars_in_single_line) {
-          if ((0x81 <= c && c <= 0x9F) || (0xE0 <= c && 0xFC)) {
-            len_to_write--;
+          if ((c1 >= 0x81 && c1 <= 0x9F) || (c1 >= 0xE0 && c1 <= 0xFC)) {
+            unsigned char c2 = (unsigned char)p_line[len_to_write];
+            if ((c2 >= 0x40 && c2 <= 0x7E) || (c2 >= 0x80 && c2 <= 0xFC)) {
+              len_to_write--;
+            }
           }
         }
 
