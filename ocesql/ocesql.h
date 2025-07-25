@@ -217,7 +217,7 @@ extern struct cb_sql_list *cb_add_text_list(struct cb_sql_list *list,
                                             struct cb_sql_list *targetlist);
 extern struct cb_sql_list *cb_text_list_add(struct cb_sql_list *list,
                                             const char *text);
-char *cb_host_list_add(struct cb_hostreference_list *list, char *text);
+char *cb_host_list_add(struct cb_hostreference_list *list, const char *text);
 void cb_res_host_list_add(struct cb_res_hostreference_list *list,
                           const char *text);
 int cb_search_list(const char *text);
@@ -240,8 +240,8 @@ extern int ppoutputparam(struct cb_hostreference_list *host_list,
                          int iteration);
 extern void _ppoutputparam(char *varface, int type, int digits, int scale,
                            int iteration);
-extern void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head);
-extern void ppoutput_incfile(char *ppin, char *ppout,
+extern void ppoutput(const char *ppin, const char *ppout, struct cb_exec_list *head);
+extern void ppoutput_incfile(const char *ppin, const char *ppout,
                              struct cb_exec_list *head);
 int check_Dchar(char c);
 int get_host_group_length(struct cb_field *field, int *length);

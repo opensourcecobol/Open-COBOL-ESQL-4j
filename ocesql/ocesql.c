@@ -170,7 +170,7 @@ struct cb_sql_list *cb_add_text_list(struct cb_sql_list *list,
   return targetlist;
 }
 
-char *cb_host_list_add(struct cb_hostreference_list *list, char *text) {
+char *cb_host_list_add(struct cb_hostreference_list *list, const char *text) {
   char temps[BUFFSIZE];
 
   cb_search_list(text);

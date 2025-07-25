@@ -145,7 +145,6 @@ void sql_string(const struct cb_exec_list *wk_text) {
     }
 
     // Remove spaces from the A area
-    // char *a_area = line_buff;
     int i;
     int a_len = 4;
     for (i = 0; i < a_len && line_buff[i] != '\n'; i++) {
@@ -177,7 +176,6 @@ void sql_string(const struct cb_exec_list *wk_text) {
           fprintf(outfile, "\"\nOCESQL  &  \"");
 
           // Insert space if there is no space between this and the previous
-          // line
           if (!isspace((unsigned char)*p_line) && is_first_line) {
             fprintf(outfile, " ");
             maximum_chars_in_single_line--;
@@ -2020,7 +2018,7 @@ void outwrite() {
   fputc('\n', outfile);
 }
 
-void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head) {
+void ppoutput(const char *ppin, const char *ppout, struct cb_exec_list *head) {
   FILE *readfile;
 
   struct cb_exec_list *l;
@@ -2099,7 +2097,7 @@ void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head) {
   remove(ppin);
 }
 
-void ppoutput_incfile(char *ppin, char *ppout, struct cb_exec_list *head) {
+void ppoutput_incfile(const char *ppin, const char *ppout, struct cb_exec_list *head) {
   FILE *readfile;
   size_t len;
 
