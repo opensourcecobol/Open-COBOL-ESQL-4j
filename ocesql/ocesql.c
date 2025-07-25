@@ -86,9 +86,9 @@ char *gettranslatename(const char *name) {
   return com_strdup(buff);
 }
 
-int translate(struct filename *fn) {
+int translate(const struct filename *fn) {
   int ret;
-  char *tmpfile;
+  const char *tmpfile;
 
   tmpfile = gettmpname("tmp");
 
