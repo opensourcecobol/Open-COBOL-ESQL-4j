@@ -67,8 +67,8 @@
       *      EXEC SQL WHENEVER SQLERROR PERFORM ERROR-RTN END-EXEC.
            
       *    CONNECT
-           MOVE  "testdb@oc4j_db:5432"          TO   DBNAME.
-           MOVE  "main_user"        TO   USERNAME.
+           MOVE  "testdb"          TO   DBNAME.
+           MOVE  "postgres"        TO   USERNAME.
            MOVE  "password"        TO   PASSWD.
            EXEC SQL
                CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME 
@@ -83,9 +83,9 @@
            
       *    CREATE TABLE 
            EXEC SQL
-         CREATE TABLE EMP
+                CREATE TABLE EMP
                 (
-                    EMP_NO     NUMERIC(4,0) NOT NULL,                     
+                    EMP_NO     NUMERIC(4,0) NOT NULL,
                     EMP_NAME   CHAR(20),
                     EMP_SALARY NUMERIC(4,0),
                     CONSTRAINT IEMP_0 PRIMARY KEY (EMP_NO)
@@ -96,13 +96,13 @@
       *    INSERT ROWS USING LITERAL
            EXEC SQL
       *         INSERT INTO EMP VALUES (46, 'KAGOSHIMA ROKURO', -320)
-               INSERT INTO EMP VALUES (46, '鹿児島　六郎', -320)
+               INSERT INTO EMP VALUES (46, '???????@?Z?Y', -320)
            END-EXEC.
            IF  SQLCODE NOT = ZERO PERFORM ERROR-RTN.
 
            EXEC SQL
       *         INSERT INTO EMP VALUES (47, 'OKINAWA SHICHIRO', 480)
-               INSERT INTO EMP VALUES (47, '沖縄　七郎', 480)
+               INSERT INTO EMP VALUES (47, '????@???Y', 480)
            END-EXEC.
            IF  SQLCODE NOT = ZERO PERFORM ERROR-RTN.
 

@@ -46,8 +46,8 @@
       *      EXEC SQL WHENEVER SQLERROR PERFORM ERROR-RTN END-EXEC.
            
       *    CONNECT
-           MOVE  "testdb@oc4j_db:5432"          TO   DBNAME.
-           MOVE  "main_user"        TO   USERNAME.
+           MOVE  "testdb"          TO   DBNAME.
+           MOVE  "postgres"        TO   USERNAME.
            MOVE  "password"        TO   PASSWD.
            EXEC SQL
                CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME 
@@ -63,9 +63,9 @@
       *    DECLARE CURSOR
            EXEC SQL 
                DECLARE C1 CURSOR FOR
-               SELECT EMP_NO, EMP_NAME,                       EMP_SALARY 
+               SELECT EMP_NO, EMP_NAME, EMP_SALARY 
                       FROM EMP
-           ORDER BY EMP_NO
+                      ORDER BY EMP_NO
            END-EXEC.
            EXEC SQL
                OPEN C1
@@ -133,4 +133,3 @@
                  DISPLAY SQLERRMC
            END-EVALUATE.
       ******************************************************************
-
