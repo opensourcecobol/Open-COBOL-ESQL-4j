@@ -172,7 +172,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"CONNECT");
-		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return CONNECT;
 	}
 
@@ -254,7 +253,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"FETCH");
-		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return FETCH;
 	}
 
@@ -262,7 +260,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT_RELEASE");
-		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return COMMIT_WORK;
 	}
 
@@ -270,7 +267,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT_RELEASE");
-		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return COMMIT_WORK;
 	}
 
@@ -278,7 +274,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT");
-		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return COMMIT_WORK;
 	}
 
@@ -286,7 +281,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT");
-		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return COMMIT_WORK;
 	}
 
@@ -294,7 +288,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK_RELEASE");
-		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return ROLLBACK_WORK;
 	}
 
@@ -302,7 +295,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK_RELEASE");
-		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return ROLLBACK_WORK;
 	}
 
@@ -310,7 +302,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK");
-		//strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return ROLLBACK_WORK;
 	}
 
@@ -318,7 +309,6 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK");
-		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return ROLLBACK_WORK;
 	}
 
@@ -422,7 +412,6 @@ INT_CONSTANT {digit}+
 	}
 
 	"CURSOR" {
-		    //strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -431,7 +420,6 @@ INT_CONSTANT {digit}+
 	 }
 
 	"FOR" {
-		    //strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 				yylval.s = com_strdup (yytext);
 				return TOKEN;
@@ -440,7 +428,6 @@ INT_CONSTANT {digit}+
 	}
 
 	"IDENTIFIED"[ ]+"BY" {
-		    //strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -449,7 +436,6 @@ INT_CONSTANT {digit}+
 	}
 
 	"USING" {
-		    //strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
