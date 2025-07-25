@@ -96,13 +96,13 @@
       *    INSERT ROWS USING LITERAL
            EXEC SQL
       *         INSERT INTO EMP VALUES (46, 'KAGOSHIMA ROKURO', -320)
-               INSERT INTO EMP VALUES (46, '???????@?Z?Y', -320)
+               INSERT INTO EMP VALUES (46, '鹿児島　六郎', -320)
            END-EXEC.
            IF  SQLCODE NOT = ZERO PERFORM ERROR-RTN.
 
            EXEC SQL
       *         INSERT INTO EMP VALUES (47, 'OKINAWA SHICHIRO', 480)
-               INSERT INTO EMP VALUES (47, '????@???Y', 480)
+               INSERT INTO EMP VALUES (47, '沖縄　七郎', 480)
            END-EXEC.
            IF  SQLCODE NOT = ZERO PERFORM ERROR-RTN.
 
