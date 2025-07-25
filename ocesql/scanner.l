@@ -505,7 +505,6 @@ INT_CONSTANT {digit}+
 			if(strcmp(commandname, "DECLARE") != 0){
 		    	strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			}
-			//printf("dbg: commandname = %s, yytext=%s\n", commandname, yytext);
 			yylval.s = com_strdup (yytext);
 			return TOKEN;
 	}

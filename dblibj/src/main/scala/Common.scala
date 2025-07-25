@@ -25,7 +25,6 @@ object Common {
       case Some(q) if q.isEmpty => setLibErrorStatus(OCDB_EMPTY(), state)
       case Some(q) => {
         ocdbExec(id, q, state)
-        // println("dbg state :" + state.)
         val success = setResultStatus(id, state)
         if (success && (q == "COMMIT" || q == "ROLLBACK")) {
           clearCursorMap(id, state)
@@ -433,8 +432,6 @@ object Common {
         Option(e.getMessage) match {
           case Some(msg) => {
             val bytes = msg.getBytes
-            // println("dbg bytes.length=" + bytes.length)
-            // println("dbg bytes content (as string): " + msg)
             Some((bytes, bytes.length))
           }
           case _ => None

@@ -38,7 +38,7 @@ static char errormsg[ERRORMSGNUM][128] = {
     {"E999: unexpected error"}};
 static FILE *pfile;
 
-int openerrorfile(char *filename) {
+int openerrorfile(const char *filename) {
   if (filename != NULL) {
     com_fopen(&pfile, filename, "a+");
     if (pfile == NULL) {
@@ -60,7 +60,7 @@ int closeerrorfile() {
 }
 
 int spreadchar(char *code, char *msg, char *ret) {
-  char *p;
+  const char *p;
   if (code == NULL || msg == NULL || ret == NULL)
     return 0;
 

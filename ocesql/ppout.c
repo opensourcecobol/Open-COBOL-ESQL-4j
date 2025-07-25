@@ -101,12 +101,10 @@ char *substring(int len, char *wk_str, int flag_end) {
   return com_strdup(wkstr);
 }
 
-void sql_string(struct cb_exec_list *wk_text) {
+void sql_string(const struct cb_exec_list *wk_text) {
   char *sqlloop;
   int sqlbody_len;
   int sqllen;
-
-  struct cb_sql_list *wk_sql;
 
   sqlbody_len = strlen(wk_text->sqlBody);
 
@@ -252,7 +250,7 @@ void outsqlfiller(struct cb_exec_list *wk_head_p) {
   return;
 }
 
-void ppoutputendcall(struct cb_exec_list *list) {
+void ppoutputendcall(const struct cb_exec_list *list) {
   char buff[256];
   if (list == NULL)
     return;
@@ -1964,7 +1962,7 @@ void ppbuff(struct cb_exec_list *list) {
 }
 
 void ppbuff_incfile(struct cb_exec_list *list) {
-  struct cb_exec_list *l;
+  const struct cb_exec_list *l;
 
   l = list;
 
@@ -1984,7 +1982,7 @@ void ppbuff_incfile(struct cb_exec_list *list) {
 
     while (1) {
       memset(incf_buff, 0, BUFFSIZE + 1);
-      char *result = fgets(incf_buff, BUFFSIZE, incf);
+      const char *result = fgets(incf_buff, BUFFSIZE, incf);
       if (result == NULL)
         break;
 
@@ -2295,7 +2293,7 @@ die_parameter_split:
   return;
 }
 
-FILE *fopen_or_die(char *filename, const char *mode) {
+FILE *fopen_or_die(const char *filename, const char *mode) {
   FILE *retval;
   com_fopen(&retval, filename, mode);
 
