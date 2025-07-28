@@ -240,7 +240,8 @@ extern int ppoutputparam(struct cb_hostreference_list *host_list,
                          int iteration);
 extern void _ppoutputparam(char *varface, int type, int digits, int scale,
                            int iteration);
-extern void ppoutput(const char *ppin, const char *ppout, struct cb_exec_list *head);
+extern void ppoutput(const char *ppin, const char *ppout,
+                     struct cb_exec_list *head);
 extern void ppoutput_incfile(const char *ppin, const char *ppout,
                              struct cb_exec_list *head);
 int check_Dchar(char c);

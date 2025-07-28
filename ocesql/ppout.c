@@ -137,6 +137,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
     }
     strncpy(line_buff, p_sql, line_len);
     line_buff[line_len] = '\0';
+    printf("dbg: line_buff='%s'\n", line_buff);
 
     // Remove trailing spaces
     char *end = line_buff + line_len - 1;
@@ -156,8 +157,8 @@ void sql_string(const struct cb_exec_list *wk_text) {
       line_len = strlen(line_buff + a_len);
       memmove(line_buff, line_buff + a_len, line_len + 1);
     } else { // A area has non-space characters
-      line_len = strlen(line_buff + 1);
-      memmove(line_buff, line_buff + 1, line_len + 1);
+      line_len = strlen(line_buff);
+      memmove(line_buff, line_buff, line_len);
     }
 
     // Output strings that fit within the B area to file.
@@ -2097,7 +2098,8 @@ void ppoutput(const char *ppin, const char *ppout, struct cb_exec_list *head) {
   remove(ppin);
 }
 
-void ppoutput_incfile(const char *ppin, const char *ppout, struct cb_exec_list *head) {
+void ppoutput_incfile(const char *ppin, const char *ppout,
+                      struct cb_exec_list *head) {
   FILE *readfile;
   size_t len;
 
