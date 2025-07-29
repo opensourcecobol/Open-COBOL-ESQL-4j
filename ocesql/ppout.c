@@ -2030,6 +2030,7 @@ void outwrite() {
   size_t len;
 
   outbuff = out;
+  printf("dbg: outbuff=%s\n", outbuff);
   len = strlen(outbuff);
   fwrite(outbuff, len, 1, outfile);
   fputc('\n', outfile);

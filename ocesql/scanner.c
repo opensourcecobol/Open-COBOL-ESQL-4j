@@ -2765,7 +2765,7 @@ YY_RULE_SETUP
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"CLOSE");
-		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
+		//strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return CLOSE;
 	}
 	YY_BREAK
