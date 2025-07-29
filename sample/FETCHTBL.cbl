@@ -63,7 +63,7 @@
       *    DECLARE CURSOR
            EXEC SQL 
                DECLARE C1 CURSOR FOR
-       SELECT EMP_NO, EMP_NAME, EMP_SALARY 
+               SELECT EMP_NO, EMP_NAME, EMP_SALARY
                       FROM EMP
                       ORDER BY EMP_NO
            END-EXEC.

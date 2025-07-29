@@ -23,6 +23,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define SJIS_LEAD_START_1 0x81
+#define SJIS_LEAD_END_1 0x9F
+#define SJIS_LEAD_START_2 0xE0
+#define SJIS_LEAD_END_2 0xEF
+#define SJIS_TRAIL_START_1 0x40
+#define SJIS_TRAIL_END_1 0x7E
+#define SJIS_TRAIL_START_2 0x80
+#define SJIS_TRAIL_END_2 0xFC
+
 char inbuff[256];
 char out[256];
 struct cb_exec_list *head;
@@ -137,7 +146,6 @@ void sql_string(const struct cb_exec_list *wk_text) {
     }
     strncpy(line_buff, p_sql, line_len);
     line_buff[line_len] = '\0';
-    printf("dbg: line_buff='%s'\n", line_buff);
 
     // Remove trailing spaces
     char *end = line_buff + line_len - 1;
@@ -190,13 +198,21 @@ void sql_string(const struct cb_exec_list *wk_text) {
                                   : p_line_len;
 
         // Do not split 2-bytes character into different lines
-        unsigned char c1 = (unsigned char)p_line[len_to_write - 1];
-        if (len_to_write == maximum_chars_in_single_line &&
-            p_line_len > maximum_chars_in_single_line) {
-          if ((c1 >= 0x81 && c1 <= 0x9F) || (c1 >= 0xE0 && c1 <= 0xFC)) {
-            unsigned char c2 = (unsigned char)p_line[len_to_write];
-            if ((c2 >= 0x40 && c2 <= 0x7E) || (c2 >= 0x80 && c2 <= 0xFC)) {
-              len_to_write--;
+        for (i = 0; i < len_to_write; i++) {
+          unsigned char c1 = (unsigned char)p_line[i];
+          if ((c1 >= SJIS_LEAD_START_1 && c1 <= SJIS_LEAD_END_1) ||
+              (c1 >= SJIS_LEAD_START_2 && c1 <= SJIS_LEAD_END_2)) {
+            unsigned char c2 = (unsigned char)p_line[i + 1];
+            if ((c2 >= SJIS_TRAIL_START_1 && c2 <= SJIS_TRAIL_END_1) ||
+                (c2 >= SJIS_TRAIL_START_2 && c2 <= SJIS_TRAIL_END_2)) {
+              if (i == len_to_write - 1) {
+                // If the last character is a lead byte, reduce the length to
+                // write
+                len_to_write--;
+                break;
+              } else {
+                i++;
+              }
             }
           }
         }
