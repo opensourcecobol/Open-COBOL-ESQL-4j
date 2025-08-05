@@ -164,10 +164,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
     if (i == a_len) { // A area is all spaces
       line_len = strlen(line_buff + a_len);
       memmove(line_buff, line_buff + a_len, line_len + 1);
-    } else { // A area has non-space characters
-      line_len = strlen(line_buff);
-      memmove(line_buff, line_buff, line_len);
-    }
+    } 
 
     // Output strings that fit within the B area to file.
     // Output overflow characters to the next line.
