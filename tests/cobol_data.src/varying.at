@@ -711,12 +711,12 @@ AT_DATA([prog.cbl], [
       ******************************************************************
 
       *    SERVER
-      　    MOVE  "<|DB_NAME|>@<|DB_HOST|>:<|DB_PORT|>"
-      　      TO DBNAME.
-      　    MOVE  "<|DB_USER|>"
-      　      TO USERNAME.
-      　    MOVE  "<|DB_PASSWORD|>"
-      　      TO PASSWD.
+           MOVE  "<|DB_NAME|>@<|DB_HOST|>:<|DB_PORT|>"
+             TO DBNAME.
+           MOVE  "<|DB_USER|>"
+             TO USERNAME.
+           MOVE  "<|DB_PASSWORD|>"
+             TO PASSWD.
 
            EXEC SQL
                CONNECT :USERNAME IDENTIFIED BY :PASSWD USING :DBNAME 
