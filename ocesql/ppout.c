@@ -1436,7 +1436,11 @@ void ppbuff(struct cb_exec_list *list) {
     com_strcat(out, sizeof(out), vtmp);
     com_strcat(out, sizeof(out), " ");
     com_strcat(out, sizeof(out), vp_arr->sname);
-    com_strcat(out, sizeof(out), " PIC X(");
+    if (vp_parent->pictype == PIC_NATIONAL_VARYING) {
+      com_strcat(out, sizeof(out), " PIC N(");
+    } else {
+      com_strcat(out, sizeof(out), " PIC X(");
+    }
     com_sprintf(vtmp, sizeof(vtmp), "%d", vp_arr->picnsize);
     com_strcat(out, sizeof(out), vtmp);
     com_strcat(out, sizeof(out), ").");
