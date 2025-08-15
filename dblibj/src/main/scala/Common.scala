@@ -904,14 +904,13 @@ object Common {
     val length_bytes = ByteBuffer.wrap(new scala.Array[Byte](4));
     if (str.length >= sv.length) {
       length_bytes.putInt(sv.length)
-      addr.memcpy(0, length_bytes.array(), OCDB_VARCHAR_HEADER_BYTE)
       addr.memcpy(OCDB_VARCHAR_HEADER_BYTE, str, sv.length)
     } else {
       length_bytes.putInt(str.length)
-      addr.memcpy(0, length_bytes.array(), OCDB_VARCHAR_HEADER_BYTE)
       addr.memset(OCDB_VARCHAR_HEADER_BYTE, ' '.toByte, sv.length)
       addr.memcpy(OCDB_VARCHAR_HEADER_BYTE, str, str.length)
     }
+    addr.memcpy(0, length_bytes.array(), OCDB_VARCHAR_HEADER_BYTE)
   }
 
   private def createCobolDataJapaneseVarying(
