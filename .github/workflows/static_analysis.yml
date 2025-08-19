@@ -20,6 +20,12 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y clang-format cppcheck
 
+      # Setup sbt
+      - name: Setup sbt
+        run: |
+          curl -fL https://github.com/coursier/coursier/releases/latest/download/cs-x86_64-pc-linux.gz | gzip -d > cs && chmod +x cs && echo Y | ./cs setup
+          echo PATH="$PATH:/home/runner/.local/share/coursier/bin" >> "$GITHUB_ENV"
+
       # check if source code is formatted
       - name: Check format with clang-format
         run: |

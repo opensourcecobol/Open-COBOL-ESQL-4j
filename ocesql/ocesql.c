@@ -76,7 +76,7 @@ void file_basename(const char *filename, char *buff) {
   buff[len] = '\0';
 }
 
-char *gettranslatename(char *name) {
+char *gettranslatename(const char *name) {
   char buff[BUFFSIZE];
   char basename[BUFFSIZE];
   memset(basename, 0, sizeof(basename));
@@ -86,9 +86,9 @@ char *gettranslatename(char *name) {
   return com_strdup(buff);
 }
 
-int translate(struct filename *fn) {
+int translate(const struct filename *fn) {
   int ret;
-  char *tmpfile;
+  const char *tmpfile;
 
   tmpfile = gettmpname("tmp");
 
@@ -128,7 +128,8 @@ int translate(struct filename *fn) {
   return 0;
 }
 
-struct cb_sql_list *cb_text_list_add(struct cb_sql_list *list, char *text) {
+struct cb_sql_list *cb_text_list_add(struct cb_sql_list *list,
+                                     const char *text) {
   struct cb_sql_list *p;
   struct cb_sql_list *l;
 
@@ -169,7 +170,7 @@ struct cb_sql_list *cb_add_text_list(struct cb_sql_list *list,
   return targetlist;
 }
 
-char *cb_host_list_add(struct cb_hostreference_list *list, char *text) {
+char *cb_host_list_add(struct cb_hostreference_list *list, const char *text) {
   char temps[BUFFSIZE];
 
   cb_search_list(text);
@@ -178,7 +179,8 @@ char *cb_host_list_add(struct cb_hostreference_list *list, char *text) {
   return com_strdup(temps);
 }
 
-void cb_res_host_list_add(struct cb_res_hostreference_list *list, char *text) {
+void cb_res_host_list_add(struct cb_res_hostreference_list *list,
+                          const char *text) {
   struct cb_res_hostreference_list *l;
   struct cb_res_hostreference_list *p;
 
@@ -197,7 +199,7 @@ void cb_res_host_list_add(struct cb_res_hostreference_list *list, char *text) {
   }
 }
 
-int cb_search_list(char *text) {
+int cb_search_list(const char *text) {
   struct cb_hostreference_list *l;
   struct cb_hostreference_list *p;
   l = host_reference_list;
@@ -225,24 +227,24 @@ int cb_search_list(char *text) {
   return i + 1;
 }
 
-void cb_set_cursorname(char *text) {
+void cb_set_cursorname(const char *text) {
   memset(cursorname, 0, sizeof(cursorname));
   com_strcpy(cursorname, sizeof(cursorname), filenameID);
   com_strcat(cursorname, sizeof(cursorname), "_");
   com_strcat(cursorname, sizeof(cursorname), text);
 }
 
-void cb_set_dbname(char *text) {
+void cb_set_dbname(const char *text) {
   memset(dbname, 0, sizeof(dbname));
   com_strcpy(dbname, sizeof(dbname), text);
 }
 
-void cb_set_prepname(char *text) {
+void cb_set_prepname(const char *text) {
   memset(prepname, 0, sizeof(prepname));
   com_strcpy(prepname, sizeof(prepname), text);
 }
 
-char *cb_get_env(char *filename, int num) {
+char *cb_get_env(const char *filename, int num) {
   char *path = NULL;
 
   char buff[BUFFSIZE];
@@ -307,8 +309,8 @@ int main(int argc, char *argv[]) {
   int preloptlen = 2;
   const char *preopt = "-";
   int preoptlen = 1;
-  char *opthead;
-  char *optval;
+  const char *opthead;
+  const char *optval;
 
   char *env;
   char *tempid;
