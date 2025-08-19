@@ -101,7 +101,6 @@ char *substring(int len, char *wk_str, int flag_end) {
 }
 
 void sql_string(const struct cb_exec_list *wk_text) {
-  char sqlstr[5][256];
 
   char *sqlloop;
   int sqlloop_len;
@@ -188,7 +187,7 @@ void outsqlfiller(struct cb_exec_list *wk_head_p) {
   return;
 }
 
-void ppoutputendcall(struct cb_exec_list *list) {
+void ppoutputendcall(const struct cb_exec_list *list) {
   char buff[256];
   if (list == NULL)
     return;
@@ -1900,7 +1899,7 @@ void ppbuff(struct cb_exec_list *list) {
 }
 
 void ppbuff_incfile(struct cb_exec_list *list) {
-  struct cb_exec_list *l;
+  const struct cb_exec_list *l;
 
   l = list;
 
@@ -1920,7 +1919,7 @@ void ppbuff_incfile(struct cb_exec_list *list) {
 
     while (1) {
       memset(incf_buff, 0, BUFFSIZE + 1);
-      char *result = fgets(incf_buff, BUFFSIZE, incf);
+      const char *result = fgets(incf_buff, BUFFSIZE, incf);
       if (result == NULL)
         break;
 
