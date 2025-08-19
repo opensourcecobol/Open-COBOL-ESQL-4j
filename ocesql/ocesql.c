@@ -88,8 +88,7 @@ char *gettranslatename(const char *name) {
 
 int translate(const struct filename *fn) {
   int ret;
-  // cppcheck-suppress constVariable
-  char *tmpfile;
+  const char *tmpfile;
 
   tmpfile = gettmpname("tmp");
 
