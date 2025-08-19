@@ -88,7 +88,7 @@ char *gettranslatename(const char *name) {
 
 int translate(const struct filename *fn) {
   int ret;
-  const char *tmpfile;
+  char *tmpfile = NULL;
 
   tmpfile = gettmpname("tmp");
 
