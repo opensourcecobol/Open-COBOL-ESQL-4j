@@ -30,12 +30,12 @@ jobs:
       run: gh release create ${{ github.ref }} -F ReleaseNote.md
 
     - name: Download ocesql.exe
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: ocesql.exe
 
     - name: Download ocesql4j.jar
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: ocesql4j.jar
 
