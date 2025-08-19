@@ -41,7 +41,7 @@ jobs:
 
       # Checkout opensource COBOL 4J
       - name: Checkout opensourcecobol 4J
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: opensourcecobol/opensourcecobol4j
           path: opensourcecobol4j
@@ -56,7 +56,7 @@ jobs:
 
       # Checkout
       - name: Checkout Open-COBOL-ESQL-4j
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Build documentation
       - name: Build documentation
