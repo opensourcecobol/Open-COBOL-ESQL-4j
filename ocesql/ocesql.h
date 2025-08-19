@@ -213,31 +213,33 @@ extern char *filenameID;
 extern struct cb_sql_list *cb_add_text_list(struct cb_sql_list *list,
                                             struct cb_sql_list *targetlist);
 extern struct cb_sql_list *cb_text_list_add(struct cb_sql_list *list,
-                                            char *text);
-char *cb_host_list_add(struct cb_hostreference_list *list, char *text);
-void cb_res_host_list_add(struct cb_res_hostreference_list *list, char *text);
-int cb_search_list(char *text);
-void cb_set_dbname(char *text);
-void cb_set_cursorname(char *text);
-void cb_set_prepname(char *text);
+                                            const char *text);
+char *cb_host_list_add(struct cb_hostreference_list *list, const char *text);
+void cb_res_host_list_add(struct cb_res_hostreference_list *list,
+                          const char *text);
+int cb_search_list(const char *text);
+void cb_set_dbname(const char *text);
+void cb_set_cursorname(const char *text);
+void cb_set_prepname(const char *text);
 extern struct cb_field *getfieldbyname(char *name);
 extern int gethostvarianttype(char *name, int *type, int *len, int *scale);
 
 void outwrite();
-FILE *fopen_or_die(char *filename, const char *mode);
+FILE *fopen_or_die(const char *filename, const char *mode);
 void _printlog(char *msg);
 void readline(FILE *readfile);
 char *SQcount(int i);
 char *substring(int dexlen, char *wk_str, int flag_end);
-void sql_string(struct cb_exec_list *wk_text);
+void sql_string(const struct cb_exec_list *wk_text);
 void outsqlfiller(struct cb_exec_list *wk_head_p);
 void ppbuff(struct cb_exec_list *list);
 extern int ppoutputparam(struct cb_hostreference_list *host_list,
                          int iteration);
 extern void _ppoutputparam(char *varface, int type, int digits, int scale,
                            int iteration);
-extern void ppoutput(char *ppin, char *ppout, struct cb_exec_list *head);
-extern void ppoutput_incfile(char *ppin, char *ppout,
+extern void ppoutput(const char *ppin, const char *ppout,
+                     struct cb_exec_list *head);
+extern void ppoutput_incfile(const char *ppin, const char *ppout,
                              struct cb_exec_list *head);
 int check_Dchar(char c);
 int get_host_group_length(struct cb_field *field, int *length);
