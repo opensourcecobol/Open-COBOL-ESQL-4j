@@ -174,7 +174,7 @@ object SQLVar {
       case OCDB_TYPE_ALPHANUMERIC_VARYING =>
         createRealDataAlphanumericVarying(x)
       case OCDB_TYPE_JAPANESE_VARYING => createRealDataJapaneseVarying(x)
-      case _ => createRealDataDefault(x)
+      case _                          => createRealDataDefault(x)
     }
   }
 
