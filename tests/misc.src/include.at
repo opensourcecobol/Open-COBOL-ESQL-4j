@@ -233,7 +233,6 @@ AT_CLEANUP
 
 
 AT_SETUP([use include with newline])
-AT_CHECK([${SKIP_TEST}])
 
 AT_DATA([prog.cbl], [
        IDENTIFICATION              DIVISION.

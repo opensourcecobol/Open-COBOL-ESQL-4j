@@ -287,7 +287,7 @@ AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog | tr -d "\00" | grep -v "Position:"], [0],
 [<valid connect> SQLERRML:+0000
 <valid connect> SQLERRMC:                                                                      |
-<invalid create table> SQLERRML:+0053
+<invalid create table> SQLERRML:+0054
 <invalid create table> SQLERRMC:ERROR: syntax error at or near "abcde"
 <valid create table> SQLERRML:+0000
 <valid create table> SQLERRMC:

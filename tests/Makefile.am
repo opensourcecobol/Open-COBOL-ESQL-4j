@@ -43,7 +43,8 @@ misc_DEPENDENCIES = \
 	misc.src/include.at \
 	misc.src/fetch-sqlca.at \
 	misc.src/group-sub.at \
-	misc.src/compile.at
+	misc.src/compile.at \
+	misc.src/sql-convert.at
 
 EXTRA_DIST = $(srcdir)/package.m4 \
 	$(TESTS) \

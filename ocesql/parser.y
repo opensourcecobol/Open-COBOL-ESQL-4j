@@ -518,6 +518,7 @@ put_exec_list()
 	l->command_putother = command_putother;
 	l->sqlName = com_strdup(sqlname);
 	l->incfileName = com_strdup(incfilename);
+	l->sqlBody = com_strdup(sqlbody);
 	l->varname = var_varying;
 	l->next = NULL;
 

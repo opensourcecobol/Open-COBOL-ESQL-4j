@@ -25,6 +25,7 @@
 #include <string.h>
 
 #define BUFFSIZE 256
+#define SQLBODY_SIZE 4096
 #define MAX_LINESIZE 128
 #define COB_MAX_OCCURS_DEP 1
 
@@ -141,6 +142,7 @@ struct cb_exec_list {
   int command_putother;
   char *sqlName;
   char *incfileName;
+  char *sqlBody;
   struct cb_field *varname;
   struct cb_exec_list *next;
 };
@@ -200,6 +202,7 @@ extern char dbname[BUFFSIZE];
 extern char prepname[BUFFSIZE];
 extern char cursorname[BUFFSIZE];
 extern char sqlname[BUFFSIZE];
+extern char sqlbody[SQLBODY_SIZE];
 extern int sqlnum;
 extern struct cb_field *var_varying;
 extern char *yytext;
