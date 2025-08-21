@@ -202,7 +202,6 @@ void sql_string(const struct cb_exec_list *wk_text) {
           // Insert space if there is no space between this and the previous
           if (!is_multiline_literal) {
             if (!isspace((unsigned char)*p_line) && is_first_line) {
-              printf("dbg: print space\n");
               fprintf(outfile, " ");
               maximum_chars_in_single_line--;
             }
