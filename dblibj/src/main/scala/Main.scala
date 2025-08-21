@@ -783,6 +783,12 @@ class OCESQLCursorFetchOne extends CobolRunnableWrapper {
       for ((sv, i) <- state.globalState.sqlResVarQueue.zipWithIndex) {
         if (i < fields) {
           fetchRecord = fetchRecord ::: List(ocdbGetValue(rs, sv, i + 1))
+          if (
+            sv.sqlVarType == OCDB_TYPE_ALPHANUMERIC_VARYING || sv.sqlVarType == OCDB_TYPE_JAPANESE_VARYING
+          ) {
+            val byteArray: Array[Byte] = fetchRecord.flatten.flatten.toArray
+            createCobolData(sv, 0, byteArray, state.globalState.occursInfo)
+          }
         }
       }
       fetchRecords = fetchRecords ::: List(fetchRecord)
