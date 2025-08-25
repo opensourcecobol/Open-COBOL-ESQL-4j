@@ -919,7 +919,7 @@ object Common {
       i: Int,
       str: scala.Array[Byte]
   ): Unit = {
-    val length_bytes = ByteBuffer.wrap(new scala.Array[Byte](4));
+    val length_bytes = ByteBuffer.wrap(new scala.Array[Byte](4))
     if (str.length >= sv.length * 2) {
       length_bytes.putInt(sv.length)
       addr.memcpy(0, length_bytes.array(), OCDB_VARCHAR_HEADER_BYTE)
