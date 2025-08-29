@@ -198,8 +198,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
       int is_first_line = 1;
 
       while (*p_line) {
-
-        char *ocesql_comment;
+        const char *ocesql_comment;
         size_t ocesql_comment_len;
         if (is_first_chr) {
           ocesql_comment = "\nOCESQL     \"";
