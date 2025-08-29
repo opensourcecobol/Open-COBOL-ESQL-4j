@@ -126,7 +126,10 @@ void sql_string(const struct cb_exec_list *wk_text) {
 
   strcpy(sqlloop, wk_text->sqlBody);
   sqllen = strlen(sqlloop);
-  fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", sqllen);
+
+  char *outdata = (char *)malloc(sqllen * 2);
+  char *outdata_ptr = outdata;
+  size_t output_sql_len = 0;
 
   const char *p_sql = sqlloop;
   const char *sql_end = sqlloop + sqllen;
@@ -135,74 +138,87 @@ void sql_string(const struct cb_exec_list *wk_text) {
   while (p_sql < sql_end) {
     // Store the string up to the newline in a temp buffer
     const char *p_line_end = p_sql;
+    int is_multiline_literal = is_odd_quote ? 1 : 0;
     while (p_line_end < sql_end && *p_line_end != '\n' && *p_line_end != '\r') {
       p_line_end++;
+      // Check if the quotation is closed
+      if (*p_line_end == '\'') {
+        is_odd_quote ^= 1;
+      }
     }
+    size_t a_len = 4;
+    size_t b_len = 61;
     size_t line_len = p_line_end - p_sql;
-    char *line_buff = (char *)malloc(line_len + 1);
+    char *line_buff;
+
+    if (is_odd_quote) {
+      line_buff = (char *)malloc(a_len + b_len + 1);
+    } else {
+      line_buff = (char *)malloc(line_len + 1);
+    }
     if (line_buff == NULL) {
       _printlog("memory allocation failed.\n");
       free(sqlloop);
       return;
     }
-    strncpy(line_buff, p_sql, line_len);
-    line_buff[line_len] = '\0';
-
-    int is_multiline_literal = 0;
     if (is_odd_quote) {
-      is_multiline_literal = 1;
+      size_t space_len = a_len + b_len - line_len;
+      strncpy(line_buff, p_sql, line_len);
+      memset(line_buff + line_len, ' ', space_len);
+    } else {
+      strncpy(line_buff, p_sql, line_len);
+      line_buff[line_len] = '\0';
     }
 
     int i;
-    // Check if the quotation is not closed
-    for (i = 0; line_buff[i] != '\0'; i++) {
-      if (line_buff[i] == '\'') {
-        is_odd_quote ^= 1;
-      }
-    }
-
-    // Remove trailing spaces
-    if (is_odd_quote) {
-      int b_len = 65;
-      char *end = line_buff + b_len + 1;
-      *end = '\0';
-    } else {
-      char *end = line_buff + line_len - 1;
-      while (end >= line_buff && isspace((unsigned char)*end)) {
-        *end-- = '\0';
-      }
+    if (!is_multiline_literal) {
       // Remove spaces from the A area
-      int a_len = 4;
       for (i = 0; i < a_len && line_buff[i] != '\n'; i++) {
         if (!isspace((unsigned char)line_buff[i])) {
           break;
         }
       }
-      if (i == a_len) { // A area is all spaces
+      if (i == a_len) {
         line_len = strlen(line_buff + a_len);
         memmove(line_buff, line_buff + a_len, line_len + 1);
       }
+
+      // Remove trailing spaces
+      char *end = line_buff + line_len - 1;
+      while (end >= line_buff && isspace((unsigned char)*end)) {
+        *end-- = '\0';
+      }
     }
 
-    // Output strings that fit within the B area to file.
-    // Output overflow characters to the next line.
+    // Output strings that fit within the B area to the file,
+    // and output overflow characters to the next line.
     if (strlen(line_buff) > 0) {
-      const char *p_line = line_buff;
       int maximum_chars_in_single_line = 59;
+      const char *p_line = line_buff;
       int is_first_line = 1;
 
       while (*p_line) {
 
+        char *ocesql_comment;
+        size_t ocesql_comment_len;
         if (is_first_chr) {
-          fprintf(outfile, "\nOCESQL     \"");
+          ocesql_comment = "\nOCESQL     \"";
+          ocesql_comment_len = strlen(ocesql_comment);
+          memcpy(outdata_ptr, ocesql_comment, ocesql_comment_len);
+          outdata_ptr += ocesql_comment_len;
           is_first_chr = 0;
         } else {
-          fprintf(outfile, "\"\nOCESQL  &  \"");
+          ocesql_comment = "\"\nOCESQL  &  \"";
+          ocesql_comment_len = strlen(ocesql_comment);
+          memcpy(outdata_ptr, ocesql_comment, ocesql_comment_len);
+          outdata_ptr += ocesql_comment_len;
 
           // Insert space if there is no space between this and the previous
           if (!is_multiline_literal) {
             if (!isspace((unsigned char)*p_line) && is_first_line) {
-              fprintf(outfile, " ");
+              memcpy(outdata_ptr, " ", 1);
+              outdata_ptr += 1;
+              output_sql_len += 1;
               maximum_chars_in_single_line--;
             }
           }
@@ -234,7 +250,10 @@ void sql_string(const struct cb_exec_list *wk_text) {
           }
         }
 
-        fwrite(p_line, 1, len_to_write, outfile);
+        memcpy(outdata_ptr, p_line, len_to_write);
+        outdata_ptr += len_to_write;
+        output_sql_len += len_to_write;
+
         p_line += len_to_write;
       }
     }
@@ -245,6 +264,9 @@ void sql_string(const struct cb_exec_list *wk_text) {
       p_sql++;
     }
   }
+  *outdata_ptr = '\0';
+  fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", output_sql_len);
+  fwrite(outdata, 1, strlen(outdata), outfile);
 
   if (is_first_chr) {
     fprintf(outfile, " \"\".");
