@@ -129,7 +129,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
 
   char *outdata = (char *)malloc(sqllen * 2);
   char *outdata_ptr = outdata;
-  size_t output_sql_len = 0;
+  int output_sql_len = 0;
 
   const char *p_sql = sqlloop;
   const char *sql_end = sqlloop + sqllen;
