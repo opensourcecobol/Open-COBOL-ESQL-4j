@@ -127,7 +127,9 @@ void sql_string(const struct cb_exec_list *wk_text) {
   strcpy(sqlloop, wk_text->sqlBody);
   sqllen = strlen(sqlloop);
 
-  char *outdata = (char *)malloc(sqllen * 2);
+  size_t a_len = 4;
+  size_t b_len = 61;
+  char *outdata = (char *)malloc(sqllen * (a_len + b_len));
   char *outdata_ptr = outdata;
   int output_sql_len = 0;
 
@@ -146,8 +148,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
         is_odd_quote ^= 1;
       }
     }
-    size_t a_len = 4;
-    size_t b_len = 61;
+
     size_t line_len = p_line_end - p_sql;
     char *line_buff;
 
@@ -161,7 +162,8 @@ void sql_string(const struct cb_exec_list *wk_text) {
       free(sqlloop);
       return;
     }
-    if (is_odd_quote) {
+    if (is_odd_quote) { // Fill up to the B area with spaces for lines inside
+                        // quotations.
       size_t space_len = a_len + b_len - line_len;
       strncpy(line_buff, p_sql, line_len);
       memset(line_buff + line_len, ' ', space_len);
@@ -238,8 +240,6 @@ void sql_string(const struct cb_exec_list *wk_text) {
             if ((c2 >= SJIS_TRAIL_START_1 && c2 <= SJIS_TRAIL_END_1) ||
                 (c2 >= SJIS_TRAIL_START_2 && c2 <= SJIS_TRAIL_END_2)) {
               if (i == len_to_write - 1) {
-                // If the last character is a lead byte, reduce the length to
-                // write
                 len_to_write--;
                 break;
               } else {
