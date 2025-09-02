@@ -1,5 +1,5 @@
-AT_INIT(sql data test)
+AT_INIT([sql data test])
 
-AT_TESTED([ocesql])
+AT_TESTED([ocesql4j])
 
 m4_include([sql_type.at])

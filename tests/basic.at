@@ -1,6 +1,6 @@
-AT_INIT(basic test)
+AT_INIT([basic test])
 
-AT_TESTED([ocesql])
+AT_TESTED([ocesql4j])
 
 m4_include([connect-disconnect.at])
 m4_include([declare.at])

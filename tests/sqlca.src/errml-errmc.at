@@ -9,16 +9,16 @@ AT_DATA([prog.cbl], [
       ******************************************************************
        WORKING-STORAGE             SECTION.
        01  TEST-DATA.
-         03 FILLER       PIC X(28) VALUE "0001北海　太郎          0400".
-         03 FILLER       PIC X(28) VALUE "0002青森　次郎          0350".
-         03 FILLER       PIC X(28) VALUE "0003秋田　三郎          0300".
-         03 FILLER       PIC X(28) VALUE "0004岩手　四郎          025p".
-         03 FILLER       PIC X(28) VALUE "0005宮城　五郎          020p".
-         03 FILLER       PIC X(28) VALUE "0006福島　六郎          0150".
-         03 FILLER       PIC X(28) VALUE "0007栃木　七郎          010p".
-         03 FILLER       PIC X(28) VALUE "0008茨城　八郎          0050".
-         03 FILLER       PIC X(28) VALUE "0009群馬　九郎          020p".
-         03 FILLER       PIC X(28) VALUE "0010埼玉　十郎          0350".
+         03 FILLER       PIC X(28) VALUE "0001北海戞太郎          0400".
+         03 FILLER       PIC X(28) VALUE "0002敖拗戞次郎          0350".
+         03 FILLER       PIC X(28) VALUE "0003扎田戞三郎          0300".
+         03 FILLER       PIC X(28) VALUE "0004岩手戞四郎          025p".
+         03 FILLER       PIC X(28) VALUE "0005宮晞戞五郎          020p".
+         03 FILLER       PIC X(28) VALUE "0006福島戞六郎          0150".
+         03 FILLER       PIC X(28) VALUE "0007栃木戞七郎          010p".
+         03 FILLER       PIC X(28) VALUE "0008茨晞戞八郎          0050".
+         03 FILLER       PIC X(28) VALUE "0009群馬戞九郎          020p".
+         03 FILLER       PIC X(28) VALUE "0010晞玉戞拿郎          0350".
 
        01  TEST-DATA-R   REDEFINES TEST-DATA.
          03  TEST-TBL    OCCURS  10.
@@ -249,7 +249,7 @@ AT_DATA([prog.cbl], [
 ])
 
 AT_CHECK([${EMBED_DB_INFO} prog.cbl])
-AT_CHECK([ocesql prog.cbl prog.cob], [0],
+AT_CHECK([ocesql4j prog.cbl prog.cob], [0],
 [precompile start: prog.cbl
 =======================================================
               LIST OF CALLED DB Library API            @&t@

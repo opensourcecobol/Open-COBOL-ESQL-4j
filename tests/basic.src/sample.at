@@ -143,7 +143,7 @@ AT_DATA([prog.cbl], [
 ])
 
 AT_CHECK([${EMBED_DB_INFO} prog.cbl])
-AT_CHECK([ocesql prog.cbl])
+AT_CHECK([ocesql4j prog.cbl])
 AT_CHECK([${COMPILE_MODULE} prog.cob])
 AT_CHECK([${RUN_MODULE} prog], [0], [success
 ])

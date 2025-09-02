@@ -1,6 +1,6 @@
-AT_INIT(SQLCA test)
+AT_INIT([SQLCA test])
 
-AT_TESTED([ocesql])
+AT_TESTED([ocesql4j])
 
 m4_include([connect-disconnect.at])
 m4_include([insert-select-update-delete.at])

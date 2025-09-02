@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.8.2.  */
+/* A Bison parser, made by GNU Bison 3.7.4.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -46,10 +46,10 @@
    USER NAME SPACE" below.  */
 
 /* Identify Bison output, and Bison version.  */
-#define YYBISON 30802
+#define YYBISON 30704
 
 /* Bison version string.  */
-#define YYBISON_VERSION "3.8.2"
+#define YYBISON_VERSION "3.7.4"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -286,9 +286,7 @@ typedef union YYSTYPE YYSTYPE;
 
 extern YYSTYPE yylval;
 
-
 int yyparse (void);
-
 
 #endif /* !YY_YY_PARSER_H_INCLUDED  */
 /* Symbol kind.  */
@@ -461,18 +459,6 @@ typedef int_least16_t yytype_int16;
 typedef short yytype_int16;
 #endif
 
-/* Work around bug in HP-UX 11.23, which defines these macros
-   incorrectly for preprocessor constants.  This workaround can likely
-   be removed in 2023, as HPE has promised support for HP-UX 11.23
-   (aka HP-UX 11i v2) only through the end of 2022; see Table 2 of
-   <https://h20195.www2.hpe.com/V2/getpdf.aspx/4AA4-7673ENW.pdf>.  */
-#ifdef __hpux
-# undef UINT_LEAST8_MAX
-# undef UINT_LEAST16_MAX
-# define UINT_LEAST8_MAX 255
-# define UINT_LEAST16_MAX 65535
-#endif
-
 #if defined __UINT_LEAST8_MAX__ && __UINT_LEAST8_MAX__ <= __INT_MAX__
 typedef __UINT_LEAST8_TYPE__ yytype_uint8;
 #elif (!defined __UINT_LEAST8_MAX__ && defined YY_STDINT_H \
@@ -570,23 +556,17 @@ typedef int yy_state_fast_t;
 
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
-# define YY_USE(E) ((void) (E))
+# define YYUSE(E) ((void) (E))
 #else
-# define YY_USE(E) /* empty */
+# define YYUSE(E) /* empty */
 #endif
 
+#if defined __GNUC__ && ! defined __ICC && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
 /* Suppress an incorrect diagnostic about yylval being uninitialized.  */
-#if defined __GNUC__ && ! defined __ICC && 406 <= __GNUC__ * 100 + __GNUC_MINOR__
-# if __GNUC__ * 100 + __GNUC_MINOR__ < 407
-#  define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                           \
-    _Pragma ("GCC diagnostic push")                                     \
-    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")
-# else
-#  define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                           \
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                            \
     _Pragma ("GCC diagnostic push")                                     \
     _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")              \
     _Pragma ("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
-# endif
 # define YY_IGNORE_MAYBE_UNINITIALIZED_END      \
     _Pragma ("GCC diagnostic pop")
 #else
@@ -806,7 +786,7 @@ static const yytype_int8 yytranslate[] =
 };
 
 #if YYDEBUG
-/* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
+  /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
        0,   122,   122,   123,   124,   125,   126,   127,   128,   129,
@@ -870,6 +850,21 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
+#ifdef YYPRINT
+/* YYTOKNUM[NUM] -- (External) token number corresponding to the
+   (internal) symbol number NUM (which must be that of a token).  */
+static const yytype_int16 yytoknum[] =
+{
+       0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
+     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
+     275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
+     285,   286,   287,   288,   289,   290,   291,   292,   293,   294,
+     295,   296,   297,   298,   299,   300,   301,   302,   303,   304,
+     305,   306,   307,   308,   309,   310,   311,   312,   313,   314,
+      46
+};
+#endif
+
 #define YYPACT_NINF (-45)
 
 #define yypact_value_is_default(Yyn) \
@@ -880,8 +875,8 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 #define yytable_value_is_error(Yyn) \
   0
 
-/* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
-   STATE-NUM.  */
+  /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
+     STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
      -45,   102,   -45,   -30,   -15,   -45,   -45,   -45,   -45,   -45,
@@ -906,9 +901,9 @@ static const yytype_int16 yypact[] =
      -45,   -45,   -45,   -45,   -45,   -45,   -45,   -45,   -45
 };
 
-/* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
-   Performed when YYTABLE does not specify something else to do.  Zero
-   means the default is an error.  */
+  /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
+     Performed when YYTABLE does not specify something else to do.  Zero
+     means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
        2,     0,     1,    43,     0,    76,     3,    18,    19,    17,
@@ -933,7 +928,7 @@ static const yytype_int8 yydefact[] =
      126,   116,   115,   111,   110,   108,   107,   109,   106
 };
 
-/* YYPGOTO[NTERM-NUM].  */
+  /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
      -45,   -45,   -45,   -45,   -45,   -45,   -45,   -45,   -45,   -45,
@@ -945,10 +940,10 @@ static const yytype_int16 yypgoto[] =
      -45,   -45
 };
 
-/* YYDEFGOTO[NTERM-NUM].  */
-static const yytype_uint8 yydefgoto[] =
+  /* YYDEFGOTO[NTERM-NUM].  */
+static const yytype_int16 yydefgoto[] =
 {
-       0,     1,     6,     7,    50,     8,    51,     9,    52,    10,
+      -1,     1,     6,     7,    50,     8,    51,     9,    52,    10,
       53,    11,    12,    13,    54,   132,   119,    14,    15,    26,
       35,    16,    17,    27,    58,   125,    18,    99,    19,    20,
       21,    22,    72,   135,    89,    55,    69,   105,    70,    23,
@@ -957,9 +952,9 @@ static const yytype_uint8 yydefgoto[] =
      189,   191
 };
 
-/* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
-   positive, shift that token.  If negative, reduce the rule whose
-   number is the opposite.  If YYTABLE_NINF, syntax error.  */
+  /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
+     positive, shift that token.  If negative, reduce the rule whose
+     number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int16 yytable[] =
 {
       75,    33,    73,    78,    79,    80,    24,    56,   195,    30,
@@ -1012,8 +1007,8 @@ static const yytype_int16 yycheck[] =
       60,    60,   159,    34,    35,    -1,    -1,    38,    39,    40
 };
 
-/* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
-   state STATE-NUM.  */
+  /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
+     symbol of state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
        0,    62,     0,    19,    20,    26,    63,    64,    66,    68,
@@ -1038,7 +1033,7 @@ static const yytype_int8 yystos[] =
       57,   122,    48,   116,   116,     8,    17,    58,   113
 };
 
-/* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
+  /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_int8 yyr1[] =
 {
        0,    61,    62,    62,    63,    63,    63,    63,    63,    63,
@@ -1056,7 +1051,7 @@ static const yytype_int8 yyr1[] =
      120,   120,   120,   121,   121,   122,   122
 };
 
-/* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
+  /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     0,     2,     1,     1,     1,     1,     1,     1,
@@ -1083,7 +1078,6 @@ enum { YYENOMEM = -2 };
 #define YYACCEPT        goto yyacceptlab
 #define YYABORT         goto yyabortlab
 #define YYERROR         goto yyerrorlab
-#define YYNOMEM         goto yyexhaustedlab
 
 
 #define YYRECOVERING()  (!!yyerrstatus)
@@ -1124,7 +1118,10 @@ do {                                            \
     YYFPRINTF Args;                             \
 } while (0)
 
-
+/* This macro is provided for backward compatibility. */
+# ifndef YY_LOCATION_PRINT
+#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
+# endif
 
 
 # define YY_SYMBOL_PRINT(Title, Kind, Value, Location)                    \
@@ -1148,11 +1145,15 @@ yy_symbol_value_print (FILE *yyo,
                        yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
 {
   FILE *yyoutput = yyo;
-  YY_USE (yyoutput);
+  YYUSE (yyoutput);
   if (!yyvaluep)
     return;
+# ifdef YYPRINT
+  if (yykind < YYNTOKENS)
+    YYPRINT (yyo, yytoknum[yykind], *yyvaluep);
+# endif
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-  YY_USE (yykind);
+  YYUSE (yykind);
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 }
 
@@ -1266,13 +1267,13 @@ static void
 yydestruct (const char *yymsg,
             yysymbol_kind_t yykind, YYSTYPE *yyvaluep)
 {
-  YY_USE (yyvaluep);
+  YYUSE (yyvaluep);
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);
 
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-  YY_USE (yykind);
+  YYUSE (yykind);
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 }
 
@@ -1335,7 +1336,6 @@ yyparse (void)
   YYDPRINTF ((stderr, "Starting parse\n"));
 
   yychar = YYEMPTY; /* Cause a token to be read.  */
-
   goto yysetstate;
 
 
@@ -1361,7 +1361,7 @@ yysetstate:
 
   if (yyss + yystacksize - 1 <= yyssp)
 #if !defined yyoverflow && !defined YYSTACK_RELOCATE
-    YYNOMEM;
+    goto yyexhaustedlab;
 #else
     {
       /* Get the current used size of the three stacks, in elements.  */
@@ -1389,7 +1389,7 @@ yysetstate:
 # else /* defined YYSTACK_RELOCATE */
       /* Extend the stack our own way.  */
       if (YYMAXDEPTH <= yystacksize)
-        YYNOMEM;
+        goto yyexhaustedlab;
       yystacksize *= 2;
       if (YYMAXDEPTH < yystacksize)
         yystacksize = YYMAXDEPTH;
@@ -1400,7 +1400,7 @@ yysetstate:
           YY_CAST (union yyalloc *,
                    YYSTACK_ALLOC (YY_CAST (YYSIZE_T, YYSTACK_BYTES (yystacksize))));
         if (! yyptr)
-          YYNOMEM;
+          goto yyexhaustedlab;
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
 #  undef YYSTACK_RELOCATE
@@ -1421,7 +1421,6 @@ yysetstate:
         YYABORT;
     }
 #endif /* !defined yyoverflow && !defined YYSTACK_RELOCATE */
-
 
   if (yystate == YYFINAL)
     YYACCEPT;
@@ -1540,13 +1539,13 @@ yyreduce:
 	(yyval.l) = cb_add_text_list ((yyvsp[-2].l), (yyvsp[-1].l));
 	put_exec_list();
 }
-#line 1544 "parser.c"
+#line 1543 "parser.c"
     break;
 
   case 22: /* update: UPDATE  */
 #line 153 "parser.y"
        {(yyval.l) = cb_text_list_add (NULL, (yyvsp[0].s));}
-#line 1550 "parser.c"
+#line 1549 "parser.c"
     break;
 
   case 23: /* disconnectsql: EXECSQL otherdb disconnect token_list END_EXEC  */
@@ -1555,13 +1554,13 @@ yyreduce:
 	(yyval.l) = cb_add_text_list ((yyvsp[-2].l), (yyvsp[-1].l));
 	put_exec_list();
 }
-#line 1559 "parser.c"
+#line 1558 "parser.c"
     break;
 
   case 24: /* disconnect: DISCONNECT  */
 #line 165 "parser.y"
            {(yyval.l) = cb_text_list_add (NULL, (yyvsp[0].s));}
-#line 1565 "parser.c"
+#line 1564 "parser.c"
     break;
 
   case 25: /* deletesql: EXECSQL otherdb delete token_list END_EXEC  */
@@ -1570,13 +1569,13 @@ yyreduce:
 	(yyval.l) = cb_add_text_list ((yyvsp[-2].l), (yyvsp[-1].l));
 	put_exec_list();
 }
-#line 1574 "parser.c"
+#line 1573 "parser.c"
     break;
 
   case 26: /* delete: DELETE  */
 #line 177 "parser.y"
        {(yyval.l) = cb_text_list_add (NULL, (yyvsp[0].s));}
-#line 1580 "parser.c"
+#line 1579 "parser.c"
     break;
 
   case 27: /* insertsql: EXECSQL otherdb insert token_list END_EXEC  */
@@ -1585,19 +1584,19 @@ yyreduce:
 	(yyval.l) = cb_add_text_list ((yyvsp[-2].l), (yyvsp[-1].l));
 	put_exec_list();
 }
-#line 1589 "parser.c"
+#line 1588 "parser.c"
     break;
 
   case 28: /* insert: INSERT  */
 #line 188 "parser.y"
        {(yyval.l) = cb_text_list_add (NULL, (yyvsp[0].s));}
-#line 1595 "parser.c"
+#line 1594 "parser.c"
     break;
 
   case 29: /* insert: insert INTO  */
 #line 189 "parser.y"
               {(yyval.l) = cb_text_list_add ((yyvsp[-1].l), (yyvsp[0].s));}
-#line 1601 "parser.c"
+#line 1600 "parser.c"
     break;
 
   case 30: /* rollbacksql: EXECSQL otherdb ROLLBACK_WORK END_EXEC  */
@@ -1605,7 +1604,7 @@ yyreduce:
                                        {
 	put_exec_list();
 }
-#line 1609 "parser.c"
+#line 1608 "parser.c"
     break;
 
   case 31: /* commitsql: EXECSQL otherdb COMMIT_WORK END_EXEC  */
@@ -1613,7 +1612,7 @@ yyreduce:
                                      {
 	put_exec_list();
 }
-#line 1617 "parser.c"
+#line 1616 "parser.c"
     break;
 
   case 32: /* fetchsql: EXECSQL otherdb fetch INTO res_host_references END_EXEC  */
@@ -1621,37 +1620,37 @@ yyreduce:
                                                         {
 	put_exec_list();
 }
-#line 1625 "parser.c"
+#line 1624 "parser.c"
     break;
 
   case 33: /* fetch: FETCH expr  */
 #line 210 "parser.y"
            { cb_set_cursorname((yyvsp[0].s));}
-#line 1631 "parser.c"
+#line 1630 "parser.c"
     break;
 
   case 34: /* host_references: host_reference  */
 #line 213 "parser.y"
                {cb_host_list_add (host_reference_list, (yyvsp[0].s));}
-#line 1637 "parser.c"
+#line 1636 "parser.c"
     break;
 
   case 36: /* host_references: host_references host_reference  */
 #line 215 "parser.y"
                                  {cb_host_list_add (host_reference_list, (yyvsp[0].s));}
-#line 1643 "parser.c"
+#line 1642 "parser.c"
     break;
 
   case 37: /* res_host_references: host_reference  */
 #line 218 "parser.y"
                {cb_res_host_list_add (res_host_reference_list, (yyvsp[0].s));}
-#line 1649 "parser.c"
+#line 1648 "parser.c"
     break;
 
   case 39: /* res_host_references: res_host_references host_reference  */
 #line 220 "parser.y"
                                      {cb_res_host_list_add (res_host_reference_list, (yyvsp[0].s));}
-#line 1655 "parser.c"
+#line 1654 "parser.c"
     break;
 
   case 40: /* closesql: EXECSQL otherdb CLOSE expr END_EXEC  */
@@ -1660,7 +1659,7 @@ yyreduce:
 	cb_set_cursorname((yyvsp[-1].s));
 	put_exec_list();
 }
-#line 1664 "parser.c"
+#line 1663 "parser.c"
     break;
 
   case 41: /* opensql: EXECSQL otherdb OPEN expr END_EXEC  */
@@ -1669,7 +1668,7 @@ yyreduce:
 	cb_set_cursorname((yyvsp[-1].s));
 	put_exec_list();
 }
-#line 1673 "parser.c"
+#line 1672 "parser.c"
     break;
 
   case 42: /* opensql: EXECSQL otherdb OPEN expr USING host_references END_EXEC  */
@@ -1678,13 +1677,13 @@ yyreduce:
 	cb_set_cursorname((yyvsp[-3].s));
 	put_exec_list();
 }
-#line 1682 "parser.c"
+#line 1681 "parser.c"
     break;
 
   case 44: /* otherdb: AT dbid  */
 #line 239 "parser.y"
           { }
-#line 1688 "parser.c"
+#line 1687 "parser.c"
     break;
 
   case 45: /* dbid: HOSTTOKEN  */
@@ -1692,31 +1691,31 @@ yyreduce:
           {
 	cb_set_dbname((yyvsp[0].s));
 }
-#line 1696 "parser.c"
+#line 1695 "parser.c"
     break;
 
   case 46: /* connectsql: EXECSQL CONNECT otherdb END_EXEC  */
 #line 247 "parser.y"
                                  { put_exec_list(); }
-#line 1702 "parser.c"
+#line 1701 "parser.c"
     break;
 
   case 47: /* connectsql: EXECSQL connect identified otherdb using END_EXEC  */
 #line 248 "parser.y"
                                                     { put_exec_list(); }
-#line 1708 "parser.c"
+#line 1707 "parser.c"
     break;
 
   case 48: /* connectsql: EXECSQL AT dbid connect END_EXEC  */
 #line 249 "parser.y"
                                    { put_exec_list(); }
-#line 1714 "parser.c"
+#line 1713 "parser.c"
     break;
 
   case 49: /* connectsql: EXECSQL connect otherdb END_EXEC  */
 #line 250 "parser.y"
                                    { put_exec_list(); }
-#line 1720 "parser.c"
+#line 1719 "parser.c"
     break;
 
   case 50: /* othersql: EXECSQL otherdb OTHERFUNC token_list END_EXEC  */
@@ -1725,7 +1724,7 @@ yyreduce:
 	(yyval.l) = cb_add_text_list(cb_text_list_add(NULL, (yyvsp[-2].s)), (yyvsp[-1].l));
 	put_exec_list();
 }
-#line 1729 "parser.c"
+#line 1728 "parser.c"
     break;
 
   case 51: /* connect: CONNECT host_reference  */
@@ -1733,7 +1732,7 @@ yyreduce:
                        {
 	cb_host_list_add (host_reference_list, (yyvsp[0].s));
 }
-#line 1737 "parser.c"
+#line 1736 "parser.c"
     break;
 
   case 52: /* identified: IDENTIFIED_BY host_reference  */
@@ -1741,7 +1740,7 @@ yyreduce:
                              {
 	cb_host_list_add (host_reference_list, (yyvsp[0].s));
 }
-#line 1745 "parser.c"
+#line 1744 "parser.c"
     break;
 
   case 53: /* using: USING host_reference  */
@@ -1749,7 +1748,7 @@ yyreduce:
                      {
 	cb_host_list_add (host_reference_list, (yyvsp[0].s));
 }
-#line 1753 "parser.c"
+#line 1752 "parser.c"
     break;
 
   case 54: /* incfile: EXECSQL_INCLUDE INCLUDE_FILE END_EXEC  */
@@ -1757,7 +1756,7 @@ yyreduce:
                                      {
 	put_exec_list();
 }
-#line 1761 "parser.c"
+#line 1760 "parser.c"
     break;
 
   case 55: /* includesql: EXECSQL_INCLUDE INCLUDE_SQLCA END_EXEC  */
@@ -1765,7 +1764,7 @@ yyreduce:
                                       {
 	put_exec_list();
 }
-#line 1769 "parser.c"
+#line 1768 "parser.c"
     break;
 
   case 56: /* preparesql: EXECSQL otherdb PREPARE prepared_stname FROM statement_id END_EXEC  */
@@ -1773,7 +1772,7 @@ yyreduce:
                                                                    {
 	put_exec_list();
 }
-#line 1777 "parser.c"
+#line 1776 "parser.c"
     break;
 
   case 57: /* execsql: EXECSQL otherdb EXECUTE prepared_stname USING host_references END_EXEC  */
@@ -1781,7 +1780,7 @@ yyreduce:
                                                                        {
 	put_exec_list();
 }
-#line 1785 "parser.c"
+#line 1784 "parser.c"
     break;
 
   case 58: /* execsql: EXECSQL otherdb EXECUTE prepared_stname END_EXEC  */
@@ -1789,7 +1788,7 @@ yyreduce:
                                                    {
 	put_exec_list();
 }
-#line 1793 "parser.c"
+#line 1792 "parser.c"
     break;
 
   case 59: /* selectintosql: EXECSQL otherdb SELECT token_list INTO res_host_references SELECTFROM token_list END_EXEC  */
@@ -1800,7 +1799,7 @@ yyreduce:
 	cb_add_text_list((yyval.l), (yyvsp[-1].l));
 	put_exec_list();
 }
-#line 1804 "parser.c"
+#line 1803 "parser.c"
     break;
 
   case 60: /* selectintosql: EXECSQL otherdb SELECT token_list INTO res_host_references END_EXEC  */
@@ -1809,55 +1808,55 @@ yyreduce:
 	(yyval.l) = cb_add_text_list(cb_text_list_add(NULL, (yyvsp[-4].s)), (yyvsp[-3].l));
 	put_exec_list();
 }
-#line 1813 "parser.c"
+#line 1812 "parser.c"
     break;
 
   case 61: /* declaresql: EXECSQL otherdb declare_for select END_EXEC  */
 #line 310 "parser.y"
                                             { put_exec_list(); }
-#line 1819 "parser.c"
+#line 1818 "parser.c"
     break;
 
   case 62: /* declaresql: EXECSQL otherdb declare_for prepared_stname END_EXEC  */
 #line 311 "parser.y"
                                                        { put_exec_list(); }
-#line 1825 "parser.c"
+#line 1824 "parser.c"
     break;
 
   case 63: /* prepared_stname: TOKEN  */
 #line 314 "parser.y"
      { cb_set_prepname((yyvsp[0].s)); }
-#line 1831 "parser.c"
+#line 1830 "parser.c"
     break;
 
   case 64: /* statement_id: HOSTTOKEN  */
 #line 317 "parser.y"
          { cb_host_list_add (host_reference_list, (yyvsp[0].s)); }
-#line 1837 "parser.c"
+#line 1836 "parser.c"
     break;
 
   case 65: /* select: SELECT token_list  */
 #line 320 "parser.y"
                  { (yyval.l) = cb_add_text_list (cb_text_list_add (NULL, (yyvsp[-1].s)), (yyvsp[0].l));}
-#line 1843 "parser.c"
+#line 1842 "parser.c"
     break;
 
   case 66: /* declare_for: DECLARE expr CURSOR FOR  */
 #line 323 "parser.y"
                         { cb_set_cursorname((yyvsp[-2].s));}
-#line 1849 "parser.c"
+#line 1848 "parser.c"
     break;
 
   case 67: /* token_list: expr  */
 #line 326 "parser.y"
                                 {      (yyval.l) = cb_text_list_add (NULL, (yyvsp[0].s));}
-#line 1855 "parser.c"
+#line 1854 "parser.c"
     break;
 
   case 68: /* token_list: token_list expr  */
 #line 327 "parser.y"
                         {      (yyval.l) = cb_text_list_add ((yyvsp[-1].l), (yyvsp[0].s));}
-#line 1861 "parser.c"
+#line 1860 "parser.c"
     break;
 
   case 69: /* token_list: token_list host_reference  */
@@ -1865,7 +1864,7 @@ yyreduce:
                               {
 	(yyval.l) = cb_text_list_add ((yyvsp[-1].l), cb_host_list_add (host_reference_list, (yyvsp[0].s)));
 }
-#line 1869 "parser.c"
+#line 1868 "parser.c"
     break;
 
   case 70: /* token_list: token_list WHERECURRENTOF CURNAME  */
@@ -1875,37 +1874,37 @@ yyreduce:
 	     cb_set_cursorname((yyvsp[0].s));
 	     (yyval.l) = cb_text_list_add((yyvsp[-2].l), cursorname);
 }
-#line 1879 "parser.c"
+#line 1878 "parser.c"
     break;
 
   case 71: /* host_reference: HOSTTOKEN  */
 #line 338 "parser.y"
           {}
-#line 1885 "parser.c"
+#line 1884 "parser.c"
     break;
 
   case 72: /* expr: TOKEN  */
 #line 340 "parser.y"
             {}
-#line 1891 "parser.c"
+#line 1890 "parser.c"
     break;
 
   case 73: /* expr: SELECT  */
 #line 341 "parser.y"
        {}
-#line 1897 "parser.c"
+#line 1896 "parser.c"
     break;
 
   case 74: /* expr: FOR  */
 #line 342 "parser.y"
      {}
-#line 1903 "parser.c"
+#line 1902 "parser.c"
     break;
 
   case 75: /* expr: UPDATE  */
 #line 343 "parser.y"
         {}
-#line 1909 "parser.c"
+#line 1908 "parser.c"
     break;
 
   case 76: /* $@1: %empty  */
@@ -1915,7 +1914,7 @@ yyreduce:
 	description_field = NULL;
 	put_exec_list();
 }
-#line 1919 "parser.c"
+#line 1918 "parser.c"
     break;
 
   case 77: /* sqlvariantstates: WORKINGBEGIN $@1 sqlvariantstate_list WORKINGEND  */
@@ -1924,19 +1923,19 @@ yyreduce:
 	// check host_variable
 	put_exec_list();
 }
-#line 1928 "parser.c"
+#line 1927 "parser.c"
     break;
 
   case 83: /* sqlvariantstate_list: sqlvariantstate_list HOSTVARIANTBEGIN  */
 #line 363 "parser.y"
                                        { put_exec_list(); }
-#line 1934 "parser.c"
+#line 1933 "parser.c"
     break;
 
   case 84: /* sqlvariantstate_list: sqlvariantstate_list HOSTVARIANTEND  */
 #line 364 "parser.y"
                                      { put_exec_list(); }
-#line 1940 "parser.c"
+#line 1939 "parser.c"
     break;
 
   case 85: /* $@2: %empty  */
@@ -1951,7 +1950,7 @@ yyreduce:
 			current_field = x;
 	}
 }
-#line 1955 "parser.c"
+#line 1954 "parser.c"
     break;
 
   case 86: /* sqlvariantstate: NUMERIC WORD $@2 data_description_clause_sequence  */
@@ -1960,7 +1959,7 @@ yyreduce:
 	if (description_field == NULL)
 		description_field = current_field;
 }
-#line 1964 "parser.c"
+#line 1963 "parser.c"
     break;
 
   case 87: /* $@3: %empty  */
@@ -1974,7 +1973,7 @@ yyreduce:
 			current_field = x;
 	}
 }
-#line 1978 "parser.c"
+#line 1977 "parser.c"
     break;
 
   case 88: /* sqlvariantstate: NUMERIC $@3 data_description_clause_sequence  */
@@ -1983,49 +1982,49 @@ yyreduce:
 	if (description_field == NULL)
 		description_field = current_field;
 }
-#line 1987 "parser.c"
+#line 1986 "parser.c"
     break;
 
   case 89: /* data_description_clause_sequence: %empty  */
 #line 401 "parser.y"
 {}
-#line 1993 "parser.c"
+#line 1992 "parser.c"
     break;
 
   case 90: /* data_description_clause_sequence: data_description_clause_sequence data_description_clause  */
 #line 403 "parser.y"
 {}
-#line 1999 "parser.c"
+#line 1998 "parser.c"
     break;
 
   case 98: /* picture_clause: PICTURE  */
 #line 417 "parser.y"
                 {  build_picture( (yyvsp[0].s),current_field); }
-#line 2005 "parser.c"
+#line 2004 "parser.c"
     break;
 
   case 101: /* usage: COMP_1  */
 #line 426 "parser.y"
                         { current_field->usage = USAGE_FLOAT;   }
-#line 2011 "parser.c"
+#line 2010 "parser.c"
     break;
 
   case 102: /* usage: COMP_2  */
 #line 427 "parser.y"
                                 { current_field->usage = USAGE_DOUBLE; }
-#line 2017 "parser.c"
+#line 2016 "parser.c"
     break;
 
   case 103: /* usage: COMP_3  */
 #line 428 "parser.y"
                                 { current_field->usage = USAGE_PACKED; }
-#line 2023 "parser.c"
+#line 2022 "parser.c"
     break;
 
   case 104: /* usage: WORD  */
 #line 429 "parser.y"
                     { current_field->usage = USAGE_OTHER; }
-#line 2029 "parser.c"
+#line 2028 "parser.c"
     break;
 
   case 105: /* varying_clause: VARYING  */
@@ -2041,31 +2040,31 @@ yyreduce:
 	var_varying = current_field;
 	put_exec_list();
 }
-#line 2045 "parser.c"
+#line 2044 "parser.c"
     break;
 
   case 106: /* value_clause: VALUE _is_are _all const_clause  */
 #line 447 "parser.y"
                                               {}
-#line 2051 "parser.c"
+#line 2050 "parser.c"
     break;
 
   case 107: /* const_clause: NUMERIC  */
 #line 449 "parser.y"
                       {}
-#line 2057 "parser.c"
+#line 2056 "parser.c"
     break;
 
   case 108: /* const_clause: WORD  */
 #line 450 "parser.y"
       {}
-#line 2063 "parser.c"
+#line 2062 "parser.c"
     break;
 
   case 109: /* const_clause: CONST  */
 #line 451 "parser.y"
        {}
-#line 2069 "parser.c"
+#line 2068 "parser.c"
     break;
 
   case 110: /* sign_clause: _sign_is LEADING flag_separate  */
@@ -2073,7 +2072,7 @@ yyreduce:
 {
 	current_field->sign_leading = SIGNLEADING;
 }
-#line 2077 "parser.c"
+#line 2076 "parser.c"
     break;
 
   case 111: /* sign_clause: _sign_is TRAILING flag_separate  */
@@ -2081,25 +2080,25 @@ yyreduce:
 {
 
 }
-#line 2085 "parser.c"
+#line 2084 "parser.c"
     break;
 
   case 112: /* _sign_is: SIGN  */
 #line 464 "parser.y"
                        {}
-#line 2091 "parser.c"
+#line 2090 "parser.c"
     break;
 
   case 113: /* _sign_is: SIGN IS  */
 #line 465 "parser.y"
           {}
-#line 2097 "parser.c"
+#line 2096 "parser.c"
     break;
 
   case 115: /* flag_separate: SEPARATE  */
 #line 468 "parser.y"
            { current_field->separate = SIGN_SEPARATE; }
-#line 2103 "parser.c"
+#line 2102 "parser.c"
     break;
 
   case 116: /* occurs_clause: OCCURS NUMERIC _times  */
@@ -2107,17 +2106,17 @@ yyreduce:
 {
 	current_field->occurs = (int)(yyvsp[-1].ld);
 }
-#line 2111 "parser.c"
+#line 2110 "parser.c"
     break;
 
   case 117: /* external_clause: _is EXTERNAL  */
 #line 479 "parser.y"
              {}
-#line 2117 "parser.c"
+#line 2116 "parser.c"
     break;
 
 
-#line 2121 "parser.c"
+#line 2120 "parser.c"
 
       default: break;
     }
@@ -2199,7 +2198,6 @@ yyerrorlab:
      label yyerrorlab therefore never appears in user code.  */
   if (0)
     YYERROR;
-  ++yynerrs;
 
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYERROR.  */
@@ -2260,7 +2258,7 @@ yyerrlab1:
 `-------------------------------------*/
 yyacceptlab:
   yyresult = 0;
-  goto yyreturnlab;
+  goto yyreturn;
 
 
 /*-----------------------------------.
@@ -2268,22 +2266,24 @@ yyacceptlab:
 `-----------------------------------*/
 yyabortlab:
   yyresult = 1;
-  goto yyreturnlab;
+  goto yyreturn;
 
 
-/*-----------------------------------------------------------.
-| yyexhaustedlab -- YYNOMEM (memory exhaustion) comes here.  |
-`-----------------------------------------------------------*/
+#if !defined yyoverflow
+/*-------------------------------------------------.
+| yyexhaustedlab -- memory exhaustion comes here.  |
+`-------------------------------------------------*/
 yyexhaustedlab:
   yyerror (YY_("memory exhausted"));
   yyresult = 2;
-  goto yyreturnlab;
+  goto yyreturn;
+#endif
 
 
-/*----------------------------------------------------------.
-| yyreturnlab -- parsing is finished, clean up and return.  |
-`----------------------------------------------------------*/
-yyreturnlab:
+/*-------------------------------------------------------.
+| yyreturn -- parsing is finished, clean up and return.  |
+`-------------------------------------------------------*/
+yyreturn:
   if (yychar != YYEMPTY)
     {
       /* Make sure we have latest lookahead translation.  See comments at

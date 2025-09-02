@@ -1,5 +1,5 @@
 
-#line 3 "scanner.c"
+#line 2 "scanner.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -2261,9 +2261,9 @@ yyinput (char *buf, int max_size);
 #else
 #include <unistd.h>
 #endif
-#line 2265 "scanner.c"
+#line 2264 "scanner.c"
 
-#line 2267 "scanner.c"
+#line 2266 "scanner.c"
 
 #define INITIAL 0
 #define PICTURE_STATE 1
@@ -2502,7 +2502,7 @@ YY_DECL
 
 
 
-#line 2506 "scanner.c"
+#line 2505 "scanner.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -3543,7 +3543,7 @@ YY_RULE_SETUP
 #line 736 "scanner.l"
 ECHO;
 	YY_BREAK
-#line 3547 "scanner.c"
+#line 3546 "scanner.c"
 
 	case YY_END_OF_BUFFER:
 		{

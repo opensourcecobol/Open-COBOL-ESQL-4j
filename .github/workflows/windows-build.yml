@@ -71,7 +71,7 @@ jobs:
 
     - name: Build ocesql.exe
       run: |
-        msbuild /p:Configuration=Release /p:AdditionalIncludePaths=./:ocesql win/ocesql.sln
+        msbuild /p:Configuration=Release /p:AdditionalIncludePaths=./:ocesql win/ocesql4j.sln
  
     - name: Place files of OCESQL 4j
       working-directory: win
@@ -83,8 +83,8 @@ jobs:
         $env:PATH+=";C:\opensourcecobol4j\bin;C:\ocesql4j\bin;C:\ocesql4j\config"
         $env:CLASSPATH=".;C:\opensourcecobol4j\lib\libcobj.jar;C:\ocesql4j\lib\ocesql4j.jar;C:\ocesql4j\lib\postgresql.jar"
         copy ../copy/sqlca.cbl .
-        ocesql FETCHTBL.cbl  FETCHTBL.cob
-        ocesql INSERTTBL.cbl INSERTTBL.cob
+        ocesql4j FETCHTBL.cbl  FETCHTBL.cob
+        ocesql4j INSERTTBL.cbl INSERTTBL.cob
         cobj INSERTTBL.cob
         cobj FETCHTBL.cob
         java INSERTTBL
@@ -97,14 +97,14 @@ jobs:
         findstr "no differences encountered" test-result
       shell: cmd
 
-    - name: Upload ocesql.exe
+    - name: Upload ocesql4j.exe
       if: ${{ inputs.upload-artifacts }}
       uses: actions/upload-artifact@v4
       with:
-        name: ocesql.exe
-        path: win\x64\Release\ocesql.exe
+        name: ocesql4j.exe
+        path: win\x64\Release\ocesql4j.exe
 
-    - name: Upload ocesql.exe
+    - name: Upload ocesql4j.jar
       if: ${{ inputs.upload-artifacts }}
       uses: actions/upload-artifact@v4
       with:

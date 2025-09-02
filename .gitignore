@@ -117,6 +117,7 @@ ocesql/.deps/
 ocesql/Makefile
 ocesql/errorfile.o
 ocesql/ocesql
+ocesql/ocesql4j
 ocesql/*.o
 stamp-h1
 tests/*.log
