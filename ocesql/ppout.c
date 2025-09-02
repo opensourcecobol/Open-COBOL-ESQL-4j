@@ -174,8 +174,8 @@ void sql_string(const struct cb_exec_list *wk_text) {
     }
 
     int i;
+    // Remove spaces from the A area
     if (!is_multiline_literal) {
-      // Remove spaces from the A area
       for (i = 0; i < a_len && line_buff[i] != '\n'; i++) {
         if (!isspace((unsigned char)line_buff[i])) {
           break;
@@ -185,8 +185,10 @@ void sql_string(const struct cb_exec_list *wk_text) {
         line_len = strlen(line_buff + a_len);
         memmove(line_buff, line_buff + a_len, line_len + 1);
       }
+    }
 
-      // Remove trailing spaces
+    // Remove trailing spaces
+    if (!is_odd_quote) {
       char *end = line_buff + line_len - 1;
       while (end >= line_buff && isspace((unsigned char)*end)) {
         *end-- = '\0';
