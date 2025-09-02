@@ -52,6 +52,7 @@ struct cb_field *var_varying;
 
 int flag_insqlstring = 0;
 int flag_selectcommand = 0;
+int flag_select_into = 0;
 
 #define YY_INPUT(buf,result,max_size) result = yyinput (buf, max_size);
 static int
@@ -444,8 +445,11 @@ INT_CONSTANT {digit}+
 	}
 
 	"INTO" {
+			flag_select_into = 0;
 			if(strcmp(commandname, "SELECT") != 0){
 			    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+			}else{
+				flag_select_into = 1;
 			}
 
 			if(flag_insqlstring && !flag_selectcommand){
@@ -469,7 +473,7 @@ INT_CONSTANT {digit}+
 	}
 
 	{HOSTWORD} {
-			if(strcmp(commandname, "SELECT") != 0 || strcmp(yylval.s, "INTO") != 0){
+			if(!flag_select_into){
 		    	strncat(sqlbody, " ?", sizeof(sqlbody) - strlen(sqlbody) - 1);
 			}
 			yylval.s = com_strdup (yytext + 1);

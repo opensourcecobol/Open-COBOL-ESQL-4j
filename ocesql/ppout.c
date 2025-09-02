@@ -131,7 +131,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
   size_t b_len = 61;
   char *outdata = (char *)malloc(sqllen * (a_len + b_len));
   char *outdata_ptr = outdata;
-  int output_sql_len = 0;
+  int sql_pic_len = 0;
 
   const char *p_sql = sqlloop;
   const char *sql_end = sqlloop + sqllen;
@@ -142,11 +142,11 @@ void sql_string(const struct cb_exec_list *wk_text) {
     const char *p_line_end = p_sql;
     int is_multiline_literal = is_odd_quote ? 1 : 0;
     while (p_line_end < sql_end && *p_line_end != '\n' && *p_line_end != '\r') {
-      p_line_end++;
       // Check if the quotation is closed
       if (*p_line_end == '\'') {
         is_odd_quote ^= 1;
       }
+      p_line_end++;
     }
 
     size_t line_len = p_line_end - p_sql;
@@ -160,6 +160,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
     if (line_buff == NULL) {
       _printlog("memory allocation failed.\n");
       free(sqlloop);
+      free(outdata);
       return;
     }
     if (is_odd_quote) { // Fill up to the B area with spaces for lines inside
@@ -219,7 +220,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
             if (!isspace((unsigned char)*p_line) && is_first_line) {
               memcpy(outdata_ptr, " ", 1);
               outdata_ptr += 1;
-              output_sql_len += 1;
+              sql_pic_len += 1;
               maximum_chars_in_single_line--;
             }
           }
@@ -251,7 +252,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
 
         memcpy(outdata_ptr, p_line, len_to_write);
         outdata_ptr += len_to_write;
-        output_sql_len += len_to_write;
+        sql_pic_len += len_to_write;
 
         p_line += len_to_write;
       }
@@ -264,8 +265,9 @@ void sql_string(const struct cb_exec_list *wk_text) {
     }
   }
   *outdata_ptr = '\0';
-  fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", output_sql_len);
+  fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", sql_pic_len);
   fwrite(outdata, 1, strlen(outdata), outfile);
+  free(outdata);
 
   if (is_first_chr) {
     fprintf(outfile, " \"\".");
