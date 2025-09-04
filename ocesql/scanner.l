@@ -53,6 +53,7 @@ struct cb_field *var_varying;
 int flag_insqlstring = 0;
 int flag_selectcommand = 0;
 int flag_select_into = 0;
+int flag_declare_cursor = 0;
 
 #define YY_INPUT(buf,result,max_size) result = yyinput (buf, max_size);
 static int
@@ -417,6 +418,9 @@ INT_CONSTANT {digit}+
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
 			}
+			if(strcmp(commandname, "DECLARE") == 0){
+				flag_declare_cursor = 1;
+			}
 		       return CURSOR;
 	 }
 
@@ -424,6 +428,11 @@ INT_CONSTANT {digit}+
 			if(flag_insqlstring){
 				yylval.s = com_strdup (yytext);
 				return TOKEN;
+			}
+			if(flag_declare_cursor){
+				flag_declare_cursor = 0;
+			}else{
+				strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			}
 			return FOR;
 	}
@@ -437,6 +446,7 @@ INT_CONSTANT {digit}+
 	}
 
 	"USING" {
+			strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
