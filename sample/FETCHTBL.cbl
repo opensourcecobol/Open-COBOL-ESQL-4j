@@ -97,15 +97,6 @@
            EXEC SQL 
                COMMIT WORK
            END-EXEC.
-
-           EXEC SQL
-               EXECUTE st USING :EMP-NO
-           END-EXEC.
-
-           EXEC SQL
-           AT :DBNAME OPEN C1 
-           USING :EMP-NO
-           END-EXEC.
            
       *    DISCONNECT
            EXEC SQL
