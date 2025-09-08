@@ -129,7 +129,16 @@ void sql_string(const struct cb_exec_list *wk_text) {
 
   size_t a_len = 4;
   size_t b_len = 61;
-  char *outdata = (char *)malloc(sqllen * (a_len + b_len));
+
+  int i;
+  int line_count = 0;
+  for (i = 0; i < sqllen; i++) {
+    if (sqlloop[i] == '\n') {
+      line_count++;
+    }
+  }
+
+  char *outdata = (char *)malloc((line_count + 1) * (a_len + b_len));
   char *outdata_ptr = outdata;
   int sql_pic_len = 0;
 
@@ -173,7 +182,6 @@ void sql_string(const struct cb_exec_list *wk_text) {
       line_buff[line_len] = '\0';
     }
 
-    int i;
     // Remove spaces from the A area
     if (!is_multiline_literal) {
       for (i = 0; i < a_len && line_buff[i] != '\n'; i++) {
