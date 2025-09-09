@@ -127,9 +127,6 @@ void sql_string(const struct cb_exec_list *wk_text) {
   strcpy(sqlloop, wk_text->sqlBody);
   sqllen = strlen(sqlloop);
 
-  size_t a_len = 4;
-  size_t b_len = 61;
-
   int i;
   int line_count = 0;
   for (i = 0; i < sqllen; i++) {
@@ -138,7 +135,10 @@ void sql_string(const struct cb_exec_list *wk_text) {
     }
   }
 
-  char *outdata = (char *)malloc((line_count + 1) * (a_len + b_len));
+  size_t max_line_len = 72; // max length of a line in COBOL
+  size_t other_len = 25; // length of newline and string split to next line when
+                         // exceeding B area
+  char *outdata = (char *)malloc((line_count) * (max_line_len + other_len) + 1);
   char *outdata_ptr = outdata;
   int sql_pic_len = 0;
 
@@ -159,6 +159,8 @@ void sql_string(const struct cb_exec_list *wk_text) {
     }
 
     size_t line_len = p_line_end - p_sql;
+    size_t a_len = 4;
+    size_t b_len = 61;
     char *line_buff;
 
     if (is_odd_quote) {
@@ -173,10 +175,11 @@ void sql_string(const struct cb_exec_list *wk_text) {
       return;
     }
     if (is_odd_quote) { // Fill up to the B area with spaces for lines inside
-                        // quotations.
+                        // quotations
       size_t space_len = a_len + b_len - line_len;
       strncpy(line_buff, p_sql, line_len);
       memset(line_buff + line_len, ' ', space_len);
+      line_buff[a_len + b_len] = '\0';
     } else {
       strncpy(line_buff, p_sql, line_len);
       line_buff[line_len] = '\0';
@@ -204,7 +207,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
     }
 
     // Output strings that fit within the B area to the file,
-    // and output overflow characters to the next line.
+    // and output overflow characters to the next line
     if (strlen(line_buff) > 0) {
       int maximum_chars_in_single_line = 59;
       const char *p_line = line_buff;
