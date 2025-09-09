@@ -19,8 +19,18 @@
 
 #include "ocesql.h"
 #include "ocesqlutil.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#define SJIS_LEAD_START_1 0x81
+#define SJIS_LEAD_END_1 0x9F
+#define SJIS_LEAD_START_2 0xE0
+#define SJIS_LEAD_END_2 0xEF
+#define SJIS_TRAIL_START_1 0x40
+#define SJIS_TRAIL_END_1 0x7E
+#define SJIS_TRAIL_START_2 0x80
+#define SJIS_TRAIL_END_2 0xFC
 
 char inbuff[256];
 char out[256];
@@ -30,6 +40,7 @@ FILE *outfile;
 int EOFflg = 0;
 int EOFFLG = 0;
 int lineNUM = 0;
+int is_odd_quote = 0;
 
 int japflg = 0;
 int charcount = 0;
@@ -101,60 +112,180 @@ char *substring(int len, char *wk_str, int flag_end) {
 }
 
 void sql_string(const struct cb_exec_list *wk_text) {
-
   char *sqlloop;
-  int sqlloop_len;
+  int sqlbody_len;
+  int sqllen;
 
-  struct cb_sql_list *wk_sql;
+  sqlbody_len = strlen(wk_text->sqlBody);
 
-  wk_sql = wk_text->sql_list;
-
-  sqlloop_len = 0;
-  for (; wk_sql->next != NULL;) {
-    sqlloop_len += strlen(wk_sql->sqltext);
-    if (strcmp(wk_sql->next->sqltext, ",") != 0) {
-      sqlloop_len += strlen(" ");
-    }
-    wk_sql = wk_sql->next;
-  }
-  sqlloop_len += strlen(wk_sql->sqltext);
-
-  sqlloop = (char *)malloc((sqlloop_len + 1) * sizeof(char));
+  sqlloop = (char *)malloc(sqlbody_len + 1);
   if (sqlloop == NULL) {
     _printlog("memory allocation failed.\n");
     return;
   }
-  memset(sqlloop, 0, sqlloop_len + 1);
 
-  wk_sql = wk_text->sql_list;
-  for (; wk_sql->next != NULL;) {
-    com_strcat(sqlloop, sqlloop_len, wk_sql->sqltext);
-    if (strcmp(wk_sql->next->sqltext, ",") != 0) {
-      com_strcat(sqlloop, sqlloop_len, " ");
+  strcpy(sqlloop, wk_text->sqlBody);
+  sqllen = strlen(sqlloop);
+
+  int i;
+  int line_count = 0;
+  for (i = 0; i < sqllen; i++) {
+    if (sqlloop[i] == '\n') {
+      line_count++;
     }
-    wk_sql = wk_sql->next;
   }
-  com_strcat(sqlloop, sqlloop_len + 1, wk_sql->sqltext);
 
-  int sqllen = strlen(sqlloop);
-  fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", sqllen);
+  size_t max_line_len = 72; // max length of a line in COBOL
+  size_t other_len = 25; // length of newline and string split to next line when
+                         // exceeding B area
+  char *outdata = (char *)malloc((line_count) * (max_line_len + other_len) + 1);
+  char *outdata_ptr = outdata;
+  int sql_pic_len = 0;
 
-  int i = 0;
-  const int maximum_chars_in_single_line = 58;
-  while (i < sqllen) {
-    fprintf(outfile, i == 0 ? "\nOCESQL     \"" : "\nOCESQL  &  \"");
-    int j;
-    for (j = 0; j < maximum_chars_in_single_line && i < sqllen; ++i, ++j) {
-      // Do not split 2-bytes character into different lines
-      if (j + 1 == maximum_chars_in_single_line) {
-        unsigned char c = sqlloop[i];
-        if ((0x81 <= c && c <= 0x9F) || (0xE0 <= c && 0xFC)) {
+  const char *p_sql = sqlloop;
+  const char *sql_end = sqlloop + sqllen;
+  int is_first_chr = 1;
+
+  while (p_sql < sql_end) {
+    // Store the string up to the newline in a temp buffer
+    const char *p_line_end = p_sql;
+    int is_multiline_literal = is_odd_quote ? 1 : 0;
+    while (p_line_end < sql_end && *p_line_end != '\n' && *p_line_end != '\r') {
+      // Check if the quotation is closed
+      if (*p_line_end == '\'') {
+        is_odd_quote ^= 1;
+      }
+      p_line_end++;
+    }
+
+    size_t line_len = p_line_end - p_sql;
+    size_t a_len = 4;
+    size_t b_len = 61;
+    char *line_buff;
+
+    if (is_odd_quote) {
+      line_buff = (char *)malloc(a_len + b_len + 1);
+    } else {
+      line_buff = (char *)malloc(line_len + 1);
+    }
+    if (line_buff == NULL) {
+      _printlog("memory allocation failed.\n");
+      free(sqlloop);
+      free(outdata);
+      return;
+    }
+    if (is_odd_quote) { // Fill up to the B area with spaces for lines inside
+                        // quotations
+      size_t space_len = a_len + b_len - line_len;
+      strncpy(line_buff, p_sql, line_len);
+      memset(line_buff + line_len, ' ', space_len);
+      line_buff[a_len + b_len] = '\0';
+    } else {
+      strncpy(line_buff, p_sql, line_len);
+      line_buff[line_len] = '\0';
+    }
+
+    // Remove spaces from the A area
+    if (!is_multiline_literal) {
+      for (i = 0; i < a_len && line_buff[i] != '\n'; i++) {
+        if (!isspace((unsigned char)line_buff[i])) {
           break;
         }
       }
-      fputc(sqlloop[i], outfile);
+      if (i == a_len) {
+        line_len = strlen(line_buff + a_len);
+        memmove(line_buff, line_buff + a_len, line_len + 1);
+      }
     }
-    fprintf(outfile, i == sqllen ? "\"." : "\"");
+
+    // Remove trailing spaces
+    if (!is_odd_quote) {
+      char *end = line_buff + line_len - 1;
+      while (end >= line_buff && isspace((unsigned char)*end)) {
+        *end-- = '\0';
+      }
+    }
+
+    // Output strings that fit within the B area to the file,
+    // and output overflow characters to the next line
+    if (strlen(line_buff) > 0) {
+      int maximum_chars_in_single_line = 59;
+      const char *p_line = line_buff;
+      int is_first_line = 1;
+
+      while (*p_line) {
+        const char *ocesql_comment;
+        size_t ocesql_comment_len;
+        if (is_first_chr) {
+          ocesql_comment = "\nOCESQL     \"";
+          ocesql_comment_len = strlen(ocesql_comment);
+          memcpy(outdata_ptr, ocesql_comment, ocesql_comment_len);
+          outdata_ptr += ocesql_comment_len;
+          is_first_chr = 0;
+        } else {
+          ocesql_comment = "\"\nOCESQL  &  \"";
+          ocesql_comment_len = strlen(ocesql_comment);
+          memcpy(outdata_ptr, ocesql_comment, ocesql_comment_len);
+          outdata_ptr += ocesql_comment_len;
+
+          // Insert space if there is no space between this and the previous
+          if (!is_multiline_literal) {
+            if (!isspace((unsigned char)*p_line) && is_first_line) {
+              memcpy(outdata_ptr, " ", 1);
+              outdata_ptr += 1;
+              sql_pic_len += 1;
+              maximum_chars_in_single_line--;
+            }
+          }
+        }
+        is_first_line = 0;
+
+        size_t p_line_len = strlen(p_line);
+        size_t len_to_write = (p_line_len > maximum_chars_in_single_line)
+                                  ? maximum_chars_in_single_line
+                                  : p_line_len;
+
+        // Do not split 2-bytes character into different lines
+        for (i = 0; i < len_to_write; i++) {
+          unsigned char c1 = (unsigned char)p_line[i];
+          if ((c1 >= SJIS_LEAD_START_1 && c1 <= SJIS_LEAD_END_1) ||
+              (c1 >= SJIS_LEAD_START_2 && c1 <= SJIS_LEAD_END_2)) {
+            unsigned char c2 = (unsigned char)p_line[i + 1];
+            if ((c2 >= SJIS_TRAIL_START_1 && c2 <= SJIS_TRAIL_END_1) ||
+                (c2 >= SJIS_TRAIL_START_2 && c2 <= SJIS_TRAIL_END_2)) {
+              if (i == len_to_write - 1) {
+                len_to_write--;
+                break;
+              } else {
+                i++;
+              }
+            }
+          }
+        }
+
+        memcpy(outdata_ptr, p_line, len_to_write);
+        outdata_ptr += len_to_write;
+        sql_pic_len += len_to_write;
+
+        p_line += len_to_write;
+      }
+    }
+
+    free(line_buff);
+    p_sql = p_line_end;
+    while (p_sql < sql_end && (*p_sql == '\n' || *p_sql == '\r')) {
+      p_sql++;
+    }
+  }
+  *outdata_ptr = '\0';
+  fprintf(outfile, "OCESQL     02  FILLER PIC X(%d) VALUE", sql_pic_len);
+  fwrite(outdata, 1, strlen(outdata), outfile);
+  free(outdata);
+
+  if (is_first_chr) {
+    fprintf(outfile, " \"\".");
+  } else {
+    fprintf(outfile, "\".");
   }
   fprintf(outfile, "\nOCESQL     02  FILLER PIC X(1) VALUE X\"00\".\n");
 
@@ -178,6 +309,7 @@ void outsqlfiller(struct cb_exec_list *wk_head_p) {
       outwrite();
 
       sql_string(wk_head_p);
+      is_odd_quote = 0;
 
       com_strcpy(out, sizeof(out), "OCESQL*");
       outwrite();

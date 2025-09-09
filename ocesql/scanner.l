@@ -47,10 +47,13 @@ char commandname[BUFFSIZE];
 char sqlname[BUFFSIZE];
 int sqlnum = 0;
 char incfilename[BUFFSIZE];
+char sqlbody[SQLBODY_SIZE];
 struct cb_field *var_varying;
 
 int flag_insqlstring = 0;
 int flag_selectcommand = 0;
+int flag_select_into = 0;
+int flag_declare_cursor = 0;
 
 #define YY_INPUT(buf,result,max_size) result = yyinput (buf, max_size);
 static int
@@ -103,6 +106,7 @@ INT_CONSTANT {digit}+
 					memset(cursorname,0,sizeof(cursorname));
 					memset(sqlname,0,sizeof(sqlname));
 					memset(incfilename,0,sizeof(incfilename));
+					memset(sqlbody,0,sizeof(sqlbody));
 					hostreferenceCount = 0;
 					sql_list = NULL;
 					var_varying = NULL;            
@@ -113,6 +117,10 @@ INT_CONSTANT {digit}+
 }
 
 <ESQL_FUNC_STATE>{
+	[ \t]+ {
+           strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+  	       }
+
 	"SELECT" {
 		BEGIN ESQL_STATE;
 		flag_insqlstring = 1;
@@ -121,6 +129,7 @@ INT_CONSTANT {digit}+
 		yylval.s = com_strdup (yytext);
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),yylval.s);
+		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 
 		sqlnum++;
      		memset(sqlname, 0, sizeof(sqlname));
@@ -136,6 +145,7 @@ INT_CONSTANT {digit}+
 		yylval.s = com_strdup (yytext);
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),yylval.s);
+		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 
 		sqlnum++;
      		memset(sqlname, 0, sizeof(sqlname));
@@ -151,6 +161,7 @@ INT_CONSTANT {digit}+
 		yylval.s = com_strdup (yytext);
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),yylval.s);
+		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 
 		sqlnum++;
      		memset(sqlname, 0, sizeof(sqlname));
@@ -173,6 +184,7 @@ INT_CONSTANT {digit}+
 		yylval.s = com_strdup (yytext);
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),yylval.s);
+        strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 
 		sqlnum++;
      		memset(sqlname, 0, sizeof(sqlname));
@@ -188,6 +200,7 @@ INT_CONSTANT {digit}+
 		yylval.s = com_strdup (yytext);
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),yylval.s);
+		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 
 		sqlnum++;
      		memset(sqlname, 0, sizeof(sqlname));
@@ -198,6 +211,10 @@ INT_CONSTANT {digit}+
 
 	"DECLARE" {
 		BEGIN ESQL_STATE;
+		yylval.s = com_strdup (yytext);
+		memset(commandname,0,sizeof(commandname));
+		com_strcpy(commandname,sizeof(commandname),yylval.s);
+		
 
 		return DECLARE;
 	}
@@ -206,6 +223,7 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
     	    	com_strcpy(commandname,sizeof(commandname),"OPEN");
+				strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
     	    	return OPEN;
         }
 
@@ -213,6 +231,7 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
     	    	com_strcpy(commandname,sizeof(commandname),"PREPARE");
+				strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return PREPARE;
 	}
 
@@ -220,6 +239,7 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"EXECUTE");
+		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return EXECUTE;
 	}
 
@@ -227,6 +247,7 @@ INT_CONSTANT {digit}+
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"CLOSE");
+		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		return CLOSE;
 	}
 
@@ -294,6 +315,7 @@ INT_CONSTANT {digit}+
 	}
 
 	"AT" {
+		strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 		if(flag_insqlstring || conn_use_other_db){
 			yylval.s = com_strdup (yytext);
 			return TOKEN;
@@ -309,6 +331,7 @@ INT_CONSTANT {digit}+
 		yylval.s = com_strdup (yytext);
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),yylval.s);
+		strncat(sqlbody, commandname, sizeof(sqlbody) - strlen(sqlbody) - 1);
 
 		sqlnum++;
      		memset(sqlname, 0, sizeof(sqlname));
@@ -332,16 +355,22 @@ INT_CONSTANT {digit}+
 <ESQL_STATE>{
 	{COMMA}   {
 	          yylval.s = com_strdup (yytext);
+			  strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 	          return TOKEN;
 	          }
-	(\r\n|\n) {   }
-
-
+	[ \t]+ {
+           strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+	       }
+	(\r\n|\n) {
+		       strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+	          }
 
 	[;]?(\r\n|\n)		{
+		        strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 				ECHO;
 				}
 	"AT" {
+			strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring || conn_use_other_db){
 				yylval.s = com_strdup (yytext);
 				return TOKEN;
@@ -353,6 +382,7 @@ INT_CONSTANT {digit}+
 	}
 
 	"SELECT" {
+		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -370,6 +400,7 @@ INT_CONSTANT {digit}+
 	}
 
 	"FROM" {
+		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 				if(!flag_selectcommand){
@@ -387,6 +418,9 @@ INT_CONSTANT {digit}+
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
 			}
+			if(strcmp(commandname, "DECLARE") == 0){
+				flag_declare_cursor = 1;
+			}
 		       return CURSOR;
 	 }
 
@@ -394,6 +428,11 @@ INT_CONSTANT {digit}+
 			if(flag_insqlstring){
 				yylval.s = com_strdup (yytext);
 				return TOKEN;
+			}
+			if(flag_declare_cursor){
+				flag_declare_cursor = 0;
+			}else{
+				strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			}
 			return FOR;
 	}
@@ -407,6 +446,7 @@ INT_CONSTANT {digit}+
 	}
 
 	"USING" {
+			strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -415,6 +455,13 @@ INT_CONSTANT {digit}+
 	}
 
 	"INTO" {
+			flag_select_into = 0;
+			if(strcmp(commandname, "SELECT") != 0){
+			    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+			}else{
+				flag_select_into = 1;
+			}
+
 			if(flag_insqlstring && !flag_selectcommand){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -424,16 +471,21 @@ INT_CONSTANT {digit}+
 	}
 
 	"WHERE"[ \r\n]+"CURRENT"[ \r\n]+"OF" {
+		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			yy_push_state(WHERE_CURRENT_OF);
 			return WHERECURRENTOF;
 	}
 
 	{OPERATOR} {
+		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			yylval.s = com_strdup (yytext);
 			return TOKEN;
 	}
 
 	{HOSTWORD} {
+			if(!flag_select_into){
+		    	strncat(sqlbody, " ?", sizeof(sqlbody) - strlen(sqlbody) - 1);
+			}
 			yylval.s = com_strdup (yytext + 1);
 			hostlineno = yylineno - includelinenum;
 
@@ -458,16 +510,21 @@ INT_CONSTANT {digit}+
 	}
 
 	"'"({WORD}|{JPNWORD}|{SELF}|[ ])+"'" {
+		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			yylval.s = com_strdup (yytext);
 			return TOKEN;
 	}
 
 	({WORD}|{JPNWORD})+("."("*"|({WORD}|{JPNWORD})+))? {
+			if(strcmp(commandname, "DECLARE") != 0){
+		    	strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
+			}
 			yylval.s = com_strdup (yytext);
 			return TOKEN;
 	}
 
 	{SELF} {
+		    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 			yylval.s = com_strdup (yytext);
 			return TOKEN;
 	}
@@ -831,4 +888,3 @@ yyinput(char *buff,int max_size)
 	return 0;
 
 }
-
