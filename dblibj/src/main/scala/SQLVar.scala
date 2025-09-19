@@ -173,8 +173,8 @@ object SQLVar {
       case OCDB_TYPE_JAPANESE           => createRealDataJapanese(x)
       case OCDB_TYPE_ALPHANUMERIC_VARYING =>
         createRealDataAlphanumericVarying(x)
-      // case OCDB_TYPE_JAPANESE_VARYING => createRealDataJapaneseVarying(x)
-      case _ => createRealDataDefault(x)
+      case OCDB_TYPE_JAPANESE_VARYING => createRealDataJapaneseVarying(x)
+      case _                          => createRealDataDefault(x)
     }
   }
 
@@ -493,7 +493,24 @@ object SQLVar {
       .setLength(lenSize)
   }
 
-  private def createRealDataJapaneseVarying(v: SQLVar): SQLVar = v
+  private def createRealDataJapaneseVarying(v: SQLVar): SQLVar = {
+    val addr = v.addr.getOrElse(nullDataStorage)
+    val addrDataPart = addr.getSubDataStorage(OCDB_VARCHAR_HEADER_BYTE)
+    val lenSize = (0 until OCDB_VARCHAR_HEADER_BYTE)
+      .foldLeft(0)((acc, i) =>
+        acc * 256 + java.lang.Byte.toUnsignedInt(addr.getByte(i))
+      ) * 2
+    val data = new CobolDataStorage(lenSize + 1)
+    val realData = new CobolDataStorage(lenSize + 1)
+    data.memset(0.toByte, lenSize + 1)
+    realData.memset(0.toByte, lenSize + 1)
+    data.memcpy(addrDataPart, lenSize)
+    realData.memcpy(addrDataPart, lenSize)
+    v.setRealData(Some(realData))
+      .setData(Some(data))
+      .setRealDataLength(lenSize)
+      .setLength(lenSize)
+  }
 
   private def createRealDataDefault(v: SQLVar): SQLVar = {
     val data = new CobolDataStorage(v.length)

@@ -910,6 +910,7 @@ object Common {
       addr.memset(OCDB_VARCHAR_HEADER_BYTE, ' '.toByte, sv.length)
       addr.memcpy(OCDB_VARCHAR_HEADER_BYTE, str, str.length)
     }
+    addr.memcpy(0, length_bytes.array(), OCDB_VARCHAR_HEADER_BYTE)
   }
 
   private def createCobolDataJapaneseVarying(
@@ -918,7 +919,24 @@ object Common {
       i: Int,
       str: scala.Array[Byte]
   ): Unit = {
-    // TODO Implement
+    val length_bytes = ByteBuffer.wrap(new scala.Array[Byte](4))
+    if (str.length >= sv.length * 2) {
+      length_bytes.putInt(sv.length)
+      addr.memcpy(0, length_bytes.array(), OCDB_VARCHAR_HEADER_BYTE)
+      addr.memcpy(OCDB_VARCHAR_HEADER_BYTE, str, sv.length * 2)
+    } else {
+      val length = sv.length
+      val arr = scala.Array(0x81.toByte, 0x40.toByte)
+      for (
+        i <-
+          OCDB_VARCHAR_HEADER_BYTE until (OCDB_VARCHAR_HEADER_BYTE + length * 2 - 1) by 2
+      ) {
+        addr.memcpy(i, arr, 2)
+      }
+      length_bytes.putInt(str.length / 2)
+      addr.memcpy(0, length_bytes.array(), OCDB_VARCHAR_HEADER_BYTE)
+      addr.memcpy(OCDB_VARCHAR_HEADER_BYTE, str, str.length)
+    }
   }
 
   // scalastyle:off method.length
