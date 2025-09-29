@@ -6,19 +6,19 @@ NEWS - user visible changes				-*- outline -*-
 
 ** New Features
 
-(1) Support the data type `PIC N VARYING`.
+(1) Support the `PIC N VARYING` data type.
 (2) Improve the readability of converted SQL statements.
 
 ** Bug Fixes
 
-(1) Fix SQL statement generations for some cases.
-  * With older versions, the precompiler ignores SQL statements for some cases.
+(1) Fix SQL statement generations in some cases.
+  * With older versions, the precompiler ignores SQL statements in some cases.
 (2) The precompiler accepts INCLUDE statements containing '\n' characters.
 
 ** Miscellaneous
 
 (1) Add README_JP.md for Japanese users.
-(2) Add Dev container configuration.
+(2) Add a Dev container configuration.
 
 -----------------------------------------------------------------------
 
