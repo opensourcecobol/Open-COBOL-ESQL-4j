@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.2] - 2025-09-29
+
+### Added
+
+* Support the `PIC N VARYING` data type. (#134)
+* Improve the readability of converted SQL statements. (#136)
+
+### Fixed
+
+* Fix SQL statement generations in some cases. (#99)
+  * With older versions, the precompiler ignores SQL statements in some cases.
+* The precompiler accepts INCLUDE statements containing '\n' characters. (#121)
+
+### Miscellaneous
+
+* Add README_JP.md for Japanese users. (#112)
+* Add a Dev container configuration. (#107)
+
 ## [1.1.1] - 2024-09-30
 
 ### Added
