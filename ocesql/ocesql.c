@@ -23,6 +23,7 @@
 
 #include "ocesql.h"
 #include "ocesqlutil.h"
+#include "config.h"
 
 int processid = 0;
 char *cb_source_file = NULL;
@@ -276,7 +277,7 @@ char *cb_get_env(const char *filename, int num) {
 
 void version(void) {
   printf("Open Cobol ESQL 4J\n");
-  printf("Version 1.1.1\n");
+  printf("Version %s\n", PACKAGE_VERSION);
   printf("\n");
   printf("Tokyo System House Co., Ltd. <opencobol@tsh-world.co.jp>\n");
 }
