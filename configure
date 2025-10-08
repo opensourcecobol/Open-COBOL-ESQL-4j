@@ -1378,7 +1378,7 @@ Optional Features:
                           speeds up one-time build
   --enable-debug          (OCESQL) enable -g C compiler debug option
   --disable-precompiler   (OCESQL) disable OCESQL precompiler install
-  --enable-utf8           (OpenCOBOL) enable UTF-8 support.
+  --enable-utf8           enable UTF-8 support.
 
 Some influential environment variables:
   CC          C compiler command

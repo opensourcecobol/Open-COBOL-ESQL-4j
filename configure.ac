@@ -49,7 +49,7 @@ AM_CONDITIONAL(DISABLE_OCESQL, test $DISABLE_COMPILER = yes)
 
 # UTF-8 support
 AC_ARG_ENABLE(utf8,
-  [  --enable-utf8           (OpenCOBOL) enable UTF-8 support.],
+  [  --enable-utf8           enable UTF-8 support.],
   [if test "$enable_utf8" = "yes"
    then
 	AC_DEFINE(I18N_UTF8)
