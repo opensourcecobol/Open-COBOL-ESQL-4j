@@ -89,6 +89,9 @@
 /* Define to 1 if the system has the type `_Bool'. */
 #undef HAVE__BOOL
 
+/* Enable UTF-8 support */
+#undef I18N_UTF8
+
 /* Name of package */
 #undef PACKAGE
 

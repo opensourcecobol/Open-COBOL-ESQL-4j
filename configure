@@ -629,6 +629,8 @@ LIBOBJS
 ALLOCA
 EGREP
 GREP
+I18N_UTF8_FALSE
+I18N_UTF8_TRUE
 DISABLE_OCESQL_FALSE
 DISABLE_OCESQL_TRUE
 LEXLIB
@@ -659,9 +661,6 @@ AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
 AM_DEFAULT_V
 AM_V
-CSCOPE
-ETAGS
-CTAGS
 am__untar
 am__tar
 AMTAR
@@ -732,6 +731,7 @@ enable_silent_rules
 enable_dependency_tracking
 enable_debug
 enable_precompiler
+enable_utf8
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1378,6 +1378,7 @@ Optional Features:
                           speeds up one-time build
   --enable-debug          (OCESQL) enable -g C compiler debug option
   --disable-precompiler   (OCESQL) disable OCESQL precompiler install
+  --enable-utf8           (OpenCOBOL) enable UTF-8 support.
 
 Some influential environment variables:
   CC          C compiler command
@@ -2365,6 +2366,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 ac_config_headers="$ac_config_headers config.h"
 
+
+# Autoheader templates
+
+
 am__api_version='1.16'
 
 ac_aux_dir=
@@ -2570,7 +2575,12 @@ program_transform_name=`$as_echo "$program_transform_name" | sed "$ac_script"`
 am_aux_dir=`cd "$ac_aux_dir" && pwd`
 
 if test x"${MISSING+set}" != xset; then
-  MISSING="\${SHELL} '$am_aux_dir/missing'"
+  case $am_aux_dir in
+  *\ * | *\	*)
+    MISSING="\${SHELL} \"$am_aux_dir/missing\"" ;;
+  *)
+    MISSING="\${SHELL} $am_aux_dir/missing" ;;
+  esac
 fi
 # Use eval to expand $SHELL
 if eval "$MISSING --is-lightweight"; then
@@ -2923,20 +2933,6 @@ am__tar='$${TAR-tar} chof - "$$tardir"' am__untar='$${TAR-tar} xf -'
 
 
 
-
-
-# Variables for tags utilities; see am/tags.am
-if test -z "$CTAGS"; then
-  CTAGS=ctags
-fi
-
-if test -z "$ETAGS"; then
-  ETAGS=etags
-fi
-
-if test -z "$CSCOPE"; then
-  CSCOPE=cscope
-fi
 
 
 
@@ -5302,6 +5298,26 @@ else
 fi
 
 
+# UTF-8 support
+# Check whether --enable-utf8 was given.
+if test "${enable_utf8+set}" = set; then :
+  enableval=$enable_utf8; if test "$enable_utf8" = "yes"
+   then
+	$as_echo "#define I18N_UTF8 1" >>confdefs.h
+
+	COB_M4_FLAGS=-DM4.I18N_UTF8
+   fi
+fi
+
+ if test x$COB_M4_FLAGS = x-DM4.I18N_UTF8; then
+  I18N_UTF8_TRUE=
+  I18N_UTF8_FALSE='#'
+else
+  I18N_UTF8_TRUE='#'
+  I18N_UTF8_FALSE=
+fi
+
+
 # Checks for libraries.
 #AC_CHECK_LIB([pq], [PQconnectdb])
 
@@ -6250,6 +6266,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${DISABLE_OCESQL_TRUE}" && test -z "${DISABLE_OCESQL_FALSE}"; then
   as_fn_error $? "conditional \"DISABLE_OCESQL\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${I18N_UTF8_TRUE}" && test -z "${I18N_UTF8_FALSE}"; then
+  as_fn_error $? "conditional \"I18N_UTF8\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
