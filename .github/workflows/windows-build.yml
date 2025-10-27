@@ -99,14 +99,14 @@ jobs:
 
     - name: Upload ocesql.exe
       if: ${{ inputs.upload-artifacts }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ocesql.exe
         path: win\x64\Release\ocesql.exe
 
     - name: Upload ocesql.exe
       if: ${{ inputs.upload-artifacts }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ocesql4j.jar
         path: dblibj\target\scala-2.13\ocesql4j.jar
