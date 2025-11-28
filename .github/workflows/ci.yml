@@ -14,6 +14,7 @@ permissions:
 
 jobs:
   check-workflows:
+    if: github.event_name != 'schedule' || github.repository == 'opensourcecobol/Open-COBOL-ESQL-4j'
     uses: ./.github/workflows/check-workflows.yml
 
   test:
@@ -22,17 +23,14 @@ jobs:
   
   coverage:
     needs: check-workflows
-    if: github.event_name != 'schedule'
     uses: ./.github/workflows/coverage.yml
    
   static_analysis:
     needs: check-workflows
-    if: github.event_name != 'schedule'
     uses: ./.github/workflows/static_analysis.yml 
 
   doc:
     needs: check-workflows
-    if: github.event_name != 'schedule'
     uses: ./.github/workflows/doc.yml
     
   windows-build:
