@@ -105,6 +105,7 @@
     <ClInclude Include="..\..\ocesql\ocesql.h" />
     <ClInclude Include="..\..\ocesql\ocesqlutil.h" />
     <ClInclude Include="..\..\ocesql\parser.h" />
+    <ClInclude Include="..\config.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
