@@ -69,6 +69,7 @@
       <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
       <PreprocessorDefinitions>_CONSOLE;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
+      <AdditionalIncludeDirectories>..\..\;..\..\ocesql;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
