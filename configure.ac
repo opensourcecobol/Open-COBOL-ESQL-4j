@@ -56,6 +56,7 @@ AC_ARG_ENABLE(utf8,
 	COB_M4_FLAGS=-DM4.I18N_UTF8
    fi])
 AM_CONDITIONAL(I18N_UTF8, test x$COB_M4_FLAGS = x-DM4.I18N_UTF8)
+AC_SUBST(COB_M4_FLAGS)
 
 # Checks for libraries.
 #AC_CHECK_LIB([pq], [PQconnectdb])
