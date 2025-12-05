@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301 USA
  */
 
-
+changequote(>>>>>,<<<<<)
 
 %option 8bit
 %option caseless
@@ -77,10 +77,13 @@ yyinput (char *buf, int max_size);
 
 %x ESQL_FUNC_STATE ESQL_INCLUDE_STATE ESQL_SELECT_STATE ESQL_STATE ESQL_DBNAME_STATE WHERE_CURRENT_OF
 
-
+ifdef(M4.I18N_UTF8,>>>>>
 JPNWORD ([\xE0-\xEF][\x80-\xBF][\x80-\xBF])|[\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC])
 HOSTWORD ":"([A-Za-z\-0-9_]*(([\xE0-\xEF][\x80-\xBF][\x80-\xBF])|[\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC]))*[A-Za-z\-0-9_]*)
-
+<<<<<,>>>>>
+JPNWORD ([\xE0-\xEF][\x80-\xBF][\x80-\xBF])|[\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC])
+HOSTWORD ":"([A-Za-z\-0-9_]*(([\xE0-\xEF][\x80-\xBF][\x80-\xBF])|[\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC]))*[A-Za-z\-0-9_]*)
+<<<<<)
 DIGIT [0-9]
 WORD ([A-Za-z\+\-0-9_]|[(]|[)]|[\'])
 INCFILE [A-Za-z0-9_\+\-]+
