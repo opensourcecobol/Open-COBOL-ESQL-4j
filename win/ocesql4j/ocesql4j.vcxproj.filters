@@ -27,7 +27,7 @@
     <ClInclude Include="..\..\ocesql\parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\config.h">
+    <ClInclude Include="..\..\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
