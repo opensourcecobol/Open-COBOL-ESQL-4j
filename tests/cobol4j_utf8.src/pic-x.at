@@ -1,0 +1,696 @@
+AT_SETUP([Value clause])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(14) VALUE "日本語の文字列".
+       PROCEDURE        DIVISION.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob 2> /dev/null])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 日本語の文字列 | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(14).
+       PROCEDURE        DIVISION.
+           MOVE "日本語の文字列" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 日本語の文字列 | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move with trunc])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(6).
+       PROCEDURE        DIVISION.
+           MOVE "日本語の文字列" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 日本語 | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move ALL with trunc and trimming])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(7).
+       PROCEDURE        DIVISION.
+           MOVE ALL "喜" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob], [0])
+AT_CHECK([java prog | od -tx1 -An | sed -e 's/  */ /g' -e 's/ *$//'], [0], [ 8a ec 8a ec 8a ec 20
+])
+
+AT_CLEANUP
+
+AT_SETUP([Move with trunc and trimming 1])
+AT_CHECK([${SKIP_TEST}])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(7).
+       PROCEDURE        DIVISION.
+           MOVE "日本語の文字列" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog | od -tx1 -An | sed -e 's/  */ /g' -e 's/ *$//'], [0], [ 93 fa 96 7b 8c ea 82
+])
+
+AT_CLEANUP
+
+AT_SETUP([Move from field with trunc and trimming 1])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 FS PIC X(14) VALUE "日本語の文字列".
+       01 F0 PIC X(7).
+       PROCEDURE        DIVISION.
+           MOVE FS TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob], [0])
+AT_CHECK([java prog | od -tx1 -An | sed -e 's/  */ /g' -e 's/ *$//'], [0], [ 93 fa 96 7b 8c ea 82
+])
+
+AT_CLEANUP
+
+AT_SETUP([Move with padding])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(16).
+       PROCEDURE        DIVISION.
+           MOVE "日本語の文字列" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '日本語の文字列  ' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move with justify])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(15) JUSTIFIED RIGHT.
+       PROCEDURE        DIVISION.
+           MOVE "日本語の文字列" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n ' 日本語の文字列' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move to alnum EDITED])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC XXXX/XXXXBXXXX0.
+       PROCEDURE        DIVISION.
+           MOVE "日本中国文字" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '日本/中国 文字0' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move to alnum EDITED (pic too short)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC XX/XXBXX0.
+       PROCEDURE        DIVISION.
+           MOVE "日本中国文字" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '日/本 中0' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move to alnum EDITED (pic too long)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC XX/XXBXX0.
+       PROCEDURE        DIVISION.
+           MOVE "日本" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '日/本   0' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move to alnum EDITED (No char break)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(2)BX(2).
+       PROCEDURE        DIVISION.
+           MOVE "日本" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '日 本' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Move to alnum EDITED (char break & junk chars)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(1)BX(3).
+       PROCEDURE        DIVISION.
+           MOVE "日本" TO F0.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob], [0])
+AT_CHECK([java prog | od -tx1 -An | sed -e 's/  */ /g' -e 's/ *$//'], [0], [ 93 20 fa 96 7b
+])
+
+AT_CLEANUP
+
+AT_SETUP([Move group to group in bad alignment])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0.
+       03     XX0    PIC X(4) VALUE "日本".
+       01 F1.
+       03     XX1    PIC X(3).
+       03     FILLER PIC X(1).
+
+       PROCEDURE        DIVISION.
+           MOVE   F0 TO F1.
+           DISPLAY XX1 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob], [0])
+AT_CHECK([java prog | od -tx1 -An | sed -e 's/  */ /g' -e 's/ *$//'], [0], [ 93 fa 96
+])
+
+AT_CLEANUP
+
+AT_SETUP([Redifinition breaking char pos.])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0.
+       03     XX0    PIC X(4) VALUE "日本".
+       01 F1 REDEFINES F0.
+       03     XX1    PIC X(3).
+       03     FILLER PIC X(1).
+
+       PROCEDURE        DIVISION.
+           DISPLAY XX1 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob], [0])
+AT_CHECK([java prog | od -tx1 -An | sed -e 's/  */ /g' -e 's/ *$//'], [0], [ 93 fa 96
+])
+
+AT_CLEANUP
+
+
+AT_SETUP([Ref mod(n:)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(14).
+       PROCEDURE        DIVISION.
+           MOVE "日本語の文字列" TO F0.
+           DISPLAY F0(9:) WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '文字列' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Ref mod(n:m)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(14).
+       PROCEDURE        DIVISION.
+           MOVE "日本語の文字列" TO F0.
+           DISPLAY F0(9:4) WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '文字' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([STRING by size])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(4)  VALUE "私の".
+       01 F1 PIC X(6)  VALUE "名前は".
+       01 F2 PIC X(10) VALUE "ありません".
+       01 FF PIC X(20).
+       PROCEDURE        DIVISION.
+           STRING F0 F1 F2 DELIMITED BY SIZE
+             INTO FF.
+           DISPLAY FF WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '私の名前はありません' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([STRING with delimiter])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(4)  VALUE "私の".
+       01 F1 PIC X(8)  VALUE "名前△は".
+       01 F2 PIC X(12) VALUE "△ありません".
+       01 FF PIC X(8).
+       PROCEDURE        DIVISION.
+           STRING F0 F1 F2 DELIMITED BY "△"
+             INTO FF.
+           DISPLAY FF WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '私の名前' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([STRING with pointer])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(4)  VALUE "私の".
+       01 F1 PIC X(6)  VALUE "名前は".
+       01 F2 PIC X(10) VALUE "ありません".
+       01 FF PIC X(20) VALUE "言えません○※△■×".
+       01 FP PIC 99    VALUE 11.
+       PROCEDURE        DIVISION.
+           STRING F0 F1 F2 DELIMITED BY SIZE
+             INTO FF WITH POINTER FP.
+           DISPLAY FF WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '言えません私の名前は' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([INSPECT REPLACING])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(20)  VALUE "１２３４５１２３４５".
+       PROCEDURE        DIVISION.
+           INSPECT F0 REPLACING ALL "５" BY "０".
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '１２３４０１２３４０' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([INSPECT REPLACING by ZERO])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(20)  VALUE "１２３４５１２３４５".
+       PROCEDURE        DIVISION.
+           INSPECT F0 REPLACING ALL "５" BY ZERO.
+           DISPLAY F0 WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '１２３４０１２３４０' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([INSPECT TALLYING])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(30)  VALUE "１２３４５１２３４５".
+       01 CN PIC 99.
+       PROCEDURE        DIVISION.
+           INSPECT F0 TALLYING CN FOR ALL "４５".
+           DISPLAY CN WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '02' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([WRITE FROM Japanese literal])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+           SELECT TEST-FILE ASSIGN TO "TESTFILE"
+                  ORGANIZATION IS SEQUENTIAL.
+       DATA DIVISION.
+       FILE SECTION.
+       FD  TEST-FILE.
+       01  TEST-DATA     PIC X(36).
+       WORKING-STORAGE SECTION.
+       PROCEDURE DIVISION.
+           OPEN  OUTPUT TEST-FILE.
+           WRITE TEST-DATA FROM  "縄文弥生古墳飛鳥奈良平安鎌倉室町江戸".
+           CLOSE TEST-FILE.
+
+           OPEN INPUT TEST-FILE.
+           READ TEST-FILE
+               NOT AT END
+                   DISPLAY TEST-DATA
+           END-READ.
+           CLOSE TEST-FILE.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '縄文弥生古墳飛鳥奈良平安鎌倉室町江戸
+' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([Group item COB_TERMINAL_ENCODING])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. prog.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  WK-AREA.
+         03  WK-CD        PIC X(04).
+         03  WK-NAME      PIC X(20).
+         03  WK-DPT-CD    PIC X(02).
+         03  WK-ENT-DATE  PIC 9(08).
+         03  WK-RETURN    PIC 9(01).
+       PROCEDURE DIVISION.
+       MAIN.
+           MOVE "0012千葉  二郎          02199904010" TO WK-AREA.
+           DISPLAY "従業員番号: " WK-CD.
+           DISPLAY "名前　　　: " WK-NAME.
+           DISPLAY "部署コード: " WK-DPT-CD.
+           DISPLAY "入社日　　: " WK-ENT-DATE.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cbl])
+AT_CHECK([COB_TERMINAL_ENCODING=UTF-8 java prog], [0], 
+[従業員番号: 0012
+名前　　　: 千葉  二郎          @&t@
+部署コード: 02
+入社日　　: 19990401
+])
+
+AT_CLEANUP
+
+AT_SETUP([Initializing Group items])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 F0 PIC X(17) VALUE "千葉  二郎".
+       PROCEDURE        DIVISION.
+       DISPLAY F0.
+       STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cbl])
+AT_CHECK([COB_TERMINAL_ENCODING=UTF-8 java prog], [0], 
+[千葉  二郎       @&t@
+])
+
+AT_CLEANUP
+
+AT_SETUP([Exceed column 72 with Japanese literal])
+
+AT_DATA([prog.cbl], [       
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 str PIC X(5) VALUE                                     'ｱｲｳｴｵ'.
+       PROCEDURE DIVISION.
+       DISPLAY str.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'ｱｲｳｴｵ
+' | nkf -x --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+#AT_SETUP([Readable string literals])
+### Older compilers converts string literals "日本語" in COBOL source code
+## to `CobolUtil.toBytes((byte)0x93, (byte)0xfa, (byte)0x96, (byte)0x7b, (byte)0x8c, (byte)0xea)` in Java source code.
+## The following tests check that the compiler converts the string literals to readable ones.
+#
+#AT_DATA([prog1.cob], [
+#       IDENTIFICATION   DIVISION.
+#       PROGRAM-ID.      prog1.
+#       DATA             DIVISION.
+#       WORKING-STORAGE  SECTION.
+#       01 F0 PIC X(30)  VALUE "東京1".
+#       PROCEDURE        DIVISION.
+#            MOVE "東京2" TO F0.
+#            DISPLAY "東京3".
+#])
+#
+#AT_CHECK([cobj prog1.cob])
+#AT_CHECK([grep '東京1' < prog1.java > /dev/null])
+#AT_CHECK([grep '東京2' < prog1.java > /dev/null])
+#AT_CHECK([grep '東京3' < prog1.java > /dev/null])
+#
+## '　' is the first multi-byte Shift-JIS character with respect to the byte order
+## see http://charset.7jp.net/sjis.html
+#AT_DATA([prog2.cob], [
+#       IDENTIFICATION   DIVISION.
+#       PROGRAM-ID.      prog2.
+#       DATA             DIVISION.
+#       WORKING-STORAGE  SECTION.
+#       01 F0 PIC X(30)  VALUE "　1".
+#       PROCEDURE        DIVISION.
+#            MOVE "　2" TO F0.
+#            DISPLAY "　3".
+#])
+#
+#AT_CHECK([cobj prog2.cob])
+#AT_CHECK([grep '　1' < prog2.java > /dev/null])
+#AT_CHECK([grep '　2' < prog2.java > /dev/null])
+#AT_CHECK([grep '　3' < prog2.java > /dev/null])
+#
+## '熙' is the last printable Shift-JIS character with respect to the byte order.
+## See http://charset.7jp.net/sjis.html
+#AT_DATA([prog3.cob], [
+#       IDENTIFICATION   DIVISION.
+#       PROGRAM-ID.      prog3.
+#       DATA             DIVISION.
+#       WORKING-STORAGE  SECTION.
+#       01 F0 PIC X(30)  VALUE "熙1".
+#       PROCEDURE        DIVISION.
+#            MOVE "熙2" TO F0.
+#            DISPLAY "熙3".
+#])
+#
+#AT_CHECK([cobj prog3.cob])
+#AT_CHECK([grep '熙1' < prog3.java > /dev/null])
+#AT_CHECK([grep '熙2' < prog3.java > /dev/null])
+#AT_CHECK([grep '熙3' < prog3.java > /dev/null])
+#
+#AT_CLEANUP

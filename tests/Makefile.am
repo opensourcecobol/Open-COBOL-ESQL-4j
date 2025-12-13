@@ -1,8 +1,18 @@
+if I18N_UTF8
+TESTS = basic \
+	cobol_data \
+	sql_data \
+	sqlca \
+	cobol4j_utf8 \
+	ocesql_utf8 \
+	misc
+else
 TESTS = basic \
 	cobol_data \
 	sql_data \
 	sqlca \
 	misc
+endif
 
 basic_DEPENDENCIES = \
 	basic.src/commit-rollback.at \
@@ -38,6 +48,24 @@ sqlca_DEPENDENCIES = \
 	sqlca.src/fetch-loop.at \
 	sqlca.src/errml-errmc.at
 
+cobol4j_utf8_DEPENDENCIES = \
+	cobol4j_utf8.src/compare-national-diff-size.at \
+	cobol4j_utf8.src/compare-national.at \
+	cobol4j_utf8.src/error-print.at \
+	cobol4j_utf8.src/file-handler-japanese.at \
+	cobol4j_utf8.src/japanese-char-section-var.at \
+	cobol4j_utf8.src/java-interface.at \
+	cobol4j_utf8.src/limits.at
+	cobol4j_utf8.src/mb-space.at \
+	cobol4j_utf8.src/national.at \
+	cobol4j_utf8.src/pic-n.at \
+	cobol4j_utf8.src/pic-x.at \
+	cobol4j_utf8.src/program-id.at \
+	cobol4j_utf8.src/user-defined-word.at
+
+ocesql_utf8_DEPENDENCIES = \
+	ocesql_utf8.src/sample.at
+
 misc_DEPENDENCIES = \
 	misc.src/long-sql.at \
 	misc.src/include.at \
@@ -51,7 +79,10 @@ EXTRA_DIST = $(srcdir)/package.m4 \
 	$(basic_DEPENDENCIES) \
 	$(cobol_data_DEPENDENCIES) \
 	$(sql_data_DEPENDENCIES) \
-	$(sqlca_DEPENDENCIES)
+	$(sqlca_DEPENDENCIES) \
+	$(cobol4j_utf8_DEPENDENCIES) \
+	$(ocesql_utf8_DEPENDENCIES) \
+	$(misc_DEPENDENCIES)
 
 DISTCLEANFILES = atconfig
 
@@ -84,4 +115,6 @@ $(srcdir)/basic: $(basic_DEPENDENCIES)
 $(srcdir)/cobol_data: $(cobol_data_DEPENDENCIES)
 $(srcdir)/sql_data: $(sql_data_DEPENDENCIES)
 $(srcdir)/sqlca: $(sqlca_DEPENDENCIES)
+$(srcdir)/cobol4j_utf8: $(cobol4j_utf8_DEPENDENCIES)
+$(srcdir)/ocesql_utf8: $(ocesql_utf8_DEPENDENCIES)
 $(srcdir)/misc: $(misc_DEPENDENCIES)

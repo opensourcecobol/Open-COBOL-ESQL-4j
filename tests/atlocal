@@ -1,7 +1,7 @@
-COBC=cobj
+COBJ=cobj
 OCESQL=ocesql
 EMBED_DB_INFO="sh ../../embed_db_info.sh"
-COMPILE="${COBC} -I ../../"
+COMPILE="${COBJ} -I ../../"
 COMPILE_MODULE="${COMPILE}"
 RUN_MODULE=java
 SKIP_TEST="exit 77"

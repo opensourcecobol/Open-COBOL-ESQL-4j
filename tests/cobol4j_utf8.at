@@ -1,0 +1,17 @@
+AT_INIT(UTF8 test)
+
+AT_TESTED([ocesql])
+
+m4_include([compare-national-diff-size.at])
+m4_include([compare-national.at])
+m4_include([error-print.at])
+m4_include([file-handler-japanese.at])
+m4_include([japanese-char-section-var.at])
+m4_include([java-interface.at])
+m4_include([limits.at])
+m4_include([mb-space.at])
+m4_include([national.at])
+m4_include([pic-n.at])
+m4_include([pic-x.at])
+m4_include([program-id.at])
+m4_include([user-defined-word.at])

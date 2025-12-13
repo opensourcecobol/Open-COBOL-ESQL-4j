@@ -418,11 +418,19 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = basic \
-	cobol_data \
-	sql_data \
-	sqlca \
-	misc
+@I18N_UTF8_FALSE@TESTS = basic \
+@I18N_UTF8_FALSE@	cobol_data \
+@I18N_UTF8_FALSE@	sql_data \
+@I18N_UTF8_FALSE@	sqlca \
+@I18N_UTF8_FALSE@	misc
+
+@I18N_UTF8_TRUE@TESTS = basic \
+@I18N_UTF8_TRUE@	cobol_data \
+@I18N_UTF8_TRUE@	sql_data \
+@I18N_UTF8_TRUE@	sqlca \
+@I18N_UTF8_TRUE@	cobol4j_utf8 \
+@I18N_UTF8_TRUE@	ocesql_utf8 \
+@I18N_UTF8_TRUE@	misc
 
 basic_DEPENDENCIES = \
 	basic.src/commit-rollback.at \
@@ -458,6 +466,24 @@ sqlca_DEPENDENCIES = \
 	sqlca.src/fetch-loop.at \
 	sqlca.src/errml-errmc.at
 
+cobol4j_utf8_DEPENDENCIES = \
+	cobol4j_utf8.src/compare-national-diff-size.at \
+	cobol4j_utf8.src/compare-national.at \
+	cobol4j_utf8.src/error-print.at \
+	cobol4j_utf8.src/file-handler-japanese.at \
+	cobol4j_utf8.src/japanese-char-section-var.at \
+	cobol4j_utf8.src/java-interface.at \
+	cobol4j_utf8.src/limits.at \
+	cobol4j_utf8.src/mb-space.at \
+	cobol4j_utf8.src/national.at \
+	cobol4j_utf8.src/pic-n.at \
+	cobol4j_utf8.src/pic-x.at \
+	cobol4j_utf8.src/program-id.at \
+	cobol4j_utf8.src/user-defined-word.at
+
+ocesql_utf8_DEPENDENCIES = \
+	ocesql_utf8.src/sample.at
+
 misc_DEPENDENCIES = \
 	misc.src/long-sql.at \
 	misc.src/include.at \
@@ -471,7 +497,10 @@ EXTRA_DIST = $(srcdir)/package.m4 \
 	$(basic_DEPENDENCIES) \
 	$(cobol_data_DEPENDENCIES) \
 	$(sql_data_DEPENDENCIES) \
-	$(sqlca_DEPENDENCIES)
+	$(sqlca_DEPENDENCIES) \
+	$(cobol4j_utf8_DEPENDENCIES) \
+	$(ocesql_utf8_DEPENDENCIES) \
+	$(misc_DEPENDENCIES)
 
 DISTCLEANFILES = atconfig
 all: all-am
@@ -690,6 +719,20 @@ misc.log: misc
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+cobol4j_utf8.log: cobol4j_utf8
+	@p='cobol4j_utf8'; \
+	b='cobol4j_utf8'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+ocesql_utf8.log: ocesql_utf8
+	@p='ocesql_utf8'; \
+	b='ocesql_utf8'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .test.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -859,6 +902,7 @@ uninstall-am:
 
 .PRECIOUS: Makefile
 
+	cobol4j_utf8.src/mb-space.at
 
 all: $(TESTS)
 
@@ -889,6 +933,8 @@ $(srcdir)/basic: $(basic_DEPENDENCIES)
 $(srcdir)/cobol_data: $(cobol_data_DEPENDENCIES)
 $(srcdir)/sql_data: $(sql_data_DEPENDENCIES)
 $(srcdir)/sqlca: $(sqlca_DEPENDENCIES)
+$(srcdir)/cobol4j_utf8: $(cobol4j_utf8_DEPENDENCIES)
+$(srcdir)/ocesql_utf8: $(ocesql_utf8_DEPENDENCIES)
 $(srcdir)/misc: $(misc_DEPENDENCIES)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

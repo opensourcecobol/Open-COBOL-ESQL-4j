@@ -1,0 +1,271 @@
+AT_SETUP([FUNCTION NATIONAL single-byte])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 I-STR    PIC X(5).
+       01 O-STR    PIC X(10).
+       PROCEDURE        DIVISION.
+           MOVE "ABCDZ" TO I-STR.
+           MOVE FUNCTION NATIONAL(I-STR) TO O-STR.
+           DISPLAY O-STR WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj -conf=../../cobol4j_utf8.src/jp-compat.conf prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'ＡＢＣＤＺ'| nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION NATIONAL multi-byte])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 I-STR    PIC X(9).
+       01 O-STR    PIC X(12).
+       PROCEDURE        DIVISION.
+           MOVE "AＢC１2３" TO I-STR.
+           MOVE FUNCTION NATIONAL(I-STR) TO O-STR.
+           DISPLAY O-STR WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj -conf=../../cobol4j_utf8.src/jp-compat.conf prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'ＡＢＣ１２３'| nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION NATIONAL KIGOU-exclamation])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 I-STR    PIC X(5).
+       01 O-STR    PIC X(10).
+       PROCEDURE        DIVISION.
+           MOVE "!!!!!" TO I-STR.
+           MOVE FUNCTION NATIONAL(I-STR) TO O-STR.
+           DISPLAY O-STR WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj -conf=../../cobol4j_utf8.src/jp-compat.conf prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '！！！！！' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION NATIONAL KIGOU-yen])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 I-STR    PIC X(1).
+       01 O-STR    PIC X(10).
+       PROCEDURE        DIVISION.
+           MOVE "¥" TO I-STR.
+           MOVE FUNCTION NATIONAL(I-STR) TO O-STR.
+           DISPLAY O-STR WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj -conf=../../cobol4j_utf8.src/jp-compat.conf -Wall prog.cob], [0], [],
+[prog.cob:10: Warning: Value size exceeds data size
+prog.cob:6: Warning: 'I-STR' defined here as PIC X(1)
+])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '￥        ' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION NATIONAL KIGOU-plus])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 I-STR    PIC X(2).
+       01 O-STR    PIC X(10).
+       PROCEDURE        DIVISION.
+           MOVE "+ " TO I-STR.
+           MOVE FUNCTION NATIONAL(I-STR) TO O-STR.
+           DISPLAY O-STR WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj -conf=../../cobol4j_utf8.src/jp-compat.conf prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n '＋　      ' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION NATIONAL (HanKana w/ Daku-on)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 I-STR    PIC X(16).
+       01 O-STR    PIC X(16).
+       PROCEDURE        DIVISION.
+           MOVE "ﾚﾃﾞｨｶﾞｶﾞ" TO I-STR.
+           MOVE FUNCTION NATIONAL(I-STR) TO O-STR.
+           DISPLAY O-STR WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj -conf=../../cobol4j_utf8.src/jp-compat.conf prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'レディガガ　　　' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([FUNCTION NATIONAL (HanKana w/ Han-daku-on)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 I-STR    PIC X(10).
+       01 O-STR    PIC X(10).
+       PROCEDURE        DIVISION.
+           MOVE "ﾎﾟﾋﾟﾝ" TO I-STR.
+           MOVE FUNCTION NATIONAL(I-STR) TO O-STR.
+           DISPLAY O-STR WITH NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj -conf=../../cobol4j_utf8.src/jp-compat.conf prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'ポピン　　' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([N Literal (NO zenakaku conversion)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           DISPLAY N"いろは".
+           DISPLAY N"ｲﾛﾊ".
+           DISPLAY N"ﾎﾟﾋﾟﾝ".
+           DISPLAY N"ABC".
+           DISPLAY N"#$%".
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'いろは
+ｲﾛﾊ
+ﾎﾟﾋﾟﾝ
+ABC
+#$%
+'| nkf -x --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([NC Literal (NO zenakaku conversion)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           DISPLAY NC"いろは".
+           DISPLAY NC"ｲﾛﾊ".
+           DISPLAY NC"ﾎﾟﾋﾟﾝ".
+           DISPLAY NC"ABC".
+           DISPLAY NC"#$%".
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'いろは
+ｲﾛﾊ
+ﾎﾟﾋﾟﾝ
+ABC
+#$%
+'| nkf -x --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([ND Literal (NO zenakaku conversion)])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           DISPLAY ND"いろは".
+           DISPLAY ND"ｲﾛﾊ".
+           DISPLAY ND"ﾎﾟﾋﾟﾝ".
+           DISPLAY ND"ABC".
+           DISPLAY ND"#$%".
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'いろは
+ｲﾛﾊ
+ﾎﾟﾋﾟﾝ
+ABC
+#$%
+'| nkf -x --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
+
+AT_SETUP([NX Literal])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           DISPLAY NX"E38184E3828DE381AF".
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj prog.cob])
+AT_CHECK([java prog > out1.txt])
+AT_CHECK([echo -n 'いろは
+' | nkf --ic=UTF-8 --oc=Shift_JIS > out2.txt])
+AT_CHECK([diff out1.txt out2.txt])
+
+AT_CLEANUP
