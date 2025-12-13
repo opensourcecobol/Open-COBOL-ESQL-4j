@@ -78,18 +78,32 @@ yyinput (char *buf, int max_size);
 %x ESQL_FUNC_STATE ESQL_INCLUDE_STATE ESQL_SELECT_STATE ESQL_STATE ESQL_DBNAME_STATE WHERE_CURRENT_OF
 
 ifdef(M4.I18N_UTF8,>>>>>
-JPNWORD ([\xE0-\xEF][\x80-\xBF][\x80-\xBF])|[\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC])
-HOSTWORD ":"([A-Za-z\-0-9_]*(([\xE0-\xEF][\x80-\xBF][\x80-\xBF])|[\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC]))*[A-Za-z\-0-9_]*)
+ZENSPC [\xE3][\x80][\x80]
+UTF8_1BYTE [\x00-\x7F]
+UTF8_2BYTE [\xC2-\xDF][\x80-\xBF]
+UTF8_3BYTE_1 [\xE0][\xA0-\xBF][\x80-\xBF]
+UTF8_3BYTE_2 [\xE1-\xEC][\x80-\xBF][\x80-\xBF]
+UTF8_3BYTE_EXT_ZENSPC [\xE1-\xE2][\x80-\xBF][\x80-\xBF]|[\xE3][\x80-\xBF][\x81-\xBF]|[\xE3][\x81-\xBF][\x80-\xBF]|[\xE4-\xEC][\x80-\xBF][\x80-\xBF]
+UTF8_3BYTE_3 [\xED][\x80-\x9F][\x80-\xBF]
+UTF8_3BYTE_4 [\xEE-\xEF][\x80-\xBF][\x80-\xBF]
+UTF8_3BYTE {UTF8_3BYTE_1}|{UTF8_3BYTE_2}|{UTF8_3BYTE_3}
+UTF8_4BYTE_1 [\xF0][\x90-\xBF][\x80-\xBF][\x80-\xBF]
+UTF8_4BYTE_2 [\xF1-\xF3][\x80-\xBF][\x80-\xBF][\x80-\xBF]
+UTF8_4BYTE_3 [\xF4][\x80-\x8F][\x80-\xBF][\x80-\xBF]
+UTF8_4BYTE {UTF8_4BYTE_1}|{UTF8_4BYTE_2}|{UTF8_4BYTE_3}
+UTF8_EXT {UTF8_2BYTE}|{UTF8_3BYTE_1}|{UTF8_3BYTE_EXT_ZENSPC}|{UTF8_3BYTE_3}|{UTF8_3BYTE_4}|{UTF8_4BYTE}
+JPNWORD {UTF8_2BYTE}|{UTF8_3BYTE_1}|{UTF8_3BYTE_EXT_ZENSPC}|{UTF8_3BYTE_3}|{UTF8_3BYTE_4}|{UTF8_4BYTE}
 <<<<<,>>>>>
+ZENSPC [\x81][\x40]
 JPNWORD [\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC])
-HOSTWORD ":"([A-Za-z\-0-9_]*([\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC]))*[A-Za-z\-0-9_]*)
 <<<<<)
+HOSTWORD ":"([A-Za-z\-0-9_]*({JPNWORD})*[A-Za-z\-0-9_]*)
 DIGIT [0-9]
 WORD ([A-Za-z\+\-0-9_]|[(]|[)]|[\'])
 INCFILE [A-Za-z0-9_\+\-]+
 INCFILE_QUOTED ("\""[^\"]+"\""|"\'"[^\']+"\'")
 FILENAME [A-Za-z0-9_\+\-\.]+
-STRVALUE ("\""[^\"]+"\""|"\'"[^\']+"\'")
+STRVALUE ("N"?"\""[^\"]+"\""|"N"?"\'"[^\']+"\'")
 HEXVALUE "X"("\""[^\"]+"\""|"\'"[^\']+"\'")
 SELF [,()\[\].;\:\+\-\*\/\%\^\<\>\=]
 OP_CHARS [\~\!\@\#\^\&\|\`\?\+\-\*\/\%\<\>\=]
@@ -102,7 +116,7 @@ INT_CONSTANT {digit}+
 %%
 
 
-"EXEC"[ ]+"SQL"		{
+"EXEC"({ZENSPC}|[ ])+"SQL"		{
 					BEGIN ESQL_FUNC_STATE;
 
 					startlineno = yylineno;
@@ -125,7 +139,7 @@ INT_CONSTANT {digit}+
 }
 
 <ESQL_FUNC_STATE>{
-	[ \t]+ {
+	([ \t]|{ZENSPC})+ {
            strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
   	       }
 
@@ -366,7 +380,7 @@ INT_CONSTANT {digit}+
 			  strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 	          return TOKEN;
 	          }
-	[ \t]+ {
+	({ZENSPC}|[ \t])+ {
            strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
 	       }
 	(\r\n|\n) {
@@ -632,7 +646,7 @@ INT_CONSTANT {digit}+
 }
 <WORKING_STATE>{
 
-      "EXEC"[ ]+"SQL"[ ]+"BEGIN"[ ]+"DECLARE"[ ]+"SECTION"[ ]+"END-EXEC"[ ]*"." {
+      "EXEC"({ZENSPC}|[ ])+"SQL"[ ]+"BEGIN"[ ]+"DECLARE"[ ]+"SECTION"[ ]+"END-EXEC"[ ]*"." {
         startlineno = yylineno;
         endlineno = yylineno;
 	host_reference_list = NULL;
