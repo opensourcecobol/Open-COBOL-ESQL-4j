@@ -17,12 +17,23 @@
  * Boston, MA 02110-1301 USA
  */
 
+#include "config.h"
 #include "ocesql.h"
 #include "ocesqlutil.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+// #ifdef I18N_UTF8
+#define UTF8_2BYTE_START 0xC2
+#define UTF8_2BYTE_END 0xDF
+#define UTF8_3BYTE_START 0xE0
+#define UTF8_3BYTE_END 0xEF
+#define UTF8_4BYTE_START 0xF0
+#define UTF8_4BYTE_END 0xF4
+#define UTF8_TRAIL_START 0x80
+#define UTF8_TRAIL_END 0xBF
+// #else /* I18N_UTF8 */
 #define SJIS_LEAD_START_1 0x81
 #define SJIS_LEAD_END_1 0x9F
 #define SJIS_LEAD_START_2 0xE0
@@ -31,6 +42,7 @@
 #define SJIS_TRAIL_END_1 0x7E
 #define SJIS_TRAIL_START_2 0x80
 #define SJIS_TRAIL_END_2 0xFC
+// #endif /* I18N_UTF8 */
 
 char inbuff[256];
 char out[256];
@@ -209,7 +221,11 @@ void sql_string(const struct cb_exec_list *wk_text) {
     // Output strings that fit within the B area to the file,
     // and output overflow characters to the next line
     if (strlen(line_buff) > 0) {
+#ifdef I18N_UTF8
+      int maximum_chars_in_single_line = 62;
+#else  /* I18N_UTF8 */
       int maximum_chars_in_single_line = 59;
+#endif /* I18N_UTF8 */
       const char *p_line = line_buff;
       int is_first_line = 1;
 
@@ -245,9 +261,37 @@ void sql_string(const struct cb_exec_list *wk_text) {
                                   ? maximum_chars_in_single_line
                                   : p_line_len;
 
-        // Do not split 2-bytes character into different lines
+        // Do not split multi-byte character into different lines
         for (i = 0; i < len_to_write; i++) {
           unsigned char c1 = (unsigned char)p_line[i];
+#ifdef I18N_UTF8
+          int utf8_bytes = 0;
+          if (c1 >= UTF8_2BYTE_START && c1 <= UTF8_2BYTE_END) {
+            utf8_bytes = 2;
+          } else if (c1 >= UTF8_3BYTE_START && c1 <= UTF8_3BYTE_END) {
+            utf8_bytes = 3;
+          } else if (c1 >= UTF8_4BYTE_START && c1 <= UTF8_4BYTE_END) {
+            utf8_bytes = 4;
+          }
+          if (utf8_bytes > 0) {
+            int valid_utf8 = 1;
+            for (int j = 1; j < utf8_bytes && (i + j) < p_line_len; j++) {
+              unsigned char trail = (unsigned char)p_line[i + j];
+              if (trail < UTF8_TRAIL_START || trail > UTF8_TRAIL_END) {
+                valid_utf8 = 0;
+                break;
+              }
+            }
+            if (valid_utf8) {
+              if (i + utf8_bytes > len_to_write) {
+                len_to_write = i;
+                break;
+              } else {
+                i += (utf8_bytes - 1);
+              }
+            }
+          }
+#else  /* I18N_UTF8 */
           if ((c1 >= SJIS_LEAD_START_1 && c1 <= SJIS_LEAD_END_1) ||
               (c1 >= SJIS_LEAD_START_2 && c1 <= SJIS_LEAD_END_2)) {
             unsigned char c2 = (unsigned char)p_line[i + 1];
@@ -261,6 +305,7 @@ void sql_string(const struct cb_exec_list *wk_text) {
               }
             }
           }
+#endif /* I18N_UTF8 */
         }
 
         memcpy(outdata_ptr, p_line, len_to_write);
@@ -2245,11 +2290,21 @@ void ppoutput_incfile(const char *ppin, const char *ppout,
 
 int check_Dchar(char c) {
   unsigned char uc = (unsigned char)c;
-  if (uc >= 0x81 && uc <= 0x9f) {
+#ifdef I18N_UTF8
+  if (uc >= UTF8_2BYTE_START && uc <= UTF8_2BYTE_END) {
     return 1;
-  } else if (uc >= 0xe0 && uc <= 0xef) {
+  } else if (uc >= UTF8_3BYTE_START && uc <= UTF8_3BYTE_END) {
+    return 1;
+  } else if (uc >= UTF8_4BYTE_START && uc <= UTF8_4BYTE_END) {
     return 1;
   }
+#else  /* I18N_UTF8 */
+  if (uc >= SJIS_LEAD_START_1 && uc <= SJIS_LEAD_END_1) {
+    return 1;
+  } else if (uc >= SJIS_LEAD_START_2 && uc <= SJIS_LEAD_END_2) {
+    return 1;
+  }
+#endif /* I18N_UTF8 */
   return 0;
 }
 

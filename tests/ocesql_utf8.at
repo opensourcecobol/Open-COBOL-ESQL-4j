@@ -1,0 +1,13 @@
+AT_INIT(UTF8 test)
+
+AT_TESTED([ocesql])
+
+m4_include([cursor.at])
+m4_include([host-variable.at])
+m4_include([include.at])
+m4_include([japanese.at])
+m4_include([long-sql.at])
+m4_include([prepare.at])
+m4_include([sample.at])
+m4_include([sql-convert.at])
+m4_include([varying.at])

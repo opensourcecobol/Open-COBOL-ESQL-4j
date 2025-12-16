@@ -482,7 +482,15 @@ cobol4j_utf8_DEPENDENCIES = \
 	cobol4j_utf8.src/user-defined-word.at
 
 ocesql_utf8_DEPENDENCIES = \
-	ocesql_utf8.src/sample.at
+	ocesql_utf8.src/cursor.at \
+	ocesql_utf8.src/host-variable.at \
+	ocesql_utf8.src/include.at \
+	ocesql_utf8.src/japanese.at \
+	ocesql_utf8.src/long-sql.at \
+	ocesql_utf8.src/prepare.at \
+	ocesql_utf8.src/sample.at \
+	ocesql_utf8.src/sql-convert.at \
+	ocesql_utf8.src/varying.at
 
 misc_DEPENDENCIES = \
 	misc.src/long-sql.at \

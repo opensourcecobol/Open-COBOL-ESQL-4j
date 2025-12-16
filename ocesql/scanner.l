@@ -84,7 +84,7 @@ JPNWORD [\xA0-\xDF]|([\x81-\x9F\xE0-\xFC][\x40-\x7E\x80-\xFC])
 HOSTWORD ":"([A-Za-z\-0-9_]*({JPNWORD})*[A-Za-z\-0-9_]*)
 DIGIT [0-9]
 WORD ([A-Za-z\+\-0-9_]|[(]|[)]|[\'])
-INCFILE [A-Za-z0-9_\+\-]+
+INCFILE ([A-Za-z0-9_\+\-]|{JPNWORD})+
 INCFILE_QUOTED ("\""[^\"]+"\""|"\'"[^\']+"\'")
 FILENAME [A-Za-z0-9_\+\-\.]+
 STRVALUE ("N"?"\""[^\"]+"\""|"N"?"\'"[^\']+"\'")
@@ -264,21 +264,21 @@ INT_CONSTANT {digit}+
 		return FETCH;
 	}
 
-	"COMMIT"[ ]+"WORK"+[ ]+"RELEASE" {
+	"COMMIT"({ZENSPC}|[ ])+"WORK"+({ZENSPC}|[ ])+"RELEASE" {
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT_RELEASE");
 		return COMMIT_WORK;
 	}
 
-	"COMMIT"[ ]+"WORK"+[ ]+"WITH"+[ ]+"RELEASE" {
+	"COMMIT"({ZENSPC}|[ ])+"WORK"+({ZENSPC}|[ ])+"WITH"+({ZENSPC}|[ ])+"RELEASE" {
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT_RELEASE");
 		return COMMIT_WORK;
 	}
 
-	"COMMIT"[ ]+"WORK" {
+	"COMMIT"({ZENSPC}|[ ])+"WORK" {
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"COMMIT");
@@ -292,21 +292,21 @@ INT_CONSTANT {digit}+
 		return COMMIT_WORK;
 	}
 
-	"ROLLBACK"[ ]+"WORK"+[ ]+"RELEASE" {
+	"ROLLBACK"({ZENSPC}|[ ])+"WORK"+({ZENSPC}|[ ])+"RELEASE" {
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK_RELEASE");
 		return ROLLBACK_WORK;
 	}
 
-	"ROLLBACK"[ ]+"WORK"+[ ]+"WITH"+[ ]+"RELEASE" {
+	"ROLLBACK"({ZENSPC}|[ ])+"WORK"+({ZENSPC}|[ ])+"WITH"+({ZENSPC}|[ ])+"RELEASE" {
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK_RELEASE");
 		return ROLLBACK_WORK;
 	}
 
-	"ROLLBACK"[ ]+"WORK" {
+	"ROLLBACK"({ZENSPC}|[ ])+"WORK" {
 		BEGIN ESQL_STATE;
 
 		com_strcpy(commandname,sizeof(commandname),"ROLLBACK");
@@ -443,7 +443,7 @@ INT_CONSTANT {digit}+
 			return FOR;
 	}
 
-	"IDENTIFIED"[ ]+"BY" {
+	"IDENTIFIED"({ZENSPC}|[ ])+"BY" {
 			if(flag_insqlstring){
 	      			yylval.s = com_strdup (yytext);
 	      			return TOKEN;
@@ -460,7 +460,7 @@ INT_CONSTANT {digit}+
 			return USING;
 	}
 
-	"INTO" {
+	({ZENSPC}|[ \t])+"INTO"({ZENSPC}|[ \t])+ {
 			flag_select_into = 0;
 			if(strcmp(commandname, "SELECT") != 0){
 			    strncat(sqlbody, yytext, sizeof(sqlbody) - strlen(sqlbody) - 1);
@@ -546,7 +546,7 @@ INT_CONSTANT {digit}+
 	}
 }
 
-"EXEC"[ ]+"SQL"[ \r\n]+"INCLUDE" {
+"EXEC"({ZENSPC}|[ ])+"SQL"({ZENSPC}|[ \r\n])+"INCLUDE" {
     period = 0;
 	int newlines = 0;
     for (char *p = yytext; *p != '\0'; p++) {
@@ -571,7 +571,7 @@ INT_CONSTANT {digit}+
  	return EXECSQL_INCLUDE;
 }
 <ESQL_INCLUDE_STATE>{
-	(\r\n|\n) {   }
+	({ZENSPC}|\r\n|\n) {   }
 	"SQLCA" {
 		memset(commandname,0,sizeof(commandname));
 		com_strcpy(commandname,sizeof(commandname),"INCLUDE");
@@ -607,7 +607,7 @@ INT_CONSTANT {digit}+
 	}
 }
 
-"WORKING-STORAGE"[ ]+"SECTION"[ ]*"." {
+"WORKING-STORAGE"({ZENSPC}|[ ])+"SECTION"[ ]*"." {
         BEGIN WORKING_STATE;
         startlineno = yylineno;
         endlineno = yylineno;
@@ -630,7 +630,7 @@ INT_CONSTANT {digit}+
 }
 <WORKING_STATE>{
 
-      "EXEC"({ZENSPC}|[ ])+"SQL"[ ]+"BEGIN"[ ]+"DECLARE"[ ]+"SECTION"[ ]+"END-EXEC"[ ]*"." {
+      "EXEC"({ZENSPC}|[ ])+"SQL"({ZENSPC}|[ ])+"BEGIN"({ZENSPC}|[ ])+"DECLARE"({ZENSPC}|[ ])+"SECTION"({ZENSPC}|[ ])+"END-EXEC"[ ]*"." {
         startlineno = yylineno;
         endlineno = yylineno;
 	host_reference_list = NULL;
@@ -650,7 +650,7 @@ INT_CONSTANT {digit}+
 
         return HOSTVARIANTBEGIN;
       }
-      "EXEC"[ ]+"SQL"[ ]+"END"[ ]+"DECLARE"[ ]+"SECTION"[ ]+"END-EXEC"[ ]*"." {
+      "EXEC"({ZENSPC}|[ ])+"SQL"({ZENSPC}|[ ])+"END"({ZENSPC}|[ ])+"DECLARE"({ZENSPC}|[ ])+"SECTION"({ZENSPC}|[ ])+"END-EXEC"[ ]*"." {
         startlineno = yylineno;
         endlineno = yylineno;
 	host_reference_list = NULL;
@@ -671,20 +671,20 @@ INT_CONSTANT {digit}+
         return HOSTVARIANTEND;
       }
 
-      "COPY"[ ]+"\"".+"\""([ ]+("==".*"=="|[^\.]*))*"." {}
-      "COPY"[ ]+[^\.]+([ ]+("==".*"=="|[^\.]*))*"." {}
-      "INCLUDE"[ ]+"\"".+"\""([ ]+("==".*"=="|[^\.]*))*"." {}
-      "INCLUDE"[ ]+[^\.]+([ ]+("==".*"=="|[^\.]*))*"." {}
+      "COPY"({ZENSPC}|[ ])+"\"".+"\""(({ZENSPC}|[ ])+("==".*"=="|[^\.]*))*"." {}
+      "COPY"({ZENSPC}|[ ])+[^\.]+(({ZENSPC}|[ ])+("==".*"=="|[^\.]*))*"." {}
+      "INCLUDE"({ZENSPC}|[ ])+"\"".+"\""(({ZENSPC}|[ ])+("==".*"=="|[^\.]*))*"." {}
+      "INCLUDE"({ZENSPC}|[ ])+[^\.]+(({ZENSPC}|[ ])+("==".*"=="|[^\.]*))*"." {}
 
       ("66"|"77"|"78"|"88")[^\.]*"." {}
 
-      "OBJECT-STORAGE"[ ]+"SECTION"[ ]*"." |
-      "LOCAL-STORAGE"[ ]+"SECTION"[ ]*"." |
-      "LINKAGE"[ ]+"SECTION"[ ]*"." |
-      "COMMUNICATION"[ ]+"SECTION"[ ]*"." |
-      "REPORT"[ ]+"SECTION"[ ]*"." |
-      "SCREEN"[ ]+"SECTION"[ ]*"." |
-      "PROCEDURE"[ ]+"DIVISION"[^\.]*"." {
+      "OBJECT-STORAGE"({ZENSPC}|[ ])+"SECTION"[ ]*"." |
+      "LOCAL-STORAGE"({ZENSPC}|[ ])+"SECTION"[ ]*"." |
+      "LINKAGE"({ZENSPC}|[ ])+"SECTION"[ ]*"." |
+      "COMMUNICATION"({ZENSPC}|[ ])+"SECTION"[ ]*"." |
+      "REPORT"({ZENSPC}|[ ])+"SECTION"[ ]*"." |
+      "SCREEN"({ZENSPC}|[ ])+"SECTION"[ ]*"." |
+      "PROCEDURE"({ZENSPC}|[ ])+"DIVISION"[^\.]*"." {
         startlineno = yylineno;
         endlineno = yylineno;
 	host_reference_list = NULL;
