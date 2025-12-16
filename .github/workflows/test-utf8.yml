@@ -63,14 +63,14 @@ jobs:
         if: matrix.os == 'ubuntu:24.04'
         run: |
           apt update -y
-          apt install -y build-essential bison flex gettext texinfo automake autoconf curl git
+          apt install -y build-essential bison flex gettext texinfo automake autoconf curl git nkf
 
       # Install dependencies (Almalinux 9)
       - name: Install dependencies on AlmaLinux 9
         if: matrix.os == 'almalinux:9'
         run: |
           dnf -y update
-          dnf install -y gcc make bison flex automake autoconf diffutils gettext git
+          dnf install -y gcc make bison flex automake autoconf diffutils gettext git nkf
 
       # Setup JDK
       - name: Setup JDK
@@ -112,33 +112,37 @@ jobs:
           make
           make install
       
-      - name: Display versions
-        run: |
-          ocesql -version
-          cobj -version
+      # - name: Display versions
+      #   run: |
+      #     ocesql -version
+      #     cobj -version
 
       # Run Autotest for PostgreSQL 9.6
-      # - name: Run tests for PostgreSQL 9.6
-      #   working-directory: tests
-      #   run: |
-      #     cp ../.github/workflows/db-settings/embed_db_info_postgresql_9.6.sh embed_db_info.sh
-      #     OCDB_LOGLEVEL=debug make test
+      - name: Run tests for PostgreSQL 9.6
+        working-directory: tests
+        run: |
+          cp ../.github/workflows/db-settings/embed_db_info_postgresql_9.6.sh embed_db_info.sh
+          export OCDB_LOGLEVEL=debug
+          ./cobol4j_utf8
+          ./ocesql_utf8
 
-      # # Run Autotest for PostgreSQL 15
-      # - name: Run tests for PostgreSQL 15
-      #   working-directory: tests
-      #   run: |
-      #     cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
-      #     OCDB_LOGFILE=debug make test
+      # Run Autotest for PostgreSQL 15
+      - name: Run tests for PostgreSQL 15
+        working-directory: tests
+        run: |
+          cp ../.github/workflows/db-settings/embed_db_info_postgresql_15.sh embed_db_info.sh
+          export OCDB_LOGLEVEL=debug
+          ./cobol4j_utf8
+          ./ocesql_utf8
 
-      # # Define the archive name
-      # - name: Define the archive name
-      #   run: |
-      #     echo "OCESQL_ARCHIVE_NAME=ocesql-${{ matrix.os }}" | sed s/:/-/g >> "$GITHUB_ENV"
+      # Define the archive name
+      - name: Define the archive name
+        run: |
+          echo "OCESQL_ARCHIVE_NAME=ocesql-${{ matrix.os }}" | sed s/:/-/g >> "$GITHUB_ENV"
 
-      # # upload a log file
-      # - name: Upload a test log
-      #   uses: actions/upload-artifact@v6
-      #   with:
-      #     name: ${{ env.OCESQL_ARCHIVE_NAME }}.log
-      #     path: /tmp/ocesql.log
+      # upload a log file
+      - name: Upload a test log
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.OCESQL_ARCHIVE_NAME }}.log
+          path: /tmp/ocesql.log
