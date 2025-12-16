@@ -138,7 +138,7 @@ jobs:
       # Define the archive name
       - name: Define the archive name
         run: |
-          echo "OCESQL_ARCHIVE_NAME=ocesql-${{ matrix.os }}" | sed s/:/-/g >> "$GITHUB_ENV"
+          echo "OCESQL_ARCHIVE_NAME=ocesql-utf8-${{ matrix.os }}" | sed s/:/-/g >> "$GITHUB_ENV"
 
       # upload a log file
       - name: Upload a test log
