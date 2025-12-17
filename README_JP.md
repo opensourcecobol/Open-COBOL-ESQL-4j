@@ -90,6 +90,15 @@ make
 make install
 ```
 
+UTF-8で記述されたCOBOLソースコードをプリコンパイルしたい場合は、下記のコマンドを実行してください。
+
+```sh
+./configure --prefix=/usr/ --enable-utf8
+touch ocesql/*.m4
+make
+make install
+```
+
 ### `$CLASSPATH`の設定
 
 `/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar`と`/usr/lib/Open-COBOL-ESQL-4j/postgresql.jar`を環境変数CLASSPATHに追加してください。
