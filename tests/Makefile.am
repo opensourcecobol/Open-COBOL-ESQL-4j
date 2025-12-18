@@ -55,7 +55,7 @@ cobol4j_utf8_DEPENDENCIES = \
 	cobol4j_utf8.src/file-handler-japanese.at \
 	cobol4j_utf8.src/japanese-char-section-var.at \
 	cobol4j_utf8.src/java-interface.at \
-	cobol4j_utf8.src/limits.at
+	cobol4j_utf8.src/limits.at \
 	cobol4j_utf8.src/mb-space.at \
 	cobol4j_utf8.src/national.at \
 	cobol4j_utf8.src/pic-n.at \

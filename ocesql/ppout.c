@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #ifdef I18N_UTF8
 #define UTF8_2BYTE_START 0xC2
 #define UTF8_2BYTE_END 0xDF
 #define UTF8_3BYTE_START 0xE0
@@ -33,7 +32,7 @@
 #define UTF8_4BYTE_END 0xF4
 #define UTF8_TRAIL_START 0x80
 #define UTF8_TRAIL_END 0xBF
-// #else /* I18N_UTF8 */
+
 #define SJIS_LEAD_START_1 0x81
 #define SJIS_LEAD_END_1 0x9F
 #define SJIS_LEAD_START_2 0xE0
@@ -42,7 +41,6 @@
 #define SJIS_TRAIL_END_1 0x7E
 #define SJIS_TRAIL_START_2 0x80
 #define SJIS_TRAIL_END_2 0xFC
-// #endif /* I18N_UTF8 */
 
 char inbuff[256];
 char out[256];
