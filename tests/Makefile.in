@@ -85,6 +85,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+build_triplet = @build@
+host_triplet = @host@
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -334,6 +336,7 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+COB_M4_FLAGS = @COB_M4_FLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CSCOPE = @CSCOPE@
@@ -344,10 +347,8 @@ DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
-GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -390,14 +391,22 @@ am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
+build = @build@
 build_alias = @build_alias@
+build_cpu = @build_cpu@
+build_os = @build_os@
+build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+host = @host@
 host_alias = @host_alias@
+host_cpu = @host_cpu@
+host_os = @host_os@
+host_vendor = @host_vendor@
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
@@ -422,11 +431,19 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = basic \
-	cobol_data \
-	sql_data \
-	sqlca \
-	misc
+@I18N_UTF8_FALSE@TESTS = basic \
+@I18N_UTF8_FALSE@	cobol_data \
+@I18N_UTF8_FALSE@	sql_data \
+@I18N_UTF8_FALSE@	sqlca \
+@I18N_UTF8_FALSE@	misc
+
+@I18N_UTF8_TRUE@TESTS = basic \
+@I18N_UTF8_TRUE@	cobol_data \
+@I18N_UTF8_TRUE@	sql_data \
+@I18N_UTF8_TRUE@	sqlca \
+@I18N_UTF8_TRUE@	cobol4j_utf8 \
+@I18N_UTF8_TRUE@	ocesql_utf8 \
+@I18N_UTF8_TRUE@	misc
 
 basic_DEPENDENCIES = \
 	basic.src/commit-rollback.at \
@@ -462,6 +479,32 @@ sqlca_DEPENDENCIES = \
 	sqlca.src/fetch-loop.at \
 	sqlca.src/errml-errmc.at
 
+cobol4j_utf8_DEPENDENCIES = \
+	cobol4j_utf8.src/compare-national-diff-size.at \
+	cobol4j_utf8.src/compare-national.at \
+	cobol4j_utf8.src/error-print.at \
+	cobol4j_utf8.src/file-handler-japanese.at \
+	cobol4j_utf8.src/japanese-char-section-var.at \
+	cobol4j_utf8.src/java-interface.at \
+	cobol4j_utf8.src/limits.at \
+	cobol4j_utf8.src/mb-space.at \
+	cobol4j_utf8.src/national.at \
+	cobol4j_utf8.src/pic-n.at \
+	cobol4j_utf8.src/pic-x.at \
+	cobol4j_utf8.src/program-id.at \
+	cobol4j_utf8.src/user-defined-word.at
+
+ocesql_utf8_DEPENDENCIES = \
+	ocesql_utf8.src/cursor.at \
+	ocesql_utf8.src/host-variable.at \
+	ocesql_utf8.src/include.at \
+	ocesql_utf8.src/japanese.at \
+	ocesql_utf8.src/long-sql.at \
+	ocesql_utf8.src/prepare.at \
+	ocesql_utf8.src/sample.at \
+	ocesql_utf8.src/sql-convert.at \
+	ocesql_utf8.src/varying.at
+
 misc_DEPENDENCIES = \
 	misc.src/long-sql.at \
 	misc.src/include.at \
@@ -475,7 +518,10 @@ EXTRA_DIST = $(srcdir)/package.m4 \
 	$(basic_DEPENDENCIES) \
 	$(cobol_data_DEPENDENCIES) \
 	$(sql_data_DEPENDENCIES) \
-	$(sqlca_DEPENDENCIES)
+	$(sqlca_DEPENDENCIES) \
+	$(cobol4j_utf8_DEPENDENCIES) \
+	$(ocesql_utf8_DEPENDENCIES) \
+	$(misc_DEPENDENCIES)
 
 DISTCLEANFILES = atconfig
 all: all-am
@@ -694,6 +740,20 @@ misc.log: misc
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+cobol4j_utf8.log: cobol4j_utf8
+	@p='cobol4j_utf8'; \
+	b='cobol4j_utf8'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+ocesql_utf8.log: ocesql_utf8
+	@p='ocesql_utf8'; \
+	b='ocesql_utf8'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .test.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -892,6 +952,8 @@ $(srcdir)/basic: $(basic_DEPENDENCIES)
 $(srcdir)/cobol_data: $(cobol_data_DEPENDENCIES)
 $(srcdir)/sql_data: $(sql_data_DEPENDENCIES)
 $(srcdir)/sqlca: $(sqlca_DEPENDENCIES)
+$(srcdir)/cobol4j_utf8: $(cobol4j_utf8_DEPENDENCIES)
+$(srcdir)/ocesql_utf8: $(ocesql_utf8_DEPENDENCIES)
 $(srcdir)/misc: $(misc_DEPENDENCIES)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

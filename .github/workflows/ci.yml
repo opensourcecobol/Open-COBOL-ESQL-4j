@@ -21,6 +21,10 @@ jobs:
     needs: check-workflows
     uses: ./.github/workflows/test.yml
   
+  test-utf8:
+    needs: check-workflows
+    uses: ./.github/workflows/test-utf8.yml
+  
   coverage:
     needs: check-workflows
     uses: ./.github/workflows/coverage.yml

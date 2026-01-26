@@ -109,7 +109,7 @@ dblibj/project/target/active.json
 *.class
 *.cache
 Makefile
-config.h
+/config.h
 config.log
 config.status
 libtool
@@ -126,5 +126,7 @@ tests/cobol_data
 tests/misc
 tests/sql_data
 tests/sqlca
+tests/ocesql_utf8
+tests/cobol4j_utf8
 configure~
 tests/*~

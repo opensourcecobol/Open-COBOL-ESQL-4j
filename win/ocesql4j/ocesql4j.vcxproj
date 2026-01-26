@@ -70,6 +70,7 @@
       <PreprocessorDefinitions>_CONSOLE;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\;..\..\ocesql;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -105,6 +106,7 @@
     <ClInclude Include="..\..\ocesql\ocesql.h" />
     <ClInclude Include="..\..\ocesql\ocesqlutil.h" />
     <ClInclude Include="..\..\ocesql\parser.h" />
+    <ClInclude Include="..\config.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

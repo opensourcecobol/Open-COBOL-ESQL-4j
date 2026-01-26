@@ -1,0 +1,23 @@
+AT_SETUP([file-handler-japanese])
+
+AT_DATA([prog.cbl], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       ENVIRONMENT      DIVISION.
+       INPUT-OUTPUT     SECTION.
+       FILE-CONTROL.
+       SELECT テストファイル
+           ORGANIZATION IS SEQUENTIAL.
+       DATA             DIVISION.
+       FILE             SECTION.
+       FD テストファイル.
+       01 REC      PIC X(10).
+       PROCEDURE        DIVISION.
+           STOP RUN.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([cobj prog.cob], [0])
+AT_CHECK([grep 'h_テストファイル' prog.java > /dev/null], [0])
+
+AT_CLEANUP

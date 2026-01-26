@@ -1,0 +1,47 @@
+AT_SETUP([japanese word section variable])
+
+AT_DATA([prog.cbl], [       IDENTIFICATION              DIVISION.
+       PROGRAM-ID.                 prog.
+
+       DATA                        DIVISION.
+       WORKING-STORAGE             SECTION.
+       01 新宿 PIC x(5) VALUE "00000".
+       01 横浜−１ PIC x(5) VALUE "11111".
+       01 甲府−2 PIC x(5) VALUE "22222".
+       01 宇都宮１ PIC x(5) VALUE "33333".
+       01 仙台2 PIC x(5) VALUE "44444".
+       PROCEDURE                   DIVISION.
+       東京ラベル.
+         DISPLAY 新宿.
+       神奈川−１ラベル.
+         DISPLAY 横浜−１.
+       山梨−2ラベル.
+         DISPLAY 甲府−2.
+       栃木１ラベル.
+         DISPLAY 宇都宮１.
+       宮城2ラベル.
+         DISPLAY 仙台2.
+])
+
+AT_CHECK([${OCESQL} prog.cbl prog.cob > /dev/null], [0])
+AT_CHECK([${COMPILE} prog.cob], [0])
+AT_CHECK([${RUN_MODULE} prog], [0],
+[00000
+11111
+22222
+33333
+44444
+])
+AT_CHECK([cat prog.java | grep "新宿" > /dev/null])
+AT_CHECK([cat prog.java | grep "横浜_１" > /dev/null])
+AT_CHECK([cat prog.java | grep "甲府_2" > /dev/null])
+AT_CHECK([cat prog.java | grep "宇都宮１" > /dev/null])
+AT_CHECK([cat prog.java | grep "仙台2" > /dev/null])
+
+AT_CHECK([cat prog.java | grep "東京ラベル" > /dev/null])
+AT_CHECK([cat prog.java | grep "神奈川_１ラベル" > /dev/null])
+AT_CHECK([cat prog.java | grep "山梨_2ラベル" > /dev/null])
+AT_CHECK([cat prog.java | grep "栃木１ラベル" > /dev/null])
+AT_CHECK([cat prog.java | grep "宮城2ラベル" > /dev/null])
+
+AT_CLEANUP

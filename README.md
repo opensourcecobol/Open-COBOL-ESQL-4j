@@ -89,6 +89,15 @@ make
 make install
 ```
 
+If you want to pre-compile the source code written in UTF-8 encoding, run the following commands.
+
+```sh
+./configure --prefix=/usr/ --enable-utf8
+touch ocesql/*.m4
+make
+make install
+```
+
 ### Set `$CLASSPATH`
 
 Add `/usr/lib/Open-COBOL-ESQL-4j/ocesql4j.jar` and `/usr/lib/Open-COBOL-ESQL-4j/postgresql.jar` to $CLASSPATH.

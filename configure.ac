@@ -5,6 +5,10 @@ AC_PREREQ([2.69])
 AC_INIT([Open COBOL ESQL 4J], [1.1.2], [opencobol@tsh-world.co.jp])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
+
+# Autoheader templates
+AH_TEMPLATE([I18N_UTF8], [Enable UTF-8 support])
+
 AM_INIT_AUTOMAKE
 
 # Checks for programs.
@@ -42,6 +46,17 @@ AC_ARG_ENABLE(precompiler,
    fi])
 
 AM_CONDITIONAL(DISABLE_OCESQL, test $DISABLE_COMPILER = yes)
+
+# UTF-8 support
+AC_ARG_ENABLE(utf8,
+  [  --enable-utf8           enable UTF-8 support.],
+  [if test "$enable_utf8" = "yes"
+   then
+	AC_DEFINE(I18N_UTF8)
+	COB_M4_FLAGS=-DM4.I18N_UTF8
+   fi])
+AM_CONDITIONAL(I18N_UTF8, test x$COB_M4_FLAGS = x-DM4.I18N_UTF8)
+AC_SUBST(COB_M4_FLAGS)
 
 # Checks for libraries.
 #AC_CHECK_LIB([pq], [PQconnectdb])
