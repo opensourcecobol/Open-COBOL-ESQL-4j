@@ -1,15 +1,5 @@
 ### Added
 
-* Support the `PIC N VARYING` data type. (#134)
-* Improve the readability of converted SQL statements. (#136)
-
-### Fixed
-
-* Fix SQL statement generations in some cases. (#99)
-  * With older versions, the precompiler ignores SQL statements in some cases.
-* The precompiler accepts INCLUDE statements containing '\n' characters. (#121)
-
-### Miscellaneous
-
-* Add README_JP.md for Japanese users. (#112)
-* Add a Dev container configuration. (#107)
+- UTF-8 encoding support via `--enable-utf8` configure option (#148)
+  - Support for processing COBOL programs encoded in UTF-8
+  - Build opensource COBOL 4J with `--enable-utf8` when using Open COBOL ESQL 4J built with `--enable-utf8`

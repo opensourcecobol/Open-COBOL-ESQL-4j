@@ -8,7 +8,7 @@ Open COBOL ESQL 4Jは[opensource COBOL 4J](https://github.com/opensourcecobol/op
 # サポートされているソフトウェアのバージョン
 
 * opensource COBOL 4J
-  * 1.1.2 or later
+  * 1.1.17 or later
 * PostgreSQL
   * 9.6
   * 15
@@ -24,7 +24,7 @@ Open COBOL ESQL 4Jは[opensource COBOL 4J](https://github.com/opensourcecobol/op
 
 * PostgreSQLデータベース
 
-* [opensource COBOL 4J](https://github.com/opensourcecobol/opensourcecobol4j) v1.1.2またはそれ以降。
+* [opensource COBOL 4J](https://github.com/opensourcecobol/opensourcecobol4j) v1.1.17またはそれ以降。
 
 * [sbt](https://www.scala-sbt.org/).
 
