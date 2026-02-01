@@ -277,8 +277,8 @@ char *cb_get_env(const char *filename, int num) {
 }
 
 void version(void) {
-  printf("Open COBOL ESQL 4J\n");
-  printf("Version 1.1.2\n");
+  printf("%s\n", PACKAGE_NAME);
+  printf("Version %s\n", PACKAGE_VERSION);
 #ifdef I18N_UTF8
   printf("[unicode/utf-8 support]\n");
 #endif /* I18N_UTF8 */
