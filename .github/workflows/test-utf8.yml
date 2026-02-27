@@ -142,7 +142,7 @@ jobs:
 
       # upload a log file
       - name: Upload a test log
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OCESQL_ARCHIVE_NAME }}.log
           path: /tmp/ocesql.log
