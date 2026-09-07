@@ -12,7 +12,7 @@ jobs:
     steps:
       # Checkout
       - name: Checkout Open COBOL ESQL 4J
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Install static analysis tools
       - name: Install static analysis tools
