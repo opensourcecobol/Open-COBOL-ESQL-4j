@@ -1,3 +1,11 @@
+> [!IMPORTANT]
+> This repository has been archived and is no longer maintained.
+> It is kept in a read-only state for reference. Issues and pull requests are no longer accepted.
+>
+> As of [opensource COBOL 4J v2.0.0](https://github.com/opensourcecobol/opensourcecobol4j/releases/tag/v2.0.0),
+> the functionality of Open COBOL ESQL 4J has been integrated into opensource COBOL 4J itself.
+> Please use [opensource COBOL 4J](https://github.com/opensourcecobol/opensourcecobol4j) v2.0.0 or later.
+
 # Open COBOL ESQL 4J
 
 [日本語版README](./README_JP.md)

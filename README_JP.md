@@ -1,3 +1,11 @@
+> [!IMPORTANT]
+> このリポジトリはアーカイブされ、メンテナンスは終了しました。
+> 参照用に読み取り専用の状態で公開しています。Issue・プルリクエストは受け付けていません。
+>
+> [opensource COBOL 4J v2.0.0](https://github.com/opensourcecobol/opensourcecobol4j/releases/tag/v2.0.0) より、
+> Open COBOL ESQL 4Jの機能はopensource COBOL 4J本体に統合されました。
+> 今後は [opensource COBOL 4J](https://github.com/opensourcecobol/opensourcecobol4j) v2.0.0以降をご利用ください。
+
 # Open COBOL ESQL 4J
 
 [English version README](./README.md)
